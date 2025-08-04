@@ -25,7 +25,7 @@ export default function Index() {
   const [isLoading, setIsLoading] = useState(false);
 
   const districts = [
-    "Центр", "Пасічна", "Вокзальна", "Гаїв", "Кнлівка", "Варшавський ��айон", 
+    "Центр", "Пасічна", "Вокзальна", "Гаїв", "Кнлівка", "Варшавський район", 
     "Угорники", "Бам", "Опришівці", "Личаківський", "Каскад"
   ];
 
@@ -380,7 +380,7 @@ export default function Index() {
                           if (response.ok) {
                             alert(`✅ ${data.message}\nОчікуваний час: ${data.estimatedTime}`);
                           } else {
-                            alert(`❌ Помилка: ${data.error || 'Невідо��а помилка'}`);
+                            alert(`❌ Помилка: ${data.error || 'Невідома помилка'}`);
                           }
                         } catch (error) {
                           console.error('Scraping error:', error);
@@ -401,10 +401,13 @@ export default function Index() {
                         try {
                           const response = await fetch('/api/scraping-status');
                           const data = await response.json();
-                          alert(`Статус: ${data.status}\nЗібрано: ${data.total_items || 0} оголошень`);
+                          const statusText = data.status === 'running' ? '🟢 Активний' :
+                                           data.status === 'completed' ? '✅ Завершено' :
+                                           data.status === 'error' ? '❌ Помилка' : '⭕ Неактивний';
+                          alert(`Статус парсингу: ${statusText}\nЗібрано: ${data.totalItems || 0} оголошень\nСторінок: ${data.totalPages || 0}`);
                         } catch (error) {
                           console.error('Status error:', error);
-                          alert('Помилка отримання статусу');
+                          alert('❌ Помилка отримання статусу');
                         }
                       }}
                     >
@@ -560,7 +563,7 @@ export default function Index() {
                       }
                     }}
                   >
-                    Метрики мо��елі
+                    Метрики моделі
                   </Button>
                 </CardContent>
               </Card>
