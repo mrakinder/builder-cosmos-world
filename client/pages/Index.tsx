@@ -48,7 +48,7 @@ export default function Index() {
         price: Math.round((parseFloat(formData.area) * 1200 + Math.random() * 20000) + 50000),
         confidence: Math.round(85 + Math.random() * 10),
         factors: ["Престижний район", "Гарна транспортна доступність", "Розвинена інфраструктура"],
-        recommendation: "Ціна відповідає ринковим показникам для дано��о району"
+        recommendation: "Ціна відповідає ринковим показникам для даного району"
       };
       
       setPrediction(mockPrediction);
@@ -98,11 +98,20 @@ export default function Index() {
               ринкової вартості об'єктів нерухомості на основі відкритих даних та експертного аналізу
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8">
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8"
+                onClick={() => document.getElementById('evaluate')?.scrollIntoView({ behavior: 'smooth' })}
+              >
                 <TrendingUp className="w-5 h-5 mr-2" />
                 Оцінити нерухомість
               </Button>
-              <Button variant="outline" size="lg" className="border-slate-300">
+              <Button
+                variant="outline"
+                size="lg"
+                className="border-slate-300"
+                onClick={() => document.getElementById('analytics')?.scrollIntoView({ behavior: 'smooth' })}
+              >
                 <BarChart3 className="w-5 h-5 mr-2" />
                 Переглянути аналітику
               </Button>
@@ -143,7 +152,7 @@ export default function Index() {
               </CardHeader>
               <CardContent className="text-center">
                 <CardDescription className="text-base leading-relaxed">
-                  Валідація через Zod та Pydantic, кешування резул��татів та аналіз відкритих даних OLX
+                  Валідація через Zod та Pydantic, кешування результатів та аналіз відкритих даних OLX
                 </CardDescription>
               </CardContent>
             </Card>
