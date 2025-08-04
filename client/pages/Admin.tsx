@@ -36,6 +36,17 @@ export default function Admin() {
   useEffect(() => {
     loadStats();
     loadScrapingStatus();
+    loadModelStatus();
+    loadActivityLogs();
+
+    // Set up real-time monitoring
+    const interval = setInterval(() => {
+      loadScrapingStatus();
+      loadModelStatus();
+      loadActivityLogs();
+    }, 2000); // Update every 2 seconds
+
+    return () => clearInterval(interval);
   }, []);
 
   const loadStats = async () => {
@@ -53,8 +64,29 @@ export default function Admin() {
       const response = await fetch('/api/scraping-status');
       const data = await response.json();
       setScrapingStatus(data.status);
+      setScrapingProgress(data.progressPercent || 0);
     } catch (error) {
       console.error('Failed to load scraping status:', error);
+    }
+  };
+
+  const loadModelStatus = async () => {
+    try {
+      const response = await fetch('/api/model-info');
+      const data = await response.json();
+      setModelProgress(data.trainingProgress || 0);
+    } catch (error) {
+      console.error('Failed to load model status:', error);
+    }
+  };
+
+  const loadActivityLogs = async () => {
+    try {
+      const response = await fetch('/api/activity-log');
+      const data = await response.json();
+      setActivityLogs(data.logs || []);
+    } catch (error) {
+      console.error('Failed to load activity logs:', error);
     }
   };
 
@@ -216,7 +248,7 @@ export default function Admin() {
             <CardHeader>
               <CardTitle className="flex items-center text-xl">
                 <Activity className="w-6 h-6 mr-3 text-green-600" />
-                Управління парсингом
+                Управління парсинго��
               </CardTitle>
               <CardDescription>
                 Контроль збору дан��х з OLX
@@ -369,7 +401,7 @@ export default function Admin() {
                   <li>• XGBoost (Python)</li>
                   <li>• Real Data Model (TS)</li>
                   <li>• Advanced Model (TS)</li>
-                  <li>• Поліноміальна регресія</li>
+                  <li>• Поліноміальна ре��ресія</li>
                 </ul>
               </div>
 
