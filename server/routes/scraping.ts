@@ -185,7 +185,11 @@ export const handleScrapingStatus: RequestHandler = (req, res) => {
     status: scrapingStatus.status,
     startTime: scrapingStatus.startTime,
     totalPages: scrapingStatus.totalPages,
+    currentPage: scrapingStatus.currentPage,
     totalItems: scrapingStatus.totalItems,
+    currentItems: scrapingStatus.currentItems,
+    progressPercent: scrapingStatus.progressPercent,
+    estimatedTimeLeft: scrapingStatus.estimatedTimeLeft,
     lastUpdate: scrapingStatus.lastUpdate,
     isRunning: scrapingStatus.status === 'running'
   });
@@ -193,14 +197,25 @@ export const handleScrapingStatus: RequestHandler = (req, res) => {
 
 export const handlePropertyStats: RequestHandler = (req, res) => {
   res.json({
-    total: mockDatabase.totalProperties,
-    from_owners: mockDatabase.fromOwners,
-    from_agencies: mockDatabase.fromAgencies,
-    manual_entries: mockDatabase.manualEntries,
+    total: propertiesDatabase.totalProperties,
+    from_owners: propertiesDatabase.fromOwners,
+    from_agencies: propertiesDatabase.fromAgencies,
+    manual_entries: propertiesDatabase.manualEntries,
     last_scraping: scrapingStatus.lastUpdate,
-    owner_percentage: mockDatabase.totalProperties > 0 
-      ? Math.round((mockDatabase.fromOwners / mockDatabase.totalProperties) * 100) 
-      : 0
+    owner_percentage: propertiesDatabase.totalProperties > 0
+      ? Math.round((propertiesDatabase.fromOwners / propertiesDatabase.totalProperties) * 100)
+      : 0,
+    districts: propertiesDatabase.districts,
+    price_ranges: propertiesDatabase.priceRanges,
+    activity_log: activityLog.slice(0, 10) // Last 10 activities
+  });
+};
+
+// New endpoint for activity log
+export const handleActivityLog: RequestHandler = (req, res) => {
+  res.json({
+    logs: activityLog,
+    last_update: new Date().toISOString()
   });
 };
 
