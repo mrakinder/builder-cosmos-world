@@ -7,7 +7,8 @@ import {
   handleScrapingStatus,
   handlePropertyStats,
   handleStopScraping,
-  handleActivityLog
+  handleActivityLog,
+  handlePriceTrends
 } from "./routes/scraping";
 import {
   handleRetrainModel,
