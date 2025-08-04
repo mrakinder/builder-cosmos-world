@@ -25,7 +25,7 @@ export default function Index() {
   const [isLoading, setIsLoading] = useState(false);
 
   const districts = [
-    "Центр", "Пасічна", "Вокзальна", "Гаїв", "Кнлівка", "Варшавський район", 
+    "Центр", "Пасічна", "Вокзальна", "Гаїв", "Кнлівка", "Варшавський ��айон", 
     "Угорники", "Бам", "Опришівці", "Личаківський", "Каскад"
   ];
 
@@ -145,7 +145,7 @@ export default function Index() {
               </CardHeader>
               <CardContent className="text-center">
                 <CardDescription className="text-base leading-relaxed">
-                  Передові алгоритми машинного навчання з високою то��ністю прогнозування на основі історичних даних
+                  Передові алгоритми машинного навчання з високою точністю прогнозування на основі історичних даних
                 </CardDescription>
               </CardContent>
             </Card>
@@ -268,7 +268,7 @@ export default function Index() {
                   <label className="text-sm font-medium text-slate-700">Опис (опціонально)</label>
                   <textarea 
                     className="w-full h-24 px-3 py-2 border border-input rounded-md bg-background text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    placeholder="Додаткова інформ��ція про об'єкт..."
+                    placeholder="Додаткова інформація про об'єкт..."
                     value={formData.description}
                     onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                   />
@@ -376,12 +376,15 @@ export default function Index() {
                       onClick={async () => {
                         try {
                           const response = await fetch('/api/start-scraping', { method: 'POST' });
+                          const data = await response.json();
                           if (response.ok) {
-                            alert('Парсинг розпочато успішно!');
+                            alert(`✅ ${data.message}\nОчікуваний час: ${data.estimatedTime}`);
+                          } else {
+                            alert(`❌ Помилка: ${data.error || 'Невідо��а помилка'}`);
                           }
                         } catch (error) {
                           console.error('Scraping error:', error);
-                          alert('Помилка запуску парсингу');
+                          alert('❌ Помилка з\'єднання з сервером');
                         }
                       }}
                     >
@@ -503,7 +506,7 @@ export default function Index() {
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-slate-900 mb-4">Аналіти��а та статистика</h2>
+              <h2 className="text-3xl font-bold text-slate-900 mb-4">Аналітика та статистика</h2>
               <p className="text-lg text-slate-600">Детальний аналіз ринку нерухомості та ефективності моделей</p>
             </div>
 
@@ -557,7 +560,7 @@ export default function Index() {
                       }
                     }}
                   >
-                    Метрики моделі
+                    Метрики мо��елі
                   </Button>
                 </CardContent>
               </Card>
