@@ -263,28 +263,52 @@ export default function Statistics() {
           <CardHeader>
             <CardTitle className="flex items-center text-xl">
               <TrendingUp className="w-6 h-6 mr-3 text-purple-600" />
-              Тенденції по місяцях
+              Тенденції по датах
             </CardTitle>
-            <CardDescription>Кількість оголошень та середня ціна за останні місяці</CardDescription>
+            <CardDescription>Кількість оголошень та середня ціна по датах збору даних</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {stats?.monthly_data?.map((month) => (
-                <div key={month.month} className="p-4 bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg">
-                  <h4 className="font-medium text-slate-900 mb-2">{month.month}</h4>
-                  <div className="space-y-1">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-slate-600">Кількість:</span>
-                      <span className="text-sm font-bold">{month.count}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-slate-600">Середня ціна:</span>
-                      <span className="text-sm font-bold text-green-600">${month.avg_price.toLocaleString()}</span>
+            {stats?.monthly_data && stats.monthly_data.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {stats.monthly_data.map((period) => (
+                  <div key={period.month || period.date} className="p-4 bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg">
+                    <h4 className="font-medium text-slate-900 mb-2">{period.month}</h4>
+                    <div className="space-y-1">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-slate-600">Кількість:</span>
+                        <span className="text-sm font-bold">{period.count}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-slate-600">Середня ціна:</span>
+                        <span className="text-sm font-bold text-green-600">${period.avg_price.toLocaleString()}</span>
+                      </div>
+                      {period.price_per_sqm && (
+                        <div className="flex justify-between">
+                          <span className="text-sm text-slate-600">За м²:</span>
+                          <span className="text-sm font-bold text-blue-600">${period.price_per_sqm.toLocaleString()}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <div className="text-slate-400 mb-4">
+                  <Calendar className="w-16 h-16 mx-auto mb-4" />
                 </div>
-              ))}
-            </div>
+                <h3 className="text-lg font-medium text-slate-900 mb-2">Немає даних для аналізу</h3>
+                <p className="text-slate-600 mb-4">
+                  Запустіть парсинг в адмін панелі для збору оголошень з OLX
+                </p>
+                <Button
+                  onClick={() => window.open('/admin', '_blank')}
+                  variant="outline"
+                >
+                  Відкрити адмін панель
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
