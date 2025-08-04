@@ -327,36 +327,21 @@ export default function Admin() {
               <div className="p-3 bg-blue-50 rounded-lg">
                 <h4 className="text-sm font-medium text-slate-900 mb-2">Швидкі дії:</h4>
                 <div className="space-y-2">
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
+                  <Button
+                    size="sm"
+                    variant="outline"
                     className="w-full justify-start"
-                    onClick={async () => {
-                      try {
-                        const response = await fetch('/api/retrain-model', { method: 'POST' });
-                        if (response.ok) alert('Перетренування розпочато!');
-                      } catch (error) {
-                        console.error('Retrain error:', error);
-                      }
-                    }}
+                    onClick={() => window.open('/statistics', '_blank')}
                   >
-                    Перетренувати основну модель
+                    Детальна статистика
                   </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
+                  <Button
+                    size="sm"
+                    variant="outline"
                     className="w-full justify-start"
-                    onClick={async () => {
-                      try {
-                        const response = await fetch('/api/model-comparison');
-                        const data = await response.json();
-                        alert(`Порівняння моделей:\n${JSON.stringify(data, null, 2)}`);
-                      } catch (error) {
-                        console.error('Comparison error:', error);
-                      }
-                    }}
+                    onClick={loadStats}
                   >
-                    Порівняти ефективність моделей
+                    Оновити дані
                   </Button>
                 </div>
               </div>
