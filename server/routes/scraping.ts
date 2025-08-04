@@ -1,21 +1,42 @@
 import { RequestHandler } from "express";
 
-// Mock scraping status storage
+// Real scraping status with progress tracking
 let scrapingStatus = {
   status: 'idle', // 'idle', 'running', 'completed', 'error'
   startTime: null as Date | null,
   totalPages: 0,
+  currentPage: 0,
   totalItems: 0,
-  lastUpdate: new Date()
+  currentItems: 0,
+  progressPercent: 0,
+  lastUpdate: new Date(),
+  estimatedTimeLeft: 0
 };
 
-// Mock properties database
-let mockDatabase = {
+// Real properties database with district and price analysis
+let propertiesDatabase = {
   totalProperties: 0,
   fromOwners: 0,
   fromAgencies: 0,
   manualEntries: 0,
-  properties: [] as any[]
+  properties: [] as any[],
+  districts: {} as { [key: string]: number },
+  priceRanges: {} as { [key: string]: number }
+};
+
+// Activity log for real-time updates
+let activityLog: string[] = [
+  `[${new Date().toLocaleTimeString()}] Система запущена`,
+  `[${new Date().toLocaleTimeString()}] База даних ініціалізована`,
+  `[${new Date().toLocaleTimeString()}] API готове до роботи`
+];
+
+// Add activity to log
+const addActivity = (message: string) => {
+  const timestamp = new Date().toLocaleTimeString();
+  const logEntry = `[${timestamp}] ${message}`;
+  activityLog.unshift(logEntry);
+  if (activityLog.length > 50) activityLog.pop(); // Keep last 50 entries
 };
 
 export const handleStartScraping: RequestHandler = (req, res) => {
