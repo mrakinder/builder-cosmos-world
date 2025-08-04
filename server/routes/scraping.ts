@@ -72,7 +72,7 @@ export const handleStartScraping: RequestHandler = (req, res) => {
       scrapingStatus.progressPercent = 100;
       scrapingStatus.estimatedTimeLeft = 0;
 
-      addActivity(`Парсинг завершено! Зібрано ${scrapingStatus.totalItems} оголошень з ${targetPages} сторінок`);
+      addActivity(`Парсинг зав��ршено! Зібрано ${scrapingStatus.totalItems} оголошень з ${targetPages} сторінок`);
       updateDatabaseStats();
       return;
     }
@@ -177,7 +177,7 @@ const updateDatabaseStats = () => {
     }
   });
 
-  addActivity(`Оновлено статистику: ${Object.keys(propertiesDatabase.districts).length} районів, ${propertiesDatabase.totalProperties} оголошень`);
+  addActivity(`Оновлено статист��ку: ${Object.keys(propertiesDatabase.districts).length} районів, ${propertiesDatabase.totalProperties} оголошень`);
 };
 
 export const handleScrapingStatus: RequestHandler = (req, res) => {
@@ -221,30 +221,47 @@ export const handleActivityLog: RequestHandler = (req, res) => {
 
 // Generate price trends based on real data
 export const handlePriceTrends: RequestHandler = (req, res) => {
-  // Calculate monthly trends from real properties
-  const monthNames = ["Січень", "Лютий", "Березень", "Квітень", "Травень", "Червень"];
-  const currentMonth = new Date().getMonth();
-
-  const trends = monthNames.map((month, index) => {
-    // Calculate properties for this month
-    const monthProperties = propertiesDatabase.properties.filter(property => {
-      const propertyDate = new Date(property.created_at);
-      return propertyDate.getMonth() === (currentMonth + index - 5) % 12;
+  // Only show data if we actually have scraped properties
+  if (propertiesDatabase.properties.length === 0) {
+    return res.json({
+      monthly_trends: [],
+      top_streets: [],
+      total_properties: 0,
+      last_update: new Date().toISOString(),
+      message: "Немає даних для аналізу. Запустіть парсинг для збору оголошень."
     });
+  }
 
-    const count = monthProperties.length || Math.floor(Math.random() * 50) + 10; // Fallback if no data
-    const avgPrice = monthProperties.length > 0
-      ? Math.round(monthProperties.reduce((sum, p) => sum + p.price_usd, 0) / monthProperties.length)
-      : Math.floor(45000 + Math.random() * 20000); // $45-65k fallback
+  // Group properties by actual dates when they were scraped
+  const propertiesByDate: { [key: string]: any[] } = {};
 
-    return {
-      month,
-      count,
-      avg_price: avgPrice,
-      price_per_sqm: Math.round(avgPrice / 65), // Assuming average 65m²
-      total_volume: count * avgPrice
-    };
+  propertiesDatabase.properties.forEach(property => {
+    const date = new Date(property.created_at);
+    const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
+    if (!propertiesByDate[dateKey]) {
+      propertiesByDate[dateKey] = [];
+    }
+    propertiesByDate[dateKey].push(property);
   });
+
+  // Generate trends only for dates that actually have data
+  const trends = Object.entries(propertiesByDate)
+    .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
+    .map(([dateKey, properties]) => {
+      const date = new Date(dateKey);
+      const avgPrice = Math.round(properties.reduce((sum, p) => sum + p.price_usd, 0) / properties.length);
+      const avgArea = Math.round(properties.reduce((sum, p) => sum + p.area, 0) / properties.length);
+
+      return {
+        date: dateKey,
+        month: date.toLocaleDateString('uk-UA', { day: 'numeric', month: 'long' }),
+        count: properties.length,
+        avg_price: avgPrice,
+        price_per_sqm: Math.round(avgPrice / avgArea),
+        total_volume: properties.length * avgPrice
+      };
+    });
 
   // Calculate top streets with real data
   const streetCounts: { [key: string]: { count: number, totalPrice: number, avgArea: number } } = {};
@@ -258,7 +275,7 @@ export const handlePriceTrends: RequestHandler = (req, res) => {
       "Каскад": "24 Серпня",
       "Залізничний (Вокзал)": "Стефаника",
       "Брати": "Хоткевича",
-      "Софіївка": "Пстрака",
+      "Софіївка": "Пс��рака",
       "Будівельників": "Селянська",
       "Набережна": "Набережна ім. В. Стефаника"
     };
