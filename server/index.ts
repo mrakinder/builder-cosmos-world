@@ -43,6 +43,7 @@ export function createServer() {
   app.get("/api/scraping-status", handleScrapingStatus);
   app.get("/api/property-stats", handlePropertyStats);
   app.post("/api/stop-scraping", handleStopScraping);
+  app.get("/api/activity-log", handleActivityLog);
 
   // Model routes
   app.post("/api/retrain-model", handleRetrainModel);
