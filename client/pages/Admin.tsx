@@ -207,7 +207,7 @@ export default function Admin() {
         </div>
 
         {/* Control Panels */}
-        <div className="grid lg:grid-cols-2 gap-8">
+        <div className="grid lg:grid-cols-3 gap-8">
           {/* Scraping Controls */}
           <Card className="border-0 shadow-xl">
             <CardHeader>
