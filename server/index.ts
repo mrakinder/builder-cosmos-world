@@ -45,6 +45,7 @@ export function createServer() {
   app.get("/api/property-stats", handlePropertyStats);
   app.post("/api/stop-scraping", handleStopScraping);
   app.get("/api/activity-log", handleActivityLog);
+  app.get("/api/price-trends", handlePriceTrends);
 
   // Model routes
   app.post("/api/retrain-model", handleRetrainModel);
