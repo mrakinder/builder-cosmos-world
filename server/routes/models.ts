@@ -89,31 +89,59 @@ export const handleRetrainModel: RequestHandler = (req, res) => {
 
 export const handleRetrainAdvancedModel: RequestHandler = (req, res) => {
   if (modelStatus.isTraining) {
-    return res.status(400).json({ 
-      error: 'Модель вже тренується', 
-      status: 'training' 
+    return res.status(400).json({
+      error: 'Модель вже тренується',
+      status: 'training'
     });
   }
 
+  const totalEpochs = Math.floor(Math.random() * 30) + 50; // 50-80 epochs
+
   modelStatus.isTraining = true;
+  modelStatus.trainingProgress = 0;
+  modelStatus.currentEpoch = 0;
+  modelStatus.totalEpochs = totalEpochs;
+  modelStatus.estimatedTimeLeft = totalEpochs * 6; // 6 seconds per epoch
+  modelStatus.trainingType = 'Advanced Model';
 
-  // Simulate advanced training process
-  setTimeout(() => {
-    modelStatus = {
-      lastTraining: new Date(),
-      isTraining: false,
-      accuracy: 0.88 + (Math.random() * 0.08), // 88-96%
-      r2: 0.82 + (Math.random() * 0.12), // 82-94%
-      mae: 4500 + (Math.random() * 1500), // 4500-6000
-      rmse: 7500 + (Math.random() * 2500) // 7500-10000
-    };
-    console.log('Advanced model retraining completed');
-  }, 7000); // Complete after 7 seconds
+  addModelActivity(`Розпочато тренування Advanced Model (${totalEpochs} епох)`);
 
-  res.json({ 
-    message: 'Перетренування розширеної моделі розпочато', 
-    estimatedTime: '5-10 хвилин',
-    status: 'training'
+  // Simulate progressive advanced training
+  const trainAdvancedEpoch = (epoch: number) => {
+    if (epoch > totalEpochs) {
+      // Complete training
+      modelStatus.isTraining = false;
+      modelStatus.trainingProgress = 100;
+      modelStatus.estimatedTimeLeft = 0;
+      modelStatus.lastTraining = new Date();
+      modelStatus.accuracy = 0.88 + (Math.random() * 0.08); // 88-96%
+      modelStatus.r2 = 0.82 + (Math.random() * 0.12); // 82-94%
+      modelStatus.mae = 4500 + (Math.random() * 1500); // 4500-6000
+      modelStatus.rmse = 7500 + (Math.random() * 2500); // 7500-10000
+
+      addModelActivity(`Тренування Advanced Model завершено! Точність: ${(modelStatus.accuracy * 100).toFixed(1)}%`);
+      return;
+    }
+
+    modelStatus.currentEpoch = epoch;
+    modelStatus.trainingProgress = Math.round((epoch / totalEpochs) * 100);
+    modelStatus.estimatedTimeLeft = (totalEpochs - epoch) * 6;
+
+    if (epoch % 10 === 0) { // Log every 10th epoch
+      addModelActivity(`Advanced: Епоха ${epoch}/${totalEpochs}, точність: ${(0.75 + (epoch / totalEpochs) * 0.23).toFixed(3)}`);
+    }
+
+    setTimeout(() => trainAdvancedEpoch(epoch + 1), 1000); // 1 second per epoch
+  };
+
+  // Start training from epoch 1
+  setTimeout(() => trainAdvancedEpoch(1), 1000);
+
+  res.json({
+    message: 'Перетренування розширеної моделі розпочато',
+    estimatedTime: `${Math.round(totalEpochs / 60)} хвилин`,
+    status: 'training',
+    progress: 0
   });
 };
 
@@ -121,11 +149,17 @@ export const handleModelInfo: RequestHandler = (req, res) => {
   res.json({
     lastTraining: modelStatus.lastTraining,
     isTraining: modelStatus.isTraining,
+    trainingProgress: modelStatus.trainingProgress,
+    currentEpoch: modelStatus.currentEpoch,
+    totalEpochs: modelStatus.totalEpochs,
+    estimatedTimeLeft: modelStatus.estimatedTimeLeft,
+    trainingType: modelStatus.trainingType,
     accuracy: Math.round(modelStatus.accuracy * 100) / 100,
     r2: Math.round(modelStatus.r2 * 100) / 100,
     mae: Math.round(modelStatus.mae),
     rmse: Math.round(modelStatus.rmse),
-    status: modelStatus.isTraining ? 'training' : 'ready'
+    status: modelStatus.isTraining ? 'training' : 'ready',
+    activity_log: modelActivityLog.slice(0, 10) // Last 10 activities
   });
 };
 
