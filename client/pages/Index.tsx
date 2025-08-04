@@ -24,14 +24,128 @@ export default function Index() {
 
   const [isLoading, setIsLoading] = useState(false);
 
+  // Comprehensive street-to-district mapping
+  const streetToDistrict: { [key: string]: string[] } = {
+    "Августина Волошина": ["Центр"],
+    "Арсенальна": ["Центр"],
+    "Бельведерська": ["Центр"],
+    "Василя Стуса": ["Позитрон", "Каскад", "Софіївка"],
+    "Вербицького": ["Брати"],
+    "Вовчинецька": ["Позитрон", "Кішлак", "Софіївка", "Залізничний (Вокзал)"],
+    "Галицька": ["Пасічна"],
+    "Героїв-пожежників": ["Залізничний (Вокзал)"],
+    "Грюнвальдська": ["Залізничний (Вокзал)"],
+    "Дашевського": ["Залізничний (Вокзал)"],
+    "Деповська": ["��алізничний (Вокзал)"],
+    "Донцова": ["Залізничний (Вокзал)"],
+    "Дунаєвського": ["Будівельників"],
+    "Залізнична": ["Залізничний (Вокзал)"],
+    "Івана Павла ІІ": ["Будівельників", "Софіївка"],
+    "Івасюка": ["БАМ", "Софіївка"],
+    "Карпатської Січі": ["Центр"],
+    "Кисілевської": ["БАМ"],
+    "Коновальця": ["Центр", "Опришівці"],
+    "Коцюбинського": ["Залізничний (Вокзал)"],
+    "Купчинського": ["Залізничний (Вокзал)"],
+    "Курінного Чорноти": ["Центр"],
+    "Львівська": ["Центр"],
+    "Мазепи": ["Хриплин"],
+    "Марійки Підгірянки": ["Залізничний (Вокзал)"],
+    "Матейка": ["Центр"],
+    "Миколайчука": ["Центр", "Каскад"],
+    "Миру": ["Будівельників"],
+    "Молодіжна": ["БАМ", "Будівельників"],
+    "Набережна ім. В. Стефаника": ["Набережна"],
+    "Національної Гвардії": ["Центр"],
+    "о. Івана Блавацького": ["Опришівці"],
+    "Опільського": ["БАМ"],
+    "Паркова": ["БАМ", "Брати"],
+    "Пасічна": ["Пасічна"],
+    "Петлюри": ["Хриплин"],
+    "Пстрака": ["Софіївка"],
+    "Привокзальна площа": ["Залізничний (Вокзал)"],
+    "Промислова": ["Залізничний (Вокзал)"],
+    "Реміснича": ["Брати"],
+    "Республіканська": ["Центр"],
+    "Селянська": ["Будівельників"],
+    "Симоненка": ["Позитрон", "Каскад", "Кішлак"],
+    "Стефаника": ["Залізничний (Вокзал)"],
+    "Тарнавського": ["Залізничний (Вокзал)"],
+    "Трильовського": ["БАМ"],
+    "Тролейбусна": ["Пасічна"],
+    "Угорницька": ["БАМ", "Брати"],
+    "Української Дивізії": ["Брати", "Будівельників"],
+    "Хіміків": ["Пасічна"],
+    "Хоткевича": ["БАМ", "Брати"],
+    "Черемшини": ["Залізничний (Вокзал)"],
+    "Чорновола": ["Центр"],
+    "Чубинського": ["Брати"],
+    "24 Серпня": ["Центр", "Каскад"]
+  };
+
+  // Updated comprehensive districts list sorted alphabetically
   const districts = [
-    "Центр", "Пасічна", "Вокзальна", "Гаїв", "Кнлівка", "Варшавський район", 
-    "Угорники", "Бам", "Опришівці", "Личаківський", "Каскад"
+    "БАМ",
+    "Брати",
+    "Будівельників",
+    "Залізничний (Вокзал)",
+    "Каскад",
+    "Кішлак",
+    "Набережна",
+    "Опришівці",
+    "Пасічна",
+    "Позитрон",
+    "Софіївка",
+    "Хриплин",
+    "Центр",
+    "Нерозпізнані райони"
   ];
 
   const conditions = [
     "Новобудова", "Євроремонт", "Гарний стан", "Житловий стан", "Потребує ремонту"
   ];
+
+  // Function to determine district from street name
+  const getDistrictFromStreet = (streetName: string): string => {
+    const normalizedStreet = streetName.trim();
+
+    // Check if street exists in our mapping
+    if (streetToDistrict[normalizedStreet]) {
+      return streetToDistrict[normalizedStreet][0]; // Return first district if multiple
+    }
+
+    // Check partial matches (for streets like "вул. Центральна")
+    for (const [street, districts] of Object.entries(streetToDistrict)) {
+      if (normalizedStreet.toLowerCase().includes(street.toLowerCase()) ||
+          street.toLowerCase().includes(normalizedStreet.toLowerCase())) {
+        return districts[0];
+      }
+    }
+
+    return "Нерозпізнані райони";
+  };
+
+  // Enhanced price calculation based on district
+  const getDistrictPriceMultiplier = (district: string): number => {
+    const districtMultipliers: { [key: string]: number } = {
+      "Центр": 1.4,
+      "Набережна": 1.3,
+      "Каскад": 1.2,
+      "Софіївка": 1.1,
+      "Пасічна": 1.0,
+      "БАМ": 0.95,
+      "Залізничний (Вокзал)": 0.9,
+      "Брати": 0.95,
+      "Будівельників": 0.9,
+      "Опришівці": 0.85,
+      "Позитрон": 0.9,
+      "Кішлак": 0.8,
+      "Хриплин": 0.75,
+      "Нерозпізнані райони": 0.8
+    };
+
+    return districtMultipliers[district] || 0.8;
+  };
 
   const handlePredict = async () => {
     if (!formData.area || !formData.district || !formData.condition) {
@@ -145,7 +259,7 @@ export default function Index() {
               </CardHeader>
               <CardContent className="text-center">
                 <CardDescription className="text-base leading-relaxed">
-                  Передові алгоритми машинного навчання з високою точністю прогнозування на основі історичних даних
+                  Передові алгоритми машинного навчання з високою точністю прогнозув��ння на основі історичних даних
                 </CardDescription>
               </CardContent>
             </Card>
@@ -467,7 +581,7 @@ export default function Index() {
                         try {
                           const response = await fetch('/api/retrain-advanced-model', { method: 'POST' });
                           if (response.ok) {
-                            alert('Перетренування розширеної моделі розпочато!');
+                            alert('Перетренування розширеної моделі роз��очато!');
                           }
                         } catch (error) {
                           console.error('Advanced retrain error:', error);
@@ -546,7 +660,7 @@ export default function Index() {
                   <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Brain className="w-8 h-8 text-blue-600" />
                   </div>
-                  <CardTitle>Ефективність моделі</CardTitle>
+                  <CardTitle>Ефектив��ість моделі</CardTitle>
                 </CardHeader>
                 <CardContent className="text-center space-y-4">
                   <Button
