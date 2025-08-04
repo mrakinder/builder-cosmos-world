@@ -28,7 +28,10 @@ export default function Admin() {
   });
 
   const [scrapingStatus, setScrapingStatus] = useState("idle");
+  const [scrapingProgress, setScrapingProgress] = useState(0);
+  const [modelProgress, setModelProgress] = useState(0);
   const [logs, setLogs] = useState([]);
+  const [activityLogs, setActivityLogs] = useState<string[]>([]);
 
   useEffect(() => {
     loadStats();
@@ -216,7 +219,7 @@ export default function Admin() {
                 Управління парсингом
               </CardTitle>
               <CardDescription>
-                Контроль збору даних з OLX
+                Контроль збору дан��х з OLX
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
