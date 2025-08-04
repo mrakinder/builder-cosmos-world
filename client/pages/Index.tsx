@@ -40,7 +40,7 @@ export default function Index() {
     "Деповська": ["Залізничний (Вокзал)"],
     "Донцова": ["Залізничний (Вокзал)"],
     "Дунаєвського": ["Будівельників"],
-    "Залізнична": ["Залізничний (Вокзал)"],
+    "Заліз��ична": ["Залізничний (Вокзал)"],
     "Івана Павла ІІ": ["Будівельників", "Софіївка"],
     "Івасюка": ["БАМ", "Софіївка"],
     "Карпатської Січі": ["Центр"],
@@ -201,7 +201,7 @@ export default function Index() {
         return factorsMap[district] || factorsMap["Нерозпізнані райони"];
       };
 
-      const confidence = actualDistrict === "Нерозпізнані райони" ?
+      const confidence = actualDistrict === "Нерозпізна��і райони" ?
         Math.round(70 + Math.random() * 10) :
         Math.round(85 + Math.random() * 10);
 
@@ -308,7 +308,7 @@ export default function Index() {
               </CardHeader>
               <CardContent className="text-center">
                 <CardDescription className="text-base leading-relaxed">
-                  Передові алгоритми машинного навчання з високою точністю прогнозування на основі історичних даних
+                  ��ередові алгоритми машинного навчання з високою точністю прогнозування на основі історичних даних
                 </CardDescription>
               </CardContent>
             </Card>
@@ -417,25 +417,28 @@ export default function Index() {
 
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-700">Поверх</label>
-                    <Input 
-                      type="number" 
+                    <Input
+                      type="number"
                       placeholder="3"
                       value={formData.floor}
                       onChange={(e) => setFormData(prev => ({ ...prev, floor: e.target.value }))}
                       className="h-12"
                     />
                   </div>
+                </div>
 
+                <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-700">Загальна кількість поверхів</label>
-                    <Input 
-                      type="number" 
+                    <Input
+                      type="number"
                       placeholder="9"
                       value={formData.totalFloors}
                       onChange={(e) => setFormData(prev => ({ ...prev, totalFloors: e.target.value }))}
                       className="h-12"
                     />
                   </div>
+                  <div></div>
                 </div>
 
                 <div className="space-y-2">
