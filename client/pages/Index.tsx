@@ -33,7 +33,7 @@ export default function Index() {
     "Василя Стуса": ["Позитрон", "Каскад", "Софіївка"],
     "Вербицького": ["Брати"],
     "Вовчинецька": ["Позитрон", "Кішлак", "Софіївка", "Залізничний (Вокзал)"],
-    "Галицька": ["Пасічна"],
+    "Галиц��ка": ["Пасічна"],
     "Героїв-пожежників": ["Залізничний (Вокзал)"],
     "Грюнвальдська": ["Залізничний (Вокзал)"],
     "Дашевсь��ого": ["Залізничний (Вокзал)"],
@@ -195,7 +195,7 @@ export default function Index() {
           "Софіївка": ["Зелений район", "Спокійне середовище", "Доступні ціни"],
           "Пасічна": ["Добра транспортна доступність", "Розвинена торгівля", "Центральне розташування"],
           "БАМ": ["Великий житловий масив", "Розвинена соціальна інфраструктура", "Доступне житло"],
-          "Залізничний (Вокзал)": ["Близькість до вокзалу", "Транспортний вузол", "Комерційна активність"],
+          "Залізничний (Вокзал)": ["��лизькість до вокзалу", "Транспортний вузол", "Комерційна активність"],
           "Нерозпізнані райони": ["Потребує уточнення рай��ну", "Середні ринкові показники", "Стандартні умови"]
         };
         return factorsMap[district] || factorsMap["Нерозпізнані райони"];
@@ -239,13 +239,14 @@ export default function Index() {
             </div>
             <nav className="hidden md:flex items-center space-x-6">
               <a href="#evaluate" className="text-slate-600 hover:text-blue-600 transition-colors">Оцінити</a>
-              <a href="#scraping" className="text-slate-600 hover:text-blue-600 transition-colors">Парсинг</a>
               <a href="#analytics" className="text-slate-600 hover:text-blue-600 transition-colors">Аналітика</a>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => window.open('/admin', '_blank')}
+                className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white"
               >
+                <Settings className="w-4 h-4 mr-1" />
                 Адмін панель
               </Button>
             </nav>
