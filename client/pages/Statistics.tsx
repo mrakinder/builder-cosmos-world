@@ -91,38 +91,7 @@ export default function Statistics() {
     }
   };
 
-  // Generate realistic monthly data
-  const generateMonthlyData = (totalProperties: number) => {
-    const months = ["Січень", "Лютий", "Березень", "Квітень", "Травень", "Червень"];
-    const avgPerMonth = Math.floor(totalProperties / 6) || 10;
 
-    return months.map(month => ({
-      month,
-      count: Math.floor(avgPerMonth * (0.8 + Math.random() * 0.4)), // ±20% variation
-      avg_price: Math.floor(45000 + Math.random() * 20000) // $45-65k average
-    }));
-  };
-
-  // Generate top streets from districts
-  const generateTopStreets = (districts: { [key: string]: number }) => {
-    const streetMap: { [key: string]: string } = {
-      "Центр": "Галицька",
-      "Пасічна": "Тролейбусна",
-      "БАМ": "Івасюка",
-      "Каскад": "24 Серпня",
-      "Залізничний (Вокзал)": "Стефаника"
-    };
-
-    return Object.entries(districts)
-      .filter(([district]) => streetMap[district])
-      .map(([district, count]) => ({
-        street: streetMap[district],
-        count: Math.floor(count * 0.3) || 1, // Streets have ~30% of district's properties
-        avg_price: Math.floor(40000 + Math.random() * 40000) // $40-80k range
-      }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 5);
-  };
 
   if (loading) {
     return (
