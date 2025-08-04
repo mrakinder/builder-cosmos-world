@@ -40,7 +40,7 @@ export default function Index() {
     "Деповська": ["Залізничний (Вокзал)"],
     "Донцова": ["Залізничний (Вокзал)"],
     "Дунаєвського": ["Будівельників"],
-    "Заліз��ична": ["Залізничний (Вокзал)"],
+    "Залізнична": ["Залізничний (Вокзал)"],
     "Івана Павла ІІ": ["Будівельників", "Софіївка"],
     "Івасюка": ["БАМ", "Софіївка"],
     "Карпатської Січі": ["Центр"],
@@ -201,7 +201,7 @@ export default function Index() {
         return factorsMap[district] || factorsMap["Нерозпізнані райони"];
       };
 
-      const confidence = actualDistrict === "Нерозпізна��і райони" ?
+      const confidence = actualDistrict === "Нерозпізнані райони" ?
         Math.round(70 + Math.random() * 10) :
         Math.round(85 + Math.random() * 10);
 
@@ -308,7 +308,7 @@ export default function Index() {
               </CardHeader>
               <CardContent className="text-center">
                 <CardDescription className="text-base leading-relaxed">
-                  ��ередові алгоритми машинного навчання з високою точністю прогнозування на основі історичних даних
+                  Передові алгоритми машинного навчання з високою точністю прогнозування на основі історичних даних
                 </CardDescription>
               </CardContent>
             </Card>
@@ -465,9 +465,9 @@ export default function Index() {
                   />
                 </div>
 
-                <Button 
+                <Button
                   onClick={handlePredict}
-                  disabled={isLoading || !formData.area || !formData.district || !formData.condition}
+                  disabled={isLoading || !formData.area || !formData.condition}
                   size="lg"
                   className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 h-12"
                 >
@@ -535,7 +535,7 @@ export default function Index() {
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-slate-900 mb-4">Парсинг OLX</h2>
-              <p className="text-lg text-slate-600">Збір нових оголошень про нерухомість з OLX для навчання моделі</p>
+              <p className="text-lg text-slate-600">Збір нових оголошень про нерухомість з OLX для навчання модел��</p>
             </div>
 
             <div className="grid md:grid-cols-2 gap-8">
@@ -582,7 +582,7 @@ export default function Index() {
                       <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                       </svg>
-                      Запустити парсинг
+                      За��устити парсинг
                     </Button>
 
                     <Button
