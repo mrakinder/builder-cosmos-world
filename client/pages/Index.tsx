@@ -187,7 +187,7 @@ export default function Index() {
               <CardHeader>
                 <CardTitle className="flex items-center text-2xl">
                   <MapPin className="w-6 h-6 mr-3 text-blue-600" />
-                  Характеристики нерухомості
+                  Хара��теристики нерухомості
                 </CardTitle>
                 <CardDescription>
                   Заповніть усі обов'язкові поля для отримання точного прогнозу
@@ -327,6 +327,261 @@ export default function Index() {
                 )}
               </CardContent>
             </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* OLX Scraping Section */}
+      <section id="scraping" className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-slate-900 mb-4">Парсинг OLX</h2>
+              <p className="text-lg text-slate-600">Збір нових оголошень про нерухомість з OLX для навчання моделі</p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-8">
+              <Card className="border-0 shadow-lg">
+                <CardHeader>
+                  <CardTitle className="flex items-center text-xl">
+                    <Building className="w-6 h-6 mr-3 text-green-600" />
+                    Автоматичний збір даних
+                  </CardTitle>
+                  <CardDescription>
+                    Парсинг оголошень з olx.ua для Івано-Франківська
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="p-4 bg-slate-50 rounded-lg">
+                    <h4 className="font-medium text-slate-900 mb-2">Параметри парсингу:</h4>
+                    <ul className="text-sm text-slate-600 space-y-1">
+                      <li>• Квартири в Івано-Франківську</li>
+                      <li>• Ціни виключно в USD</li>
+                      <li>• Розпізнавання власник/агентство</li>
+                      <li>• До 10 сторінок за сесію</li>
+                      <li>• Антибан захист</li>
+                    </ul>
+                  </div>
+
+                  <div className="space-y-3">
+                    <Button
+                      className="w-full bg-green-600 hover:bg-green-700"
+                      onClick={async () => {
+                        try {
+                          const response = await fetch('/api/start-scraping', { method: 'POST' });
+                          if (response.ok) {
+                            alert('Парсинг розпочато успішно!');
+                          }
+                        } catch (error) {
+                          console.error('Scraping error:', error);
+                          alert('Помилка запуску парсингу');
+                        }
+                      }}
+                    >
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      Запустити парсинг
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={async () => {
+                        try {
+                          const response = await fetch('/api/scraping-status');
+                          const data = await response.json();
+                          alert(`Статус: ${data.status}\nЗібрано: ${data.total_items || 0} оголошень`);
+                        } catch (error) {
+                          console.error('Status error:', error);
+                          alert('Помилка отримання статусу');
+                        }
+                      }}
+                    >
+                      <BarChart3 className="w-5 h-5 mr-2" />
+                      Статус парсингу
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-0 shadow-lg">
+                <CardHeader>
+                  <CardTitle className="flex items-center text-xl">
+                    <Brain className="w-6 h-6 mr-3 text-blue-600" />
+                    Навчання моделі
+                  </CardTitle>
+                  <CardDescription>
+                    Перетренування ML-моделей на нових даних
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="p-4 bg-blue-50 rounded-lg">
+                    <h4 className="font-medium text-slate-900 mb-2">Доступні моделі:</h4>
+                    <ul className="text-sm text-slate-600 space-y-1">
+                      <li>• XGBoost (Python)</li>
+                      <li>• Real Data Model (TS)</li>
+                      <li>• Advanced Model (TS)</li>
+                      <li>• Поліноміальна регресія</li>
+                    </ul>
+                  </div>
+
+                  <div className="space-y-3">
+                    <Button
+                      className="w-full bg-blue-600 hover:bg-blue-700"
+                      onClick={async () => {
+                        try {
+                          const response = await fetch('/api/retrain-model', { method: 'POST' });
+                          if (response.ok) {
+                            alert('Перетренування базової моделі розпочато!');
+                          }
+                        } catch (error) {
+                          console.error('Retrain error:', error);
+                          alert('Помилка запуску навчання');
+                        }
+                      }}
+                    >
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Перетренувати модель
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={async () => {
+                        try {
+                          const response = await fetch('/api/retrain-advanced-model', { method: 'POST' });
+                          if (response.ok) {
+                            alert('Перетренування розширеної моделі розпочато!');
+                          }
+                        } catch (error) {
+                          console.error('Advanced retrain error:', error);
+                          alert('Помилка запуску розширеного навчання');
+                        }
+                      }}
+                    >
+                      <Zap className="w-5 h-5 mr-2" />
+                      Розширена модель
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={async () => {
+                        try {
+                          const response = await fetch('/api/model-comparison');
+                          const data = await response.json();
+                          alert(`Порівняння моделей:\n${JSON.stringify(data, null, 2)}`);
+                        } catch (error) {
+                          console.error('Comparison error:', error);
+                          alert('Помилка порівняння моделей');
+                        }
+                      }}
+                    >
+                      <Star className="w-5 h-5 mr-2" />
+                      Порівняти моделі
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Analytics Section */}
+      <section id="analytics" className="py-20 bg-gradient-to-br from-slate-50 to-blue-50">
+        <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-slate-900 mb-4">Аналітика та статистика</h2>
+              <p className="text-lg text-slate-600">Детальний аналіз ринку нерухомості та е��ективності моделей</p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-6">
+              <Card className="border-0 shadow-lg">
+                <CardHeader className="text-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-green-100 to-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <BarChart3 className="w-8 h-8 text-green-600" />
+                  </div>
+                  <CardTitle>Статистика OLX</CardTitle>
+                </CardHeader>
+                <CardContent className="text-center space-y-4">
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={async () => {
+                      try {
+                        const response = await fetch('/api/property-stats');
+                        const data = await response.json();
+                        alert(`Статистика:\nВсього оголошень: ${data.total}\nВід власників: ${data.from_owners}\nВід агентств: ${data.from_agencies}`);
+                      } catch (error) {
+                        console.error('Stats error:', error);
+                        alert('Помилка отримання статистики');
+                      }
+                    }}
+                  >
+                    Статистика парсингу
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="border-0 shadow-lg">
+                <CardHeader className="text-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Brain className="w-8 h-8 text-blue-600" />
+                  </div>
+                  <CardTitle>Ефективність моделі</CardTitle>
+                </CardHeader>
+                <CardContent className="text-center space-y-4">
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={async () => {
+                      try {
+                        const response = await fetch('/api/model-info');
+                        const data = await response.json();
+                        alert(`Модель:\nR²: ${data.r2 || 'N/A'}\nMAE: ${data.mae || 'N/A'}\nRMSE: ${data.rmse || 'N/A'}`);
+                      } catch (error) {
+                        console.error('Model info error:', error);
+                        alert('Помилка отримання інформації про модель');
+                      }
+                    }}
+                  >
+                    Метрики моделі
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="border-0 shadow-lg">
+                <CardHeader className="text-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-pink-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Shield className="w-8 h-8 text-purple-600" />
+                  </div>
+                  <CardTitle>Ручні дані</CardTitle>
+                </CardHeader>
+                <CardContent className="text-center space-y-4">
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={async () => {
+                      try {
+                        const response = await fetch('/api/manual-property-stats');
+                        const data = await response.json();
+                        alert(`Ручні дані:\nВсього: ${data.total_manual}\nЧастка: ${data.manual_percentage}%`);
+                      } catch (error) {
+                        console.error('Manual stats error:', error);
+                        alert('Помилка отримання статистики ручних даних');
+                      }
+                    }}
+                  >
+                    Статистика ручних даних
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </section>
