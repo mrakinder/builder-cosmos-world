@@ -123,7 +123,7 @@ export default function Index() {
       }
     }
 
-    return "Нерозпізнані ��айони";
+    return "Нерозпізнані райони";
   };
 
   // Enhanced price calculation based on district
@@ -308,7 +308,7 @@ export default function Index() {
               </CardHeader>
               <CardContent className="text-center">
                 <CardDescription className="text-base leading-relaxed">
-                  Передові алгоритми машинного навчання з високою точніст�� прогнозування на основі історичних даних
+                  Передові алгоритми машинного навчання з високою точністю прогнозування на основі історичних даних
                 </CardDescription>
               </CardContent>
             </Card>
@@ -367,8 +367,8 @@ export default function Index() {
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-700">Площа (м²) *</label>
-                    <Input 
-                      type="number" 
+                    <Input
+                      type="number"
                       placeholder="60"
                       value={formData.area}
                       onChange={(e) => setFormData(prev => ({ ...prev, area: e.target.value }))}
@@ -377,10 +377,35 @@ export default function Index() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-700">Район *</label>
+                    <label className="text-sm font-medium text-slate-700">Вулиця (необов'язково)</label>
+                    <Input
+                      type="text"
+                      placeholder="наприклад: Центральна, Галицька"
+                      value={formData.street}
+                      onChange={(e) => {
+                        const street = e.target.value;
+                        setFormData(prev => ({
+                          ...prev,
+                          street: street,
+                          district: street ? getDistrictFromStreet(street) : prev.district
+                        }));
+                      }}
+                      className="h-12"
+                    />
+                    {formData.street && (
+                      <p className="text-xs text-blue-600">
+                        Автоматично визначено район: {getDistrictFromStreet(formData.street)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700">Район</label>
                     <Select value={formData.district} onValueChange={(value) => setFormData(prev => ({ ...prev, district: value }))}>
                       <SelectTrigger className="h-12">
-                        <SelectValue placeholder="Оберіть район" />
+                        <SelectValue placeholder="Оберіть район або введіть вулицю" />
                       </SelectTrigger>
                       <SelectContent>
                         {districts.map((district) => (
@@ -657,7 +682,7 @@ export default function Index() {
                       }}
                     >
                       <Star className="w-5 h-5 mr-2" />
-                      Порівняти мод��лі
+                      Порівняти моделі
                     </Button>
                   </div>
                 </CardContent>
@@ -792,7 +817,7 @@ export default function Index() {
               <h3 className="font-semibold mb-4">Моделі</h3>
               <ul className="space-y-2 text-sm text-slate-400">
                 <li>XGBoost ML</li>
-                <li>Поліноміальна регр��сія</li>
+                <li>Поліноміальна регресія</li>
                 <li>Advanced Model</li>
                 <li>Real Data Model</li>
               </ul>
