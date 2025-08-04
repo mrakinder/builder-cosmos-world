@@ -36,7 +36,7 @@ export default function Index() {
     "Галицька": ["Пасічна"],
     "Героїв-пожежників": ["Залізничний (Вокзал)"],
     "Грюнвальдська": ["Залізничний (Вокзал)"],
-    "Дашевського": ["Залізничний (Вокзал)"],
+    "Дашевсь��ого": ["Залізничний (Вокзал)"],
     "Деповська": ["Залізничний (Вокзал)"],
     "Донцова": ["Залізничний (Вокзал)"],
     "Дунаєвського": ["Будівельників"],
@@ -56,7 +56,7 @@ export default function Index() {
     "Миколайчука": ["Центр", "Каскад"],
     "Миру": ["Будівельників"],
     "Молодіжна": ["БАМ", "Будівельників"],
-    "Набережна ім. В. Стефаника": ["Набережна"],
+    "Набер��жна ім. В. Стефаника": ["Набережна"],
     "Національної Гвардії": ["Центр"],
     "о. Івана Блавацького": ["Опришівці"],
     "Опільського": ["БАМ"],
@@ -91,7 +91,7 @@ export default function Index() {
     "Будівельників",
     "Залізничний (Вокзал)",
     "Каскад",
-    "К��шлак",
+    "Кішлак",
     "Набережна",
     "Опришівці",
     "Пасічна",
@@ -196,7 +196,7 @@ export default function Index() {
           "Пасічна": ["Добра транспортна доступність", "Розвинена торгівля", "Центральне розташування"],
           "БАМ": ["Великий житловий масив", "Розвинена соціальна інфраструктура", "Доступне житло"],
           "Залізничний (Вокзал)": ["Близькість до вокзалу", "Транспортний вузол", "Комерційна активність"],
-          "Нерозпізнані райони": ["Потребує уточнення району", "Середні ринкові показники", "Стандартні умови"]
+          "Нерозпізнані райони": ["Потребує уточнення рай��ну", "Середні ринкові показники", "Стандартні умови"]
         };
         return factorsMap[district] || factorsMap["Нерозпізнані райони"];
       };
@@ -308,7 +308,7 @@ export default function Index() {
               </CardHeader>
               <CardContent className="text-center">
                 <CardDescription className="text-base leading-relaxed">
-                  Передові алгоритми машинног�� навчання з високою точністю прогнозування на основі історичних даних
+                  Передові алгоритми машинного навчання з високою точністю прогнозування на основі історичних даних
                 </CardDescription>
               </CardContent>
             </Card>
@@ -322,7 +322,7 @@ export default function Index() {
               </CardHeader>
               <CardContent className="text-center">
                 <CardDescription className="text-base leading-relaxed">
-                  Валідація через Zod та Pydantic, кешування результатів та аналіз відкритих даних OLX
+                  Валідація через Zod та Pydantic, кешування результатів та аналіз відкритих да��их OLX
                 </CardDescription>
               </CardContent>
             </Card>
@@ -360,7 +360,7 @@ export default function Index() {
                   Характеристики нерухомості
                 </CardTitle>
                 <CardDescription>
-                  Заповніть усі обов'язкові поля для отриман��я точного прогнозу
+                  Заповніть усі обов'язкові поля для отримання точного прогнозу
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -499,7 +499,7 @@ export default function Index() {
                           ${prediction.price.toLocaleString()}
                         </div>
                         <div className="text-sm text-green-600 mb-4">
-                          Точність: {prediction.confidence}%
+                          ��очність: {prediction.confidence}%
                         </div>
                         <div className="space-y-2">
                           <h4 className="font-medium text-green-800">Ключові фактори:</h4>
@@ -633,18 +633,9 @@ export default function Index() {
                   <Button
                     variant="outline"
                     className="w-full"
-                    onClick={async () => {
-                      try {
-                        const response = await fetch('/api/property-stats');
-                        const data = await response.json();
-                        alert(`Статистика:\nВсього оголошень: ${data.total}\nВід власників: ${data.from_owners}\nВід агентств: ${data.from_agencies}`);
-                      } catch (error) {
-                        console.error('Stats error:', error);
-                        alert('Помилка отримання статистики');
-                      }
-                    }}
+                    onClick={() => window.open('/statistics', '_blank')}
                   >
-                    Статистика парсингу
+                    Детальна статистика
                   </Button>
                 </CardContent>
               </Card>
@@ -719,7 +710,7 @@ export default function Index() {
                 <span className="text-lg font-bold">Glow Nest XGB</span>
               </div>
               <p className="text-slate-400 text-sm">
-                Інноваційна платформа для прогнозування вартості нерухомості в Іва��о-Франківську
+                Інноваційна платформа для прогнозування вартості нерухомості в Івано-Франківську
               </p>
             </div>
             
