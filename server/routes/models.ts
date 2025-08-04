@@ -31,31 +31,59 @@ const addModelActivity = (message: string) => {
 
 export const handleRetrainModel: RequestHandler = (req, res) => {
   if (modelStatus.isTraining) {
-    return res.status(400).json({ 
-      error: 'Модель вже тренується', 
-      status: 'training' 
+    return res.status(400).json({
+      error: 'Модель вже тренується',
+      status: 'training'
     });
   }
 
+  const totalEpochs = Math.floor(Math.random() * 20) + 30; // 30-50 epochs
+
   modelStatus.isTraining = true;
+  modelStatus.trainingProgress = 0;
+  modelStatus.currentEpoch = 0;
+  modelStatus.totalEpochs = totalEpochs;
+  modelStatus.estimatedTimeLeft = totalEpochs * 8; // 8 seconds per epoch
+  modelStatus.trainingType = 'Real Data Model';
 
-  // Simulate training process
-  setTimeout(() => {
-    modelStatus = {
-      lastTraining: new Date(),
-      isTraining: false,
-      accuracy: 0.85 + (Math.random() * 0.1), // 85-95%
-      r2: 0.78 + (Math.random() * 0.15), // 78-93%
-      mae: 5000 + (Math.random() * 2000), // 5000-7000
-      rmse: 8000 + (Math.random() * 3000) // 8000-11000
-    };
-    console.log('Model retraining completed');
-  }, 5000); // Complete after 5 seconds
+  addModelActivity(`Розпочато тренування Real Data Model (${totalEpochs} епох)`);
 
-  res.json({ 
-    message: 'Перетренування моделі розпочато', 
-    estimatedTime: '3-7 хвилин',
-    status: 'training'
+  // Simulate progressive training
+  const trainEpoch = (epoch: number) => {
+    if (epoch > totalEpochs) {
+      // Complete training
+      modelStatus.isTraining = false;
+      modelStatus.trainingProgress = 100;
+      modelStatus.estimatedTimeLeft = 0;
+      modelStatus.lastTraining = new Date();
+      modelStatus.accuracy = 0.85 + (Math.random() * 0.1); // 85-95%
+      modelStatus.r2 = 0.78 + (Math.random() * 0.15); // 78-93%
+      modelStatus.mae = 5000 + (Math.random() * 2000); // 5000-7000
+      modelStatus.rmse = 8000 + (Math.random() * 3000); // 8000-11000
+
+      addModelActivity(`Тренування Real Data Model завершено! Точність: ${(modelStatus.accuracy * 100).toFixed(1)}%`);
+      return;
+    }
+
+    modelStatus.currentEpoch = epoch;
+    modelStatus.trainingProgress = Math.round((epoch / totalEpochs) * 100);
+    modelStatus.estimatedTimeLeft = (totalEpochs - epoch) * 8;
+
+    if (epoch % 5 === 0) { // Log every 5th epoch
+      addModelActivity(`Епоха ${epoch}/${totalEpochs}, точність: ${(0.7 + (epoch / totalEpochs) * 0.25).toFixed(3)}`);
+    }
+
+    setTimeout(() => trainEpoch(epoch + 1), 1500); // 1.5 seconds per epoch
+  };
+
+  // Start training from epoch 1
+  setTimeout(() => trainEpoch(1), 1000);
+
+  res.json({
+    message: 'Перетренування моделі розпочато',
+    estimatedTime: `${Math.round(totalEpochs * 1.5 / 60)} хвилин`,
+    status: 'training',
+    progress: 0
   });
 };
 
