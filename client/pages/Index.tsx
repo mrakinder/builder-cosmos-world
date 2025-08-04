@@ -10,6 +10,7 @@ export default function Index() {
     area: "",
     floor: "",
     totalFloors: "",
+    street: "",
     district: "",
     condition: "",
     description: ""
@@ -36,7 +37,7 @@ export default function Index() {
     "Героїв-пожежників": ["Залізничний (Вокзал)"],
     "Грюнвальдська": ["Залізничний (Вокзал)"],
     "Дашевського": ["Залізничний (Вокзал)"],
-    "Деповська": ["��алізничний (Вокзал)"],
+    "Деповська": ["Залізничний (Вокзал)"],
     "Донцова": ["Залізничний (Вокзал)"],
     "Дунаєвського": ["Будівельників"],
     "Залізнична": ["Залізничний (Вокзал)"],
@@ -46,7 +47,7 @@ export default function Index() {
     "Кисілевської": ["БАМ"],
     "Коновальця": ["Центр", "Опришівці"],
     "Коцюбинського": ["Залізничний (Вокзал)"],
-    "Купчинського": ["Залізничний (Вокзал)"],
+    "К��пчинського": ["Залізничний (Вокзал)"],
     "Курінного Чорноти": ["Центр"],
     "Львівська": ["Центр"],
     "Мазепи": ["Хриплин"],
@@ -67,7 +68,7 @@ export default function Index() {
     "Промислова": ["Залізничний (Вокзал)"],
     "Реміснича": ["Брати"],
     "Республіканська": ["Центр"],
-    "Селянська": ["Будівельників"],
+    "Селянська": ["Будівел��ників"],
     "Симоненка": ["Позитрон", "Каскад", "Кішлак"],
     "Стефаника": ["Залізничний (Вокзал)"],
     "Тарнавського": ["Залізничний (Вокзал)"],
@@ -98,7 +99,7 @@ export default function Index() {
     "Софіївка",
     "Хриплин",
     "Центр",
-    "Нерозпізнані райони"
+    "Нерозпізнані р��йони"
   ];
 
   const conditions = [
@@ -259,7 +260,7 @@ export default function Index() {
               </CardHeader>
               <CardContent className="text-center">
                 <CardDescription className="text-base leading-relaxed">
-                  Передові алгоритми машинного навчання з високою точністю прогнозув��ння на основі історичних даних
+                  Передові алгоритми машинного навчання з високою точністю прогнозування на основі історичних даних
                 </CardDescription>
               </CardContent>
             </Card>
@@ -287,7 +288,7 @@ export default function Index() {
               </CardHeader>
               <CardContent className="text-center">
                 <CardDescription className="text-base leading-relaxed">
-                  Миттєва оцінка через REST API з детальним аналізом факторів та рекомендаціями
+                  Миттєва оцінка через REST API з детальним аналізом факторів та рекомендація��и
                 </CardDescription>
               </CardContent>
             </Card>
@@ -581,7 +582,7 @@ export default function Index() {
                         try {
                           const response = await fetch('/api/retrain-advanced-model', { method: 'POST' });
                           if (response.ok) {
-                            alert('Перетренування розширеної моделі роз��очато!');
+                            alert('Перетренування розширеної моделі розпочато!');
                           }
                         } catch (error) {
                           console.error('Advanced retrain error:', error);
@@ -624,7 +625,7 @@ export default function Index() {
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-slate-900 mb-4">Аналітика та статистика</h2>
-              <p className="text-lg text-slate-600">Детальний аналіз ринку нерухомості та ефективності моделей</p>
+              <p className="text-lg text-slate-600">Детальний аналіз ринку нерух��мості та ефективності моделей</p>
             </div>
 
             <div className="grid md:grid-cols-3 gap-6">
@@ -646,7 +647,7 @@ export default function Index() {
                         alert(`Статистика:\nВсього оголошень: ${data.total}\nВід власників: ${data.from_owners}\nВід агентств: ${data.from_agencies}`);
                       } catch (error) {
                         console.error('Stats error:', error);
-                        alert('Помилка отримання статистики');
+                        alert('Помилк�� отримання статистики');
                       }
                     }}
                   >
@@ -660,7 +661,7 @@ export default function Index() {
                   <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Brain className="w-8 h-8 text-blue-600" />
                   </div>
-                  <CardTitle>Ефектив��ість моделі</CardTitle>
+                  <CardTitle>Ефективність моделі</CardTitle>
                 </CardHeader>
                 <CardContent className="text-center space-y-4">
                   <Button
