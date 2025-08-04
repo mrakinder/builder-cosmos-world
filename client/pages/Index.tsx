@@ -76,8 +76,15 @@ export default function Index() {
             </div>
             <nav className="hidden md:flex items-center space-x-6">
               <a href="#evaluate" className="text-slate-600 hover:text-blue-600 transition-colors">Оцінити</a>
+              <a href="#scraping" className="text-slate-600 hover:text-blue-600 transition-colors">Парсинг</a>
               <a href="#analytics" className="text-slate-600 hover:text-blue-600 transition-colors">Аналітика</a>
-              <a href="#api" className="text-slate-600 hover:text-blue-600 transition-colors">API</a>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.open('/admin', '_blank')}
+              >
+                Адмін панель
+              </Button>
             </nav>
           </div>
         </div>
@@ -138,7 +145,7 @@ export default function Index() {
               </CardHeader>
               <CardContent className="text-center">
                 <CardDescription className="text-base leading-relaxed">
-                  Передові алгоритми машинного навчання з високою точністю прогнозування на основі історичних даних
+                  Передові алгоритми машинного навчання з високою то��ністю прогнозування на основі історичних даних
                 </CardDescription>
               </CardContent>
             </Card>
@@ -187,7 +194,7 @@ export default function Index() {
               <CardHeader>
                 <CardTitle className="flex items-center text-2xl">
                   <MapPin className="w-6 h-6 mr-3 text-blue-600" />
-                  Хара��теристики нерухомості
+                  Характеристики нерухомості
                 </CardTitle>
                 <CardDescription>
                   Заповніть усі обов'язкові поля для отримання точного прогнозу
@@ -261,7 +268,7 @@ export default function Index() {
                   <label className="text-sm font-medium text-slate-700">Опис (опціонально)</label>
                   <textarea 
                     className="w-full h-24 px-3 py-2 border border-input rounded-md bg-background text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    placeholder="Додаткова інформація про об'єкт..."
+                    placeholder="Додаткова інформ��ція про об'єкт..."
                     value={formData.description}
                     onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                   />
@@ -496,8 +503,8 @@ export default function Index() {
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-slate-900 mb-4">Аналітика та статистика</h2>
-              <p className="text-lg text-slate-600">Детальний аналіз ринку нерухомості та е��ективності моделей</p>
+              <h2 className="text-3xl font-bold text-slate-900 mb-4">Аналіти��а та статистика</h2>
+              <p className="text-lg text-slate-600">Детальний аналіз ринку нерухомості та ефективності моделей</p>
             </div>
 
             <div className="grid md:grid-cols-3 gap-6">
