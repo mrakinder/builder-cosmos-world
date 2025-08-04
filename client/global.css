@@ -104,3 +104,17 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .gradient-glow {
+    background: linear-gradient(135deg, #3b82f6, #6366f1);
+    box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.39);
+  }
+
+  .text-gradient {
+    background: linear-gradient(135deg, #3b82f6, #6366f1);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
