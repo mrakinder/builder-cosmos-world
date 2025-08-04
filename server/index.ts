@@ -2,6 +2,24 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { handleDemo } from "./routes/demo";
+import {
+  handleStartScraping,
+  handleScrapingStatus,
+  handlePropertyStats,
+  handleStopScraping
+} from "./routes/scraping";
+import {
+  handleRetrainModel,
+  handleRetrainAdvancedModel,
+  handleModelInfo,
+  handleModelComparison
+} from "./routes/models";
+import {
+  handleAddManualProperty,
+  handleManualPropertyStats,
+  handleDeleteManualProperties,
+  handleExportProperties
+} from "./routes/manual-properties";
 
 export function createServer() {
   const app = express();
@@ -18,6 +36,24 @@ export function createServer() {
   });
 
   app.get("/api/demo", handleDemo);
+
+  // Scraping routes
+  app.post("/api/start-scraping", handleStartScraping);
+  app.get("/api/scraping-status", handleScrapingStatus);
+  app.get("/api/property-stats", handlePropertyStats);
+  app.post("/api/stop-scraping", handleStopScraping);
+
+  // Model routes
+  app.post("/api/retrain-model", handleRetrainModel);
+  app.post("/api/retrain-advanced-model", handleRetrainAdvancedModel);
+  app.get("/api/model-info", handleModelInfo);
+  app.get("/api/model-comparison", handleModelComparison);
+
+  // Manual property routes
+  app.post("/api/manual-property/add", handleAddManualProperty);
+  app.get("/api/manual-property-stats", handleManualPropertyStats);
+  app.delete("/api/manual-property/delete-manual-properties", handleDeleteManualProperties);
+  app.get("/api/export-properties", handleExportProperties);
 
   return app;
 }
