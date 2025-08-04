@@ -72,7 +72,7 @@ export const handleStartScraping: RequestHandler = (req, res) => {
       scrapingStatus.progressPercent = 100;
       scrapingStatus.estimatedTimeLeft = 0;
 
-      addActivity(`Парсинг зав��ршено! Зібрано ${scrapingStatus.totalItems} оголошень з ${targetPages} сторінок`);
+      addActivity(`Парсинг завершено! Зібрано ${scrapingStatus.totalItems} оголошень з ${targetPages} сторінок`);
       updateDatabaseStats();
       return;
     }
@@ -177,7 +177,7 @@ const updateDatabaseStats = () => {
     }
   });
 
-  addActivity(`Оновлено статист��ку: ${Object.keys(propertiesDatabase.districts).length} районів, ${propertiesDatabase.totalProperties} оголошень`);
+  addActivity(`Оновлено статистику: ${Object.keys(propertiesDatabase.districts).length} районів, ${propertiesDatabase.totalProperties} оголошень`);
 };
 
 export const handleScrapingStatus: RequestHandler = (req, res) => {
@@ -263,37 +263,39 @@ export const handlePriceTrends: RequestHandler = (req, res) => {
       };
     });
 
-  // Calculate top streets with real data
+  // Calculate top streets with real data only if we have properties
   const streetCounts: { [key: string]: { count: number, totalPrice: number, avgArea: number } } = {};
 
-  propertiesDatabase.properties.forEach(property => {
-    // Generate street name based on district
-    const streetMap: { [key: string]: string } = {
-      "Центр": "Галицька",
-      "Пасічна": "Тролейбусна",
-      "БАМ": "Івасюка",
-      "Каскад": "24 Серпня",
-      "Залізничний (Вокзал)": "Стефаника",
-      "Брати": "Хоткевича",
-      "Софіївка": "Пс��рака",
-      "Будівельників": "Селянська",
-      "Набережна": "Набережна ім. В. Стефаника"
-    };
-
-    const street = streetMap[property.district] || "Інші вулиці";
-
-    if (streetCounts[street]) {
-      streetCounts[street].count++;
-      streetCounts[street].totalPrice += property.price_usd;
-      streetCounts[street].avgArea += property.area;
-    } else {
-      streetCounts[street] = {
-        count: 1,
-        totalPrice: property.price_usd,
-        avgArea: property.area
+  if (propertiesDatabase.properties.length > 0) {
+    propertiesDatabase.properties.forEach(property => {
+      // Generate street name based on district
+      const streetMap: { [key: string]: string } = {
+        "Центр": "Галицька",
+        "Пасічн��": "Тролейбусна",
+        "БАМ": "Івасюка",
+        "Каскад": "24 Серпня",
+        "Залізничний (Вокзал)": "Стефаника",
+        "Брати": "Хоткевича",
+        "Софіївка": "Пстрака",
+        "Будівельників": "Селянська",
+        "Набережна": "Набережна ім. В. Стефаника"
       };
-    }
-  });
+
+      const street = streetMap[property.district] || "Інші вулиці";
+
+      if (streetCounts[street]) {
+        streetCounts[street].count++;
+        streetCounts[street].totalPrice += property.price_usd;
+        streetCounts[street].avgArea += property.area;
+      } else {
+        streetCounts[street] = {
+          count: 1,
+          totalPrice: property.price_usd,
+          avgArea: property.area
+        };
+      }
+    });
+  }
 
   const topStreets = Object.entries(streetCounts)
     .map(([street, data]) => ({
