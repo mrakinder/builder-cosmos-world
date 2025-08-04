@@ -121,7 +121,7 @@ export default function Admin() {
   };
 
   const handleDeleteManualProperties = async () => {
-    if (!confirm('Видалити всі ручно додані оголоше��ня?')) return;
+    if (!confirm('Видалити всі ручно додані оголошення?')) return;
 
     try {
       const response = await fetch('/api/manual-property/delete-manual-properties', {
@@ -344,7 +344,7 @@ export default function Admin() {
             <CardHeader>
               <CardTitle className="flex items-center text-xl">
                 <Database className="w-6 h-6 mr-3 text-blue-600" />
-                ��правління базою даних
+                Управління базою д��них
               </CardTitle>
               <CardDescription>
                 Операції з даними та резервними копіями
@@ -410,7 +410,7 @@ export default function Admin() {
                 Навчання моделей
               </CardTitle>
               <CardDescription>
-                Перетренування ML-модел��й на нових даних
+                Перетренування ML-моделей на нових даних
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -523,12 +523,24 @@ export default function Admin() {
           </CardHeader>
           <CardContent>
             <div className="bg-slate-900 text-green-400 p-4 rounded-lg font-mono text-sm h-48 overflow-y-auto">
-              <div>[{new Date().toLocaleTimeString()}] Адмін панель завантажена</div>
-              <div>[{new Date().toLocaleTimeString()}] Статистика оновлена</div>
-              <div>[{new Date().toLocaleTimeString()}] Система готова до роботи</div>
-              {logs.map((log, index) => (
-                <div key={index}>{log}</div>
-              ))}
+              {activityLogs.length > 0 ? (
+                activityLogs.map((log, index) => (
+                  <div key={index} className={`mb-1 ${
+                    log.includes('Парсинг') || log.includes('парсинг') ? 'text-green-400' :
+                    log.includes('Модель') || log.includes('модель') || log.includes('тренування') ? 'text-purple-400' :
+                    log.includes('Помилка') || log.includes('помилка') ? 'text-red-400' :
+                    'text-blue-400'
+                  }`}>
+                    {log}
+                  </div>
+                ))
+              ) : (
+                <div className="text-slate-500">Журнал активності порожній...</div>
+              )}
+            </div>
+            <div className="mt-3 flex justify-between text-xs text-slate-500">
+              <span>Оновлюється кожні 2 секунди</span>
+              <span>Останніх записів: {activityLogs.length}</span>
             </div>
           </CardContent>
         </Card>
