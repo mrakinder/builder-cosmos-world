@@ -47,7 +47,7 @@ export default function Index() {
     "Кисілевської": ["БАМ"],
     "Коновальця": ["Центр", "Опришівці"],
     "Коцюбинського": ["Залізничний (Вокзал)"],
-    "Купчинського": ["Залізничний (Вокзал)"],
+    "Купчинського": ["Залізничний (��окзал)"],
     "Курінного Чорноти": ["Центр"],
     "Львівська": ["Центр"],
     "Мазепи": ["Хриплин"],
@@ -65,11 +65,11 @@ export default function Index() {
     "Петлюри": ["Хриплин"],
     "Пстрака": ["Софіївка"],
     "Привокзальна площа": ["Залізничний (Вокзал)"],
-    "Промислова": ["Залізничний (Вок��ал)"],
+    "Промислова": ["Залізничний (Вокзал)"],
     "Реміснича": ["Брати"],
     "Республіканська": ["Центр"],
     "Селянська": ["Будівельників"],
-    "Симоненка": ["Позитрон", "Каскад", "Кішлак"],
+    "Симоненка": ["��озитрон", "Каскад", "Кішлак"],
     "Стефаника": ["Залізничний (Вокзал)"],
     "Тарнавського": ["Залізничний (Вокзал)"],
     "Трильовського": ["БАМ"],
@@ -81,7 +81,7 @@ export default function Index() {
     "Черемшини": ["Залізничний (Вокзал)"],
     "Чорновола": ["Центр"],
     "Чубинського": ["Брати"],
-    "24 Серпня": ["Центр", "Каскад"]
+    "24 Серпня": ["Центр", "��аскад"]
   };
 
   // Updated comprehensive districts list sorted alphabetically
@@ -129,13 +129,13 @@ export default function Index() {
   // Enhanced price calculation based on district
   const getDistrictPriceMultiplier = (district: string): number => {
     const districtMultipliers: { [key: string]: number } = {
-      "Ц��нтр": 1.4,
+      "Центр": 1.4,
       "Набережна": 1.3,
       "Каскад": 1.2,
       "Софіївка": 1.1,
       "Пасічна": 1.0,
       "БАМ": 0.95,
-      "Залізничний (Вокзал)": 0.9,
+      "Залізничний (В��кзал)": 0.9,
       "Брати": 0.95,
       "Будівельників": 0.9,
       "Опришівці": 0.85,
@@ -191,8 +191,8 @@ export default function Index() {
         const factorsMap: { [key: string]: string[] } = {
           "Центр": ["Престижний центральний район", "Близькість до історичного центру", "Розвинена інфраструктура"],
           "Набережна": ["Мальовничий вид", "Близькість до набережної", "Тиха локація"],
-          "Каскад": ["Новий сучасний район", "Гарна екологія", "Сучасна забудова"],
-          "Софіївка": ["Зелений рай��н", "Спокійне середовище", "Доступні ціни"],
+          "��аскад": ["Новий сучасний район", "Гарна екологія", "Сучасна забудова"],
+          "Софіївка": ["Зелений район", "Спокійне середовище", "Доступні ціни"],
           "Пасічна": ["Добра транспортна доступність", "Розвинена торгівля", "Центральне розташування"],
           "БАМ": ["Великий житловий масив", "Розвинена соціальна інфраструктура", "Доступне житло"],
           "Залізничний (Вокзал)": ["Близькість до вокзалу", "Транспортний вузол", "Комерційна активність"],
@@ -237,9 +237,9 @@ export default function Index() {
                 <p className="text-sm text-slate-600">XGB Property Intelligence</p>
               </div>
             </div>
-            <nav className="hidden md:flex items-center space-x-6">
-              <a href="#evaluate" className="text-slate-600 hover:text-blue-600 transition-colors">Оціни��и</a>
-              <a href="#analytics" className="text-slate-600 hover:text-blue-600 transition-colors">Аналітика</a>
+            <nav className="flex items-center space-x-3 md:space-x-6">
+              <a href="#evaluate" className="hidden md:block text-slate-600 hover:text-blue-600 transition-colors">Оцінити</a>
+              <a href="#analytics" className="hidden md:block text-slate-600 hover:text-blue-600 transition-colors">Аналітика</a>
               <Button
                 variant="outline"
                 size="sm"
@@ -247,7 +247,8 @@ export default function Index() {
                 className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white"
               >
                 <Settings className="w-4 h-4 mr-1" />
-                Адмін панель
+                <span className="hidden sm:inline">Адмін панель</span>
+                <span className="sm:hidden">Адмін</span>
               </Button>
             </nav>
           </div>
@@ -265,7 +266,7 @@ export default function Index() {
               </span>
             </h1>
             <p className="text-xl text-slate-600 mb-8 leading-relaxed">
-              Використовуйте передові ML-алгоритми XGBoost для точного прогнозування 
+              Використовуйте передові ML-алгоритми XGBoost для точн��го прогнозування 
               ринкової вартості об'єктів нерухомості на основі відкритих даних та експертного аналізу
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -406,7 +407,7 @@ export default function Index() {
                     <label className="text-sm font-medium text-slate-700">Район</label>
                     <Select value={formData.district} onValueChange={(value) => setFormData(prev => ({ ...prev, district: value }))}>
                       <SelectTrigger className="h-12">
-                        <SelectValue placeholder="Оберіть район або введіть вулицю" />
+                        <SelectValue placeholder="Оберіть район або введ��ть вулицю" />
                       </SelectTrigger>
                       <SelectContent>
                         {districts.map((district) => (
@@ -655,7 +656,7 @@ export default function Index() {
             </div>
             
             <div>
-              <h3 className="font-semibold mb-4">Тех��ології</h3>
+              <h3 className="font-semibold mb-4">Технології</h3>
               <ul className="space-y-2 text-sm text-slate-400">
                 <li>Python + Node.js</li>
                 <li>SQLite Database</li>
