@@ -47,7 +47,7 @@ export default function Index() {
     "Кисілевської": ["БАМ"],
     "Коновальця": ["Центр", "Опришівці"],
     "Коцюбинського": ["Залізничний (Вокзал)"],
-    "К��пчинського": ["Залізничний (Вокзал)"],
+    "Купчинського": ["Залізничний (Вокзал)"],
     "Курінного Чорноти": ["Центр"],
     "Львівська": ["Центр"],
     "Мазепи": ["Хриплин"],
@@ -68,7 +68,7 @@ export default function Index() {
     "Промислова": ["Залізничний (Вокзал)"],
     "Реміснича": ["Брати"],
     "Республіканська": ["Центр"],
-    "Селянська": ["Будівел��ників"],
+    "Селянська": ["Будівельників"],
     "Симоненка": ["Позитрон", "Каскад", "Кішлак"],
     "Стефаника": ["Залізничний (Вокзал)"],
     "Тарнавського": ["Залізничний (Вокзал)"],
@@ -99,7 +99,7 @@ export default function Index() {
     "Софіївка",
     "Хриплин",
     "Центр",
-    "Нерозпізнані р��йони"
+    "Нерозпізнані райони"
   ];
 
   const conditions = [
@@ -123,7 +123,7 @@ export default function Index() {
       }
     }
 
-    return "Нерозпізнані райони";
+    return "Нерозпізнані ��айони";
   };
 
   // Enhanced price calculation based on district
@@ -149,23 +149,71 @@ export default function Index() {
   };
 
   const handlePredict = async () => {
-    if (!formData.area || !formData.district || !formData.condition) {
+    if (!formData.area || !formData.condition) {
       return;
     }
 
     setIsLoading(true);
-    
+
     try {
+      // Determine district from street if provided
+      let actualDistrict = formData.district;
+      if (formData.street && !formData.district) {
+        actualDistrict = getDistrictFromStreet(formData.street);
+      }
+
       // Simulate API call to /api/evaluate
       await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const mockPrediction = {
-        price: Math.round((parseFloat(formData.area) * 1200 + Math.random() * 20000) + 50000),
-        confidence: Math.round(85 + Math.random() * 10),
-        factors: ["Престижний район", "Гарна транспортна доступність", "Розвинена інфраструктура"],
-        recommendation: "Ціна відповідає ринковим показникам для даного району"
+
+      const area = parseFloat(formData.area);
+      const basePrice = 1200; // Base price per m²
+      const districtMultiplier = getDistrictPriceMultiplier(actualDistrict || "Нерозпізнані райони");
+
+      // Enhanced price calculation
+      const conditionMultiplier = {
+        "Новобудова": 1.3,
+        "Євроремонт": 1.2,
+        "Гарний стан": 1.0,
+        "Житловий стан": 0.9,
+        "Потребує ремонту": 0.7
+      }[formData.condition] || 1.0;
+
+      const floorMultiplier = formData.floor ?
+        (parseInt(formData.floor) > 1 && parseInt(formData.floor) < 9 ? 1.05 : 0.95) : 1.0;
+
+      const calculatedPrice = Math.round(
+        area * basePrice * districtMultiplier * conditionMultiplier * floorMultiplier +
+        (Math.random() * 10000 - 5000) // Random variance ±5000
+      );
+
+      // Generate district-specific factors
+      const getDistrictFactors = (district: string): string[] => {
+        const factorsMap: { [key: string]: string[] } = {
+          "Центр": ["Престижний центральний район", "Близькість до історичного центру", "Розвинена інфраструктура"],
+          "Набережна": ["Мальовничий вид", "Близькість до набережної", "Тиха локація"],
+          "Каскад": ["Новий сучасний район", "Гарна екологія", "Сучасна забудова"],
+          "Софіївка": ["Зелений район", "Спокійне середовище", "Доступні ціни"],
+          "Пасічна": ["Добра транспортна доступність", "Розвинена торгівля", "Центральне розташування"],
+          "БАМ": ["Великий житловий масив", "Розвинена соціальна інфраструктура", "Доступне житло"],
+          "Залізничний (Вокзал)": ["Близькість до вокзалу", "Транспортний вузол", "Комерційна активність"],
+          "Нерозпізнані райони": ["Потребує уточнення району", "Середні ринкові показники", "Стандартні умови"]
+        };
+        return factorsMap[district] || factorsMap["Нерозпізнані райони"];
       };
-      
+
+      const confidence = actualDistrict === "Нерозпізнані райони" ?
+        Math.round(70 + Math.random() * 10) :
+        Math.round(85 + Math.random() * 10);
+
+      const mockPrediction = {
+        price: calculatedPrice,
+        confidence: confidence,
+        factors: getDistrictFactors(actualDistrict || "Нерозпізнані райони"),
+        recommendation: actualDistrict === "Нерозпізнані райони" ?
+          "Рекомендуємо уточнити район для більш точного прогнозу" :
+          `Ціна відповідає ринковим показникам для району "${actualDistrict}"`
+      };
+
       setPrediction(mockPrediction);
     } catch (error) {
       console.error("Prediction error:", error);
@@ -260,7 +308,7 @@ export default function Index() {
               </CardHeader>
               <CardContent className="text-center">
                 <CardDescription className="text-base leading-relaxed">
-                  Передові алгоритми машинного навчання з високою точністю прогнозування на основі історичних даних
+                  Передові алгоритми машинного навчання з високою точніст�� прогнозування на основі історичних даних
                 </CardDescription>
               </CardContent>
             </Card>
@@ -288,7 +336,7 @@ export default function Index() {
               </CardHeader>
               <CardContent className="text-center">
                 <CardDescription className="text-base leading-relaxed">
-                  Миттєва оцінка через REST API з детальним аналізом факторів та рекомендація��и
+                  Миттєва оцінка через REST API з детальним аналізом факторів та рекомендаціями
                 </CardDescription>
               </CardContent>
             </Card>
@@ -609,7 +657,7 @@ export default function Index() {
                       }}
                     >
                       <Star className="w-5 h-5 mr-2" />
-                      Порівняти моделі
+                      Порівняти мод��лі
                     </Button>
                   </div>
                 </CardContent>
@@ -625,7 +673,7 @@ export default function Index() {
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-slate-900 mb-4">Аналітика та статистика</h2>
-              <p className="text-lg text-slate-600">Детальний аналіз ринку нерух��мості та ефективності моделей</p>
+              <p className="text-lg text-slate-600">Детальний аналіз ринку нерухомості та ефективності моделей</p>
             </div>
 
             <div className="grid md:grid-cols-3 gap-6">
@@ -647,7 +695,7 @@ export default function Index() {
                         alert(`Статистика:\nВсього оголошень: ${data.total}\nВід власників: ${data.from_owners}\nВід агентств: ${data.from_agencies}`);
                       } catch (error) {
                         console.error('Stats error:', error);
-                        alert('Помилк�� отримання статистики');
+                        alert('Помилка отримання статистики');
                       }
                     }}
                   >
@@ -744,7 +792,7 @@ export default function Index() {
               <h3 className="font-semibold mb-4">Моделі</h3>
               <ul className="space-y-2 text-sm text-slate-400">
                 <li>XGBoost ML</li>
-                <li>Поліноміальна регресія</li>
+                <li>Поліноміальна регр��сія</li>
                 <li>Advanced Model</li>
                 <li>Real Data Model</li>
               </ul>
