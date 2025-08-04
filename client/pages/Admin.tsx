@@ -187,7 +187,7 @@ export default function Admin() {
         {/* Dashboard Overview */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-slate-900 mb-2">Панель адміністратора</h1>
-          <p className="text-slate-600">Управління парсингом, моделями та базою даних</p>
+          <p className="text-slate-600">У��равління парсингом, моделями та базою даних</p>
         </div>
 
         {/* Stats Cards */}
@@ -248,22 +248,41 @@ export default function Admin() {
             <CardHeader>
               <CardTitle className="flex items-center text-xl">
                 <Activity className="w-6 h-6 mr-3 text-green-600" />
-                Управління парсинго��
+                Управління парсингом
               </CardTitle>
               <CardDescription>
                 Контроль збору дан��х з OLX
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <div className={`w-3 h-3 rounded-full ${
-                  scrapingStatus === 'running' ? 'bg-green-500 animate-pulse' : 
-                  scrapingStatus === 'error' ? 'bg-red-500' : 'bg-gray-400'
-                }`}></div>
-                <span className="text-sm text-slate-600">
-                  Статус: {scrapingStatus === 'running' ? 'Активний' : 
-                           scrapingStatus === 'error' ? 'Помилка' : 'Неактивний'}
-                </span>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <div className={`w-3 h-3 rounded-full ${
+                    scrapingStatus === 'running' ? 'bg-green-500 animate-pulse' :
+                    scrapingStatus === 'completed' ? 'bg-blue-500' :
+                    scrapingStatus === 'error' ? 'bg-red-500' : 'bg-gray-400'
+                  }`}></div>
+                  <span className="text-sm text-slate-600">
+                    Статус: {scrapingStatus === 'running' ? 'Активний' :
+                             scrapingStatus === 'completed' ? 'Завершено' :
+                             scrapingStatus === 'error' ? 'Помилка' : 'Неактивний'}
+                  </span>
+                </div>
+
+                {scrapingStatus === 'running' && (
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-xs text-slate-600">
+                      <span>Прогрес парсингу</span>
+                      <span>{scrapingProgress}%</span>
+                    </div>
+                    <div className="w-full bg-slate-200 rounded-full h-2">
+                      <div
+                        className="bg-green-600 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${scrapingProgress}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-3">
@@ -401,7 +420,7 @@ export default function Admin() {
                   <li>• XGBoost (Python)</li>
                   <li>• Real Data Model (TS)</li>
                   <li>• Advanced Model (TS)</li>
-                  <li>• Поліноміальна ре��ресія</li>
+                  <li>• Поліноміальна регресія</li>
                 </ul>
               </div>
 
