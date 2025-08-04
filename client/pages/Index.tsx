@@ -91,7 +91,7 @@ export default function Index() {
     "Будівельників",
     "Залізничний (Вокзал)",
     "Каскад",
-    "Кішлак",
+    "К��шлак",
     "Набережна",
     "Опришівці",
     "Пасічна",
@@ -308,7 +308,7 @@ export default function Index() {
               </CardHeader>
               <CardContent className="text-center">
                 <CardDescription className="text-base leading-relaxed">
-                  Передові алгоритми машинного навчання з високою точністю прогнозування на основі історичних даних
+                  Передові алгоритми машинног�� навчання з високою точністю прогнозування на основі історичних даних
                 </CardDescription>
               </CardContent>
             </Card>
@@ -360,7 +360,7 @@ export default function Index() {
                   Характеристики нерухомості
                 </CardTitle>
                 <CardDescription>
-                  Заповніть усі обов'язкові поля для отримання точного прогнозу
+                  Заповніть усі обов'язкові поля для отриман��я точного прогнозу
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -535,10 +535,10 @@ export default function Index() {
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-slate-900 mb-4">Парсинг OLX</h2>
-              <p className="text-lg text-slate-600">Збір нових оголошень про нерухомість з OLX для навчання модел��</p>
+              <p className="text-lg text-slate-600">Збір нових оголошень про нерухомість з OLX для навчання моделі</p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="max-w-2xl mx-auto">
               <Card className="border-0 shadow-lg">
                 <CardHeader>
                   <CardTitle className="flex items-center text-xl">
@@ -561,9 +561,9 @@ export default function Index() {
                     </ul>
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
                     <Button
-                      className="w-full bg-green-600 hover:bg-green-700"
+                      className="bg-green-600 hover:bg-green-700"
                       onClick={async () => {
                         try {
                           const response = await fetch('/api/start-scraping', { method: 'POST' });
@@ -582,12 +582,11 @@ export default function Index() {
                       <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                       </svg>
-                      За��устити парсинг
+                      Запустити парсинг
                     </Button>
 
                     <Button
                       variant="outline"
-                      className="w-full"
                       onClick={async () => {
                         try {
                           const response = await fetch('/api/scraping-status');
@@ -603,89 +602,7 @@ export default function Index() {
                       }}
                     >
                       <BarChart3 className="w-5 h-5 mr-2" />
-                      Статус парсингу
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-0 shadow-lg">
-                <CardHeader>
-                  <CardTitle className="flex items-center text-xl">
-                    <Brain className="w-6 h-6 mr-3 text-blue-600" />
-                    Навчання моделі
-                  </CardTitle>
-                  <CardDescription>
-                    Перетренування ML-моделей на нових даних
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="p-4 bg-blue-50 rounded-lg">
-                    <h4 className="font-medium text-slate-900 mb-2">Доступні моделі:</h4>
-                    <ul className="text-sm text-slate-600 space-y-1">
-                      <li>• XGBoost (Python)</li>
-                      <li>• Real Data Model (TS)</li>
-                      <li>• Advanced Model (TS)</li>
-                      <li>• Поліноміальна регресія</li>
-                    </ul>
-                  </div>
-
-                  <div className="space-y-3">
-                    <Button
-                      className="w-full bg-blue-600 hover:bg-blue-700"
-                      onClick={async () => {
-                        try {
-                          const response = await fetch('/api/retrain-model', { method: 'POST' });
-                          if (response.ok) {
-                            alert('Перетренування базової моделі розпочато!');
-                          }
-                        } catch (error) {
-                          console.error('Retrain error:', error);
-                          alert('Помилка запуску навчання');
-                        }
-                      }}
-                    >
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                      Перетренувати модель
-                    </Button>
-
-                    <Button
-                      variant="outline"
-                      className="w-full"
-                      onClick={async () => {
-                        try {
-                          const response = await fetch('/api/retrain-advanced-model', { method: 'POST' });
-                          if (response.ok) {
-                            alert('Перетренування розширеної моделі розпочато!');
-                          }
-                        } catch (error) {
-                          console.error('Advanced retrain error:', error);
-                          alert('Помилка запуску розширеного навчання');
-                        }
-                      }}
-                    >
-                      <Zap className="w-5 h-5 mr-2" />
-                      Розширена модель
-                    </Button>
-
-                    <Button
-                      variant="outline"
-                      className="w-full"
-                      onClick={async () => {
-                        try {
-                          const response = await fetch('/api/model-comparison');
-                          const data = await response.json();
-                          alert(`Порівняння моделей:\n${JSON.stringify(data, null, 2)}`);
-                        } catch (error) {
-                          console.error('Comparison error:', error);
-                          alert('Помилка порівняння моделей');
-                        }
-                      }}
-                    >
-                      <Star className="w-5 h-5 mr-2" />
-                      Порівняти моделі
+                      Статус
                     </Button>
                   </div>
                 </CardContent>
@@ -802,7 +719,7 @@ export default function Index() {
                 <span className="text-lg font-bold">Glow Nest XGB</span>
               </div>
               <p className="text-slate-400 text-sm">
-                Інноваційна платформа для прогнозування вартості нерухомості в Івано-Франківську
+                Інноваційна платформа для прогнозування вартості нерухомості в Іва��о-Франківську
               </p>
             </div>
             
