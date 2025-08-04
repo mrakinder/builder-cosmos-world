@@ -175,7 +175,7 @@ export default function Statistics() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-orange-600">{stats?.from_agencies || 0}</div>
-              <p className="text-sm text-slate-600 mt-1">{100 - (stats?.owner_percentage || 0)}% від загальної кількості</p>
+              <p className="text-sm text-slate-600 mt-1">{100 - (stats?.owner_percentage || 0)}% від загальної кіль��ості</p>
             </CardContent>
           </Card>
 
@@ -322,25 +322,37 @@ export default function Statistics() {
             <CardDescription>Найпопулярніші вулиці за кількістю оголошень</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {stats?.top_streets?.map((street, index) => (
-                <div key={street.street} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-bold text-indigo-600">{index + 1}</span>
+            {stats?.top_streets && stats.top_streets.length > 0 ? (
+              <div className="space-y-4">
+                {stats.top_streets.map((street, index) => (
+                  <div key={street.street} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
+                        <span className="text-sm font-bold text-indigo-600">{index + 1}</span>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-slate-900">{street.street}</h4>
+                        <p className="text-sm text-slate-600">{street.count} оголошень</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-medium text-slate-900">{street.street}</h4>
-                      <p className="text-sm text-slate-600">{street.count} оголошень</p>
+                    <div className="text-right">
+                      <div className="text-lg font-bold text-green-600">${street.avg_price.toLocaleString()}</div>
+                      <div className="text-sm text-slate-600">середня ціна</div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-lg font-bold text-green-600">${street.avg_price.toLocaleString()}</div>
-                    <div className="text-sm text-slate-600">середня ціна</div>
-                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <div className="text-slate-400 mb-4">
+                  <MapPin className="w-16 h-16 mx-auto mb-4" />
                 </div>
-              ))}
-            </div>
+                <h3 className="text-lg font-medium text-slate-900 mb-2">Немає даних по вулицях</h3>
+                <p className="text-slate-600">
+                  Дані з'являться після парсингу оголошень
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
