@@ -40,11 +40,16 @@ export default function Statistics() {
     try {
       setLoading(true);
 
-      // Load real stats from API
-      const response = await fetch('/api/property-stats');
-      const apiStats = await response.json();
+      // Load real stats and price trends from API
+      const [statsResponse, trendsResponse] = await Promise.all([
+        fetch('/api/property-stats'),
+        fetch('/api/price-trends')
+      ]);
 
-      // Use real data from API with fallbacks for missing data
+      const apiStats = await statsResponse.json();
+      const trendsData = await trendsResponse.json();
+
+      // Use real data from API
       const comprehensiveStats: StatisticsData = {
         total: apiStats.total || 0,
         from_owners: apiStats.from_owners || 0,
@@ -54,15 +59,33 @@ export default function Statistics() {
         owner_percentage: apiStats.owner_percentage || 0,
         districts: apiStats.districts || {},
         price_ranges: apiStats.price_ranges || {},
-        // Generate realistic monthly data based on current total
-        monthly_data: generateMonthlyData(apiStats.total || 0),
-        // Generate top streets from districts data
-        top_streets: generateTopStreets(apiStats.districts || {})
+        // Use real price trends data
+        monthly_data: trendsData.monthly_trends || [],
+        top_streets: trendsData.top_streets || []
       };
 
       setStats(comprehensiveStats);
     } catch (error) {
       console.error('Failed to load statistics:', error);
+      // Fallback to basic data if trends fail
+      try {
+        const response = await fetch('/api/property-stats');
+        const apiStats = await response.json();
+        setStats({
+          total: apiStats.total || 0,
+          from_owners: apiStats.from_owners || 0,
+          from_agencies: apiStats.from_agencies || 0,
+          manual_entries: apiStats.manual_entries || 0,
+          last_scraping: apiStats.last_scraping,
+          owner_percentage: apiStats.owner_percentage || 0,
+          districts: apiStats.districts || {},
+          price_ranges: apiStats.price_ranges || {},
+          monthly_data: [],
+          top_streets: []
+        });
+      } catch (fallbackError) {
+        console.error('Failed to load fallback data:', fallbackError);
+      }
     } finally {
       setLoading(false);
     }
@@ -125,7 +148,7 @@ export default function Statistics() {
                 </div>
                 <div>
                   <h1 className="text-xl font-bold text-slate-900">Glow Nest</h1>
-                  <p className="text-sm text-slate-600">Ста��истика парсингу</p>
+                  <p className="text-sm text-slate-600">Статистика парсингу</p>
                 </div>
               </Link>
             </div>
