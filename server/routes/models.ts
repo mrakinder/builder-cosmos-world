@@ -1,13 +1,32 @@
 import { RequestHandler } from "express";
 
-// Mock model status storage
+// Real model status with progress tracking
 let modelStatus = {
   lastTraining: new Date(),
   isTraining: false,
+  trainingProgress: 0,
+  currentEpoch: 0,
+  totalEpochs: 0,
+  estimatedTimeLeft: 0,
+  trainingType: '',
   accuracy: 0.85,
   r2: 0.78,
   mae: 5420,
   rmse: 8950
+};
+
+// Activity log for model training
+let modelActivityLog: string[] = [
+  `[${new Date().toLocaleTimeString()}] Моделі ініціалізовані`,
+  `[${new Date().toLocaleTimeString()}] Система готова до навчання`
+];
+
+// Add model activity to log
+const addModelActivity = (message: string) => {
+  const timestamp = new Date().toLocaleTimeString();
+  const logEntry = `[${timestamp}] ${message}`;
+  modelActivityLog.unshift(logEntry);
+  if (modelActivityLog.length > 30) modelActivityLog.pop(); // Keep last 30 entries
 };
 
 export const handleRetrainModel: RequestHandler = (req, res) => {
