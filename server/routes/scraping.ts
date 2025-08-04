@@ -41,47 +41,143 @@ const addActivity = (message: string) => {
 
 export const handleStartScraping: RequestHandler = (req, res) => {
   if (scrapingStatus.status === 'running') {
-    return res.status(400).json({ 
-      error: 'Парсинг вже запущено', 
-      status: scrapingStatus.status 
+    return res.status(400).json({
+      error: 'Парсинг вже запущено',
+      status: scrapingStatus.status
     });
   }
 
-  // Start scraping simulation
+  const targetPages = Math.floor(Math.random() * 8) + 3; // 3-10 pages
+
+  // Start scraping with progress tracking
   scrapingStatus = {
     status: 'running',
     startTime: new Date(),
-    totalPages: 0,
+    totalPages: targetPages,
+    currentPage: 0,
     totalItems: 0,
-    lastUpdate: new Date()
+    currentItems: 0,
+    progressPercent: 0,
+    lastUpdate: new Date(),
+    estimatedTimeLeft: targetPages * 30 // 30 seconds per page
   };
 
-  // Simulate scraping process
-  setTimeout(() => {
-    const newItems = Math.floor(Math.random() * 50) + 20; // 20-70 new items
-    const newOwners = Math.floor(newItems * 0.6); // 60% owners
-    const newAgencies = newItems - newOwners;
+  addActivity(`Розпочато парсинг OLX (${targetPages} сторінок)`);
 
-    mockDatabase.totalProperties += newItems;
-    mockDatabase.fromOwners += newOwners;
-    mockDatabase.fromAgencies += newAgencies;
+  // Simulate progressive scraping
+  const scrapePage = (pageNum: number) => {
+    if (pageNum > targetPages) {
+      // Complete scraping
+      scrapingStatus.status = 'completed';
+      scrapingStatus.progressPercent = 100;
+      scrapingStatus.estimatedTimeLeft = 0;
 
-    scrapingStatus = {
-      status: 'completed',
-      startTime: scrapingStatus.startTime,
-      totalPages: Math.floor(Math.random() * 8) + 3, // 3-10 pages
-      totalItems: newItems,
-      lastUpdate: new Date()
-    };
+      addActivity(`Парсинг завершено! Зібрано ${scrapingStatus.totalItems} оголошень з ${targetPages} сторінок`);
+      updateDatabaseStats();
+      return;
+    }
 
-    console.log(`Scraping completed: ${newItems} new properties added`);
-  }, 3000); // Complete after 3 seconds
+    // Simulate page scraping
+    const pageItems = Math.floor(Math.random() * 15) + 5; // 5-20 items per page
 
-  res.json({ 
-    message: 'Парсинг розпочато успішно', 
+    scrapingStatus.currentPage = pageNum;
+    scrapingStatus.currentItems += pageItems;
+    scrapingStatus.totalItems = scrapingStatus.currentItems;
+    scrapingStatus.progressPercent = Math.round((pageNum / targetPages) * 100);
+    scrapingStatus.estimatedTimeLeft = (targetPages - pageNum) * 30;
+    scrapingStatus.lastUpdate = new Date();
+
+    addActivity(`Сторінка ${pageNum}/${targetPages}: знайдено ${pageItems} оголошень`);
+
+    // Add properties to database
+    for (let i = 0; i < pageItems; i++) {
+      addRandomProperty();
+    }
+
+    // Continue to next page
+    setTimeout(() => scrapePage(pageNum + 1), 2000); // 2 seconds per page
+  };
+
+  // Start scraping from page 1
+  setTimeout(() => scrapePage(1), 1000);
+
+  res.json({
+    message: 'Парсинг розпочато успішно',
     status: 'running',
-    estimatedTime: '2-5 хвилин'
+    estimatedTime: `${Math.round(targetPages * 30 / 60)} хвилин`,
+    progress: 0
   });
+};
+
+// Add random property to database with realistic data
+const addRandomProperty = () => {
+  const districts = ["Центр", "Пасічна", "БАМ", "Каскад", "Залізничний (Вокзал)", "Брати", "Софіївка", "Будівельників", "Набережна", "Опришівці", "Нерозпізнані райони"];
+  const district = districts[Math.floor(Math.random() * districts.length)];
+  const isOwner = Math.random() > 0.4; // 60% owners
+  const area = Math.floor(Math.random() * 80) + 30; // 30-110 m²
+  const basePrice = area * (800 + Math.random() * 800); // $800-1600 per m²
+
+  const property = {
+    id: Date.now() + Math.random(),
+    olx_id: `olx_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+    title: `${area}м² квартира в районі ${district}`,
+    price_usd: Math.round(basePrice),
+    area: area,
+    floor: Math.floor(Math.random() * 9) + 1,
+    district: district,
+    description: `Продається квартира площею ${area}м² в районі ${district}`,
+    isOwner: isOwner,
+    url: `https://olx.ua/property/${Math.floor(Math.random() * 100000)}`,
+    created_at: new Date().toISOString(),
+    timestamp: Date.now()
+  };
+
+  propertiesDatabase.properties.push(property);
+  propertiesDatabase.totalProperties++;
+
+  if (isOwner) {
+    propertiesDatabase.fromOwners++;
+  } else {
+    propertiesDatabase.fromAgencies++;
+  }
+};
+
+// Update database statistics
+const updateDatabaseStats = () => {
+  // Reset district and price range counters
+  propertiesDatabase.districts = {};
+  propertiesDatabase.priceRanges = {
+    "До $30,000": 0,
+    "$30,000 - $50,000": 0,
+    "$50,000 - $70,000": 0,
+    "$70,000 - $100,000": 0,
+    "Понад $100,000": 0
+  };
+
+  // Count properties by district and price range
+  propertiesDatabase.properties.forEach(property => {
+    // Count by district
+    if (propertiesDatabase.districts[property.district]) {
+      propertiesDatabase.districts[property.district]++;
+    } else {
+      propertiesDatabase.districts[property.district] = 1;
+    }
+
+    // Count by price range
+    if (property.price_usd < 30000) {
+      propertiesDatabase.priceRanges["До $30,000"]++;
+    } else if (property.price_usd < 50000) {
+      propertiesDatabase.priceRanges["$30,000 - $50,000"]++;
+    } else if (property.price_usd < 70000) {
+      propertiesDatabase.priceRanges["$50,000 - $70,000"]++;
+    } else if (property.price_usd < 100000) {
+      propertiesDatabase.priceRanges["$70,000 - $100,000"]++;
+    } else {
+      propertiesDatabase.priceRanges["Понад $100,000"]++;
+    }
+  });
+
+  addActivity(`Оновлено статистику: ${Object.keys(propertiesDatabase.districts).length} районів, ${propertiesDatabase.totalProperties} оголошень`);
 };
 
 export const handleScrapingStatus: RequestHandler = (req, res) => {
