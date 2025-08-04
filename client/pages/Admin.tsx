@@ -347,6 +347,99 @@ export default function Admin() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Model Training Controls */}
+          <Card className="border-0 shadow-xl">
+            <CardHeader>
+              <CardTitle className="flex items-center text-xl">
+                <Activity className="w-6 h-6 mr-3 text-purple-600" />
+                Навчання моделей
+              </CardTitle>
+              <CardDescription>
+                Перетренування ML-моделей на нових даних
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="p-3 bg-purple-50 rounded-lg">
+                <h4 className="text-sm font-medium text-slate-900 mb-2">Доступні моделі:</h4>
+                <ul className="text-xs text-slate-600 space-y-1">
+                  <li>• XGBoost (Python)</li>
+                  <li>• Real Data Model (TS)</li>
+                  <li>• Advanced Model (TS)</li>
+                  <li>• Поліноміальна регресія</li>
+                </ul>
+              </div>
+
+              <div className="space-y-3">
+                <Button
+                  className="w-full bg-purple-600 hover:bg-purple-700"
+                  onClick={async () => {
+                    try {
+                      const response = await fetch('/api/retrain-model', { method: 'POST' });
+                      const data = await response.json();
+                      if (response.ok) {
+                        alert(`✅ ${data.message}\nОчікуваний час: ${data.estimatedTime}`);
+                      }
+                    } catch (error) {
+                      console.error('Retrain error:', error);
+                      alert('❌ Помилка запуску навчання');
+                    }
+                  }}
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Перетренувати основну модель
+                </Button>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      try {
+                        const response = await fetch('/api/retrain-advanced-model', { method: 'POST' });
+                        const data = await response.json();
+                        if (response.ok) {
+                          alert(`✅ ${data.message}\nОчікуваний час: ${data.estimatedTime}`);
+                        }
+                      } catch (error) {
+                        console.error('Advanced retrain error:', error);
+                        alert('❌ Помилка запуску розширеного навчання');
+                      }
+                    }}
+                  >
+                    Розширена модель
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      try {
+                        const response = await fetch('/api/model-comparison');
+                        const data = await response.json();
+                        alert(`Порівняння моделей:\nНайкраща: ${data.bestModel}\nДата: ${new Date(data.comparisonDate).toLocaleDateString('uk-UA')}`);
+                      } catch (error) {
+                        console.error('Comparison error:', error);
+                        alert('❌ Помилка порівняння моделей');
+                      }
+                    }}
+                  >
+                    Порівняти моделі
+                  </Button>
+                </div>
+              </div>
+
+              <div className="p-3 bg-slate-50 rounded-lg">
+                <h4 className="text-sm font-medium text-slate-900 mb-1">Стан моделей:</h4>
+                <div className="space-y-1 text-xs text-slate-600">
+                  <div>• Основна модель: Готова</div>
+                  <div>• Розширена модель: Готова</div>
+                  <div>• XGBoost: Готова</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Logs Section */}
