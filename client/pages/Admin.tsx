@@ -121,7 +121,7 @@ export default function Admin() {
   };
 
   const handleDeleteManualProperties = async () => {
-    if (!confirm('Видалити всі ручно додані оголошення?')) return;
+    if (!confirm('Видалити всі ручно додані оголоше��ня?')) return;
 
     try {
       const response = await fetch('/api/manual-property/delete-manual-properties', {
@@ -187,7 +187,7 @@ export default function Admin() {
         {/* Dashboard Overview */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-slate-900 mb-2">Панель адміністратора</h1>
-          <p className="text-slate-600">У��равління парсингом, моделями та базою даних</p>
+          <p className="text-slate-600">Управління парсингом, моделями та базою даних</p>
         </div>
 
         {/* Stats Cards */}
@@ -344,7 +344,7 @@ export default function Admin() {
             <CardHeader>
               <CardTitle className="flex items-center text-xl">
                 <Database className="w-6 h-6 mr-3 text-blue-600" />
-                Управління базою даних
+                ��правління базою даних
               </CardTitle>
               <CardDescription>
                 Операції з даними та резервними копіями
@@ -410,7 +410,7 @@ export default function Admin() {
                 Навчання моделей
               </CardTitle>
               <CardDescription>
-                Перетренування ML-моделей на нових даних
+                Перетренування ML-модел��й на нових даних
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -425,14 +425,31 @@ export default function Admin() {
               </div>
 
               <div className="space-y-3">
+                {modelProgress > 0 && modelProgress < 100 && (
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-xs text-slate-600">
+                      <span>Прогрес навчання</span>
+                      <span>{modelProgress}%</span>
+                    </div>
+                    <div className="w-full bg-slate-200 rounded-full h-2">
+                      <div
+                        className="bg-purple-600 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${modelProgress}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
+
                 <Button
                   className="w-full bg-purple-600 hover:bg-purple-700"
+                  disabled={modelProgress > 0 && modelProgress < 100}
                   onClick={async () => {
                     try {
                       const response = await fetch('/api/retrain-model', { method: 'POST' });
                       const data = await response.json();
                       if (response.ok) {
                         alert(`✅ ${data.message}\nОчікуваний час: ${data.estimatedTime}`);
+                        setModelProgress(0); // Reset progress
                       }
                     } catch (error) {
                       console.error('Retrain error:', error);
@@ -443,7 +460,7 @@ export default function Admin() {
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
-                  Перетренувати основну модель
+                  {modelProgress > 0 && modelProgress < 100 ? 'Тренування...' : 'Перетренувати основну модель'}
                 </Button>
 
                 <div className="grid grid-cols-2 gap-2">
