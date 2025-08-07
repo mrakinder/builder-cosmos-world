@@ -8,7 +8,11 @@ import {
   handlePropertyStats,
   handleStopScraping,
   handleActivityLog,
-  handlePriceTrends
+  handlePriceTrends,
+  handleGetProperties,
+  handleGetStreetMap,
+  handleAddStreet,
+  handleCheckPropertyUpdates
 } from "./routes/scraping";
 import {
   handleRetrainModel,
