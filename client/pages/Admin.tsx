@@ -229,7 +229,7 @@ export default function Admin() {
                 </div>
                 <div>
                   <h1 className="text-xl font-bold text-slate-900">Glow Nest</h1>
-                  <p className="text-sm text-slate-600">Адмін панель</p>
+                  <p className="text-sm text-slate-600">Адмін пан��ль</p>
                 </div>
               </Link>
             </div>
@@ -502,14 +502,16 @@ export default function Admin() {
               </div>
 
               <div className="space-y-3">
-                <Button 
+                <Button
                   className="w-full bg-green-600 hover:bg-green-700"
+                  disabled={scrapingStatus === 'running'}
                   onClick={async () => {
                     try {
                       const response = await fetch('/api/start-scraping', { method: 'POST' });
+                      const data = await response.json();
                       if (response.ok) {
                         setScrapingStatus('running');
-                        alert('Парсинг розпочато!');
+                        alert(`${data.message}\nОчікуваний час: ${data.estimatedTime}`);
                       }
                     } catch (error) {
                       console.error('Scraping error:', error);
@@ -517,7 +519,7 @@ export default function Admin() {
                   }}
                 >
                   <Activity className="w-4 h-4 mr-2" />
-                  Запустити повний парсинг
+                  {scrapingStatus === 'running' ? 'Парсинг активний...' : 'Запустити парсинг'}
                 </Button>
 
                 <div className="grid grid-cols-2 gap-2">
@@ -538,7 +540,7 @@ export default function Admin() {
                     }}
                   >
                     <AlertCircle className="w-4 h-4 mr-1" />
-                    Зупинити
+                    Зуп��нити
                   </Button>
                 </div>
               </div>
@@ -612,6 +614,26 @@ export default function Admin() {
                     onClick={loadStats}
                   >
                     Оновити дані
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full justify-start"
+                    onClick={async () => {
+                      try {
+                        const response = await fetch('/api/check-property-updates', { method: 'POST' });
+                        const data = await response.json();
+                        alert(`Перевірено ${data.totalChecked} оголошень\nЗнайдено ${data.updatesFound} оновлень цін`);
+                        if (data.updatesFound > 0) {
+                          loadStats();
+                        }
+                      } catch (error) {
+                        console.error('Update check failed:', error);
+                        alert('Помилка перевірки онов��ень');
+                      }
+                    }}
+                  >
+                    Перевірити оновлення цін
                   </Button>
                 </div>
               </div>
@@ -692,7 +714,7 @@ export default function Admin() {
                         }
                       } catch (error) {
                         console.error('Advanced retrain error:', error);
-                        alert('❌ Помилка запуску розширеного навчання');
+                        alert('❌ Помилка запус��у розширеного навчання');
                       }
                     }}
                   >
