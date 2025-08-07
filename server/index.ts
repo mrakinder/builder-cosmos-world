@@ -51,6 +51,12 @@ export function createServer() {
   app.get("/api/activity-log", handleActivityLog);
   app.get("/api/price-trends", handlePriceTrends);
 
+  // Property and street management routes
+  app.get("/api/properties", handleGetProperties);
+  app.get("/api/street-map", handleGetStreetMap);
+  app.post("/api/add-street", handleAddStreet);
+  app.post("/api/check-property-updates", handleCheckPropertyUpdates);
+
   // Model routes
   app.post("/api/retrain-model", handleRetrainModel);
   app.post("/api/retrain-advanced-model", handleRetrainAdvancedModel);
