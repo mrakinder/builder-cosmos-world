@@ -4,18 +4,23 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  Building, 
-  ArrowLeft, 
-  Database, 
-  Trash2, 
-  Download, 
-  Upload, 
-  Settings, 
+import {
+  Building,
+  ArrowLeft,
+  Database,
+  Trash2,
+  Download,
+  Upload,
+  Settings,
   Activity,
   AlertCircle,
   CheckCircle,
-  Clock
+  Clock,
+  MapPin,
+  Plus,
+  Eye,
+  Edit,
+  Save
 } from "lucide-react";
 
 export default function Admin() {
@@ -32,12 +37,19 @@ export default function Admin() {
   const [modelProgress, setModelProgress] = useState(0);
   const [logs, setLogs] = useState([]);
   const [activityLogs, setActivityLogs] = useState<string[]>([]);
+  const [properties, setProperties] = useState([]);
+  const [showProperties, setShowProperties] = useState(false);
+  const [showStreetManager, setShowStreetManager] = useState(false);
+  const [newStreet, setNewStreet] = useState("");
+  const [selectedDistrict, setSelectedDistrict] = useState("");
+  const [streetToDistrictMap, setStreetToDistrictMap] = useState({});
 
   useEffect(() => {
     loadStats();
     loadScrapingStatus();
     loadModelStatus();
     loadActivityLogs();
+    loadStreetMap();
 
     // Set up real-time monitoring
     const interval = setInterval(() => {
@@ -87,6 +99,54 @@ export default function Admin() {
       setActivityLogs(data.logs || []);
     } catch (error) {
       console.error('Failed to load activity logs:', error);
+    }
+  };
+
+  const loadProperties = async () => {
+    try {
+      const response = await fetch('/api/properties');
+      const data = await response.json();
+      setProperties(data.properties || []);
+    } catch (error) {
+      console.error('Failed to load properties:', error);
+    }
+  };
+
+  const loadStreetMap = async () => {
+    try {
+      const response = await fetch('/api/street-map');
+      const data = await response.json();
+      setStreetToDistrictMap(data.streetMap || {});
+    } catch (error) {
+      console.error('Failed to load street map:', error);
+    }
+  };
+
+  const handleAddStreet = async () => {
+    if (!newStreet.trim() || !selectedDistrict) {
+      alert('Будь ласка, введіть назву вулиці та оберіть район');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/add-street', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          street: newStreet.trim(),
+          district: selectedDistrict
+        })
+      });
+
+      if (response.ok) {
+        alert(`Вулицю "${newStreet}" додано до району "${selectedDistrict}"`);
+        setNewStreet('');
+        setSelectedDistrict('');
+        loadStreetMap();
+      }
+    } catch (error) {
+      console.error('Failed to add street:', error);
+      alert('Помилка додавання вулиці');
     }
   };
 
@@ -240,6 +300,162 @@ export default function Admin() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Navigation Buttons */}
+        <div className="flex flex-wrap gap-4 mb-8">
+          <Button
+            variant={showProperties ? "default" : "outline"}
+            onClick={() => {
+              setShowProperties(!showProperties);
+              if (!showProperties) {
+                loadProperties();
+                setShowStreetManager(false);
+              }
+            }}
+          >
+            <Eye className="w-4 h-4 mr-2" />
+            {showProperties ? 'Сховати' : 'Переглянути'} оголошення
+          </Button>
+          <Button
+            variant={showStreetManager ? "default" : "outline"}
+            onClick={() => {
+              setShowStreetManager(!showStreetManager);
+              if (!showStreetManager) {
+                setShowProperties(false);
+              }
+            }}
+          >
+            <MapPin className="w-4 h-4 mr-2" />
+            {showStreetManager ? 'Сховати' : 'Управління'} вулицями
+          </Button>
+        </div>
+
+        {/* Street Manager */}
+        {showStreetManager && (
+          <Card className="border-0 shadow-xl mb-8">
+            <CardHeader>
+              <CardTitle className="flex items-center text-xl">
+                <MapPin className="w-6 h-6 mr-3 text-green-600" />
+                Управління вулицями та районами
+              </CardTitle>
+              <CardDescription>
+                Додавання нових вулиць до існуючих районів
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 mb-2 block">
+                      Назва вулиці
+                    </label>
+                    <Input
+                      placeholder="Введіть назву вулиці..."
+                      value={newStreet}
+                      onChange={(e) => setNewStreet(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 mb-2 block">
+                      Район
+                    </label>
+                    <Select value={selectedDistrict} onValueChange={setSelectedDistrict}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Оберіть район" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Центр">Центр</SelectItem>
+                        <SelectItem value="Пасічна">Пасічна</SelectItem>
+                        <SelectItem value="БАМ">БАМ</SelectItem>
+                        <SelectItem value="Каскад">Каскад</SelectItem>
+                        <SelectItem value="Залізничний (Вокзал)">Залізничний (Вокзал)</SelectItem>
+                        <SelectItem value="Брати">Брати</SelectItem>
+                        <SelectItem value="Софіївка">Софіївка</SelectItem>
+                        <SelectItem value="Будівельників">Будівельників</SelectItem>
+                        <SelectItem value="Набережна">Набережна</SelectItem>
+                        <SelectItem value="Опришівці">Опришівці</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button
+                    onClick={handleAddStreet}
+                    className="w-full bg-green-600 hover:bg-green-700"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Додати вулицю
+                  </Button>
+                </div>
+                <div className="bg-slate-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-slate-900 mb-3">Поточні вулиці:</h4>
+                  <div className="max-h-64 overflow-y-auto space-y-2">
+                    {Object.entries(streetToDistrictMap).map(([street, district]) => (
+                      <div key={street} className="flex justify-between items-center p-2 bg-white rounded border text-sm">
+                        <span className="font-medium">{street}</span>
+                        <span className="text-slate-600 text-xs bg-slate-100 px-2 py-1 rounded">{district}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Properties Viewer */}
+        {showProperties && (
+          <Card className="border-0 shadow-xl mb-8">
+            <CardHeader>
+              <CardTitle className="flex items-center text-xl">
+                <Eye className="w-6 h-6 mr-3 text-blue-600" />
+                Спаршені оголошення ({properties.length})
+              </CardTitle>
+              <CardDescription>
+                Перегляд усіх зібраних оголошень з OLX
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="max-h-96 overflow-y-auto">
+                {properties.length > 0 ? (
+                  <div className="space-y-3">
+                    {properties.map((property: any, index) => (
+                      <div key={property.id || index} className="border rounded-lg p-4 bg-slate-50">
+                        <div className="grid md:grid-cols-3 gap-4">
+                          <div>
+                            <h4 className="font-medium text-slate-900 mb-1">{property.title}</h4>
+                            <p className="text-sm text-slate-600">{property.district}</p>
+                            <p className="text-xs text-slate-500 mt-1">
+                              {property.isOwner ? '👤 Власник' : '🏢 Агентство'}
+                            </p>
+                          </div>
+                          <div className="text-sm">
+                            <p><span className="font-medium">Ціна:</span> ${property.price_usd?.toLocaleString()}</p>
+                            <p><span className="font-medium">Площа:</span> {property.area}м²</p>
+                            <p><span className="font-medium">Поверх:</span> {property.floor}</p>
+                          </div>
+                          <div className="text-xs text-slate-500">
+                            <p><span className="font-medium">ID:</span> {property.olx_id}</p>
+                            <p><span className="font-medium">Додано:</span> {new Date(property.created_at).toLocaleDateString('uk-UA')}</p>
+                            {property.url && (
+                              <a href={property.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                                Переглянути на OLX
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-slate-500">
+                    <Database className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                    <p>Немає оголошень для перегляду</p>
+                    <p className="text-sm">Запустіть парсинг для збору даних</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Control Panels */}
         <div className="grid lg:grid-cols-3 gap-8">
