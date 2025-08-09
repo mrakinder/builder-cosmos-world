@@ -16,10 +16,10 @@ const getDatabase = () => {
 
 // Create tables if they don't exist
 export const initializeDatabase = () => {
-  const db = getDatabase();
-
+  const database = getDatabase();
+  
   // Properties table
-  db.exec(`
+  database.exec(`
     CREATE TABLE IF NOT EXISTS properties (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       olx_id TEXT UNIQUE NOT NULL,
@@ -40,7 +40,7 @@ export const initializeDatabase = () => {
   `);
 
   // Price history table
-  db.exec(`
+  database.exec(`
     CREATE TABLE IF NOT EXISTS price_history (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       property_id INTEGER NOT NULL,
@@ -52,7 +52,7 @@ export const initializeDatabase = () => {
   `);
 
   // Street to district mapping table
-  db.exec(`
+  database.exec(`
     CREATE TABLE IF NOT EXISTS street_districts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       street TEXT UNIQUE NOT NULL,
@@ -62,7 +62,7 @@ export const initializeDatabase = () => {
   `);
 
   // Scraping state table
-  db.exec(`
+  database.exec(`
     CREATE TABLE IF NOT EXISTS scraping_state (
       id INTEGER PRIMARY KEY,
       last_page INTEGER DEFAULT 0,
@@ -75,7 +75,7 @@ export const initializeDatabase = () => {
   `);
 
   // Activity log table
-  db.exec(`
+  database.exec(`
     CREATE TABLE IF NOT EXISTS activity_log (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       message TEXT NOT NULL,
@@ -85,10 +85,10 @@ export const initializeDatabase = () => {
   `);
 
   // Initialize default street mappings if empty
-  const streetCount = db.prepare('SELECT COUNT(*) as count FROM street_districts').get() as { count: number };
+  const streetCount = database.prepare('SELECT COUNT(*) as count FROM street_districts').get() as { count: number };
   
   if (streetCount.count === 0) {
-    const insertStreet = db.prepare('INSERT INTO street_districts (street, district) VALUES (?, ?)');
+    const insertStreet = database.prepare('INSERT INTO street_districts (street, district) VALUES (?, ?)');
     
     const defaultStreets = [
       // Center
@@ -111,7 +111,7 @@ export const initializeDatabase = () => {
       
       // Kaskad
       ["24 Серпня", "Каскад"],
-      ["Каскадна", "Каскад"],
+      ["Каскадна", "Кас��ад"],
       ["Короля Данила", "Каскад"],
       
       // Railway (Vokzal)
@@ -132,7 +132,7 @@ export const initializeDatabase = () => {
       // Budivelnikiv
       ["Селянська", "Будівельників"],
       ["Будівельників", "Будівельників"],
-      ["Промислова", "Будіве��ьників"],
+      ["Промислова", "Будівельників"],
       
       // Naberezhna
       ["Набережна ім. В. Стефаника", "Набережна"],
@@ -151,85 +151,113 @@ export const initializeDatabase = () => {
   }
 
   // Initialize scraping state if empty
-  const stateCount = db.prepare('SELECT COUNT(*) as count FROM scraping_state').get() as { count: number };
+  const stateCount = database.prepare('SELECT COUNT(*) as count FROM scraping_state').get() as { count: number };
   if (stateCount.count === 0) {
-    db.prepare('INSERT INTO scraping_state (id, status) VALUES (1, ?)').run('idle');
+    database.prepare('INSERT INTO scraping_state (id, status) VALUES (1, ?)').run('idle');
   }
 };
 
-// Database operations
+// Database operations with lazy initialization
 export const dbOperations = {
   // Properties
-  insertProperty: db.prepare(`
-    INSERT OR REPLACE INTO properties 
-    (olx_id, title, price_usd, area, rooms, floor, street, district, description, is_owner, url, last_updated)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-  `),
+  get insertProperty() {
+    return getDatabase().prepare(`
+      INSERT OR REPLACE INTO properties 
+      (olx_id, title, price_usd, area, rooms, floor, street, district, description, is_owner, url, last_updated)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+    `);
+  },
   
-  getAllProperties: db.prepare('SELECT * FROM properties WHERE is_active = 1 ORDER BY created_at DESC'),
+  get getAllProperties() {
+    return getDatabase().prepare('SELECT * FROM properties WHERE is_active = 1 ORDER BY created_at DESC');
+  },
   
-  getPropertyByOlxId: db.prepare('SELECT * FROM properties WHERE olx_id = ? AND is_active = 1'),
+  get getPropertyByOlxId() {
+    return getDatabase().prepare('SELECT * FROM properties WHERE olx_id = ? AND is_active = 1');
+  },
   
-  updatePropertyPrice: db.prepare(`
-    UPDATE properties 
-    SET price_usd = ?, last_updated = datetime('now') 
-    WHERE olx_id = ?
-  `),
+  get updatePropertyPrice() {
+    return getDatabase().prepare(`
+      UPDATE properties 
+      SET price_usd = ?, last_updated = datetime('now') 
+      WHERE olx_id = ?
+    `);
+  },
   
   // Price history
-  insertPriceHistory: db.prepare(`
-    INSERT INTO price_history (property_id, olx_id, price_usd)
-    VALUES (?, ?, ?)
-  `),
+  get insertPriceHistory() {
+    return getDatabase().prepare(`
+      INSERT INTO price_history (property_id, olx_id, price_usd)
+      VALUES (?, ?, ?)
+    `);
+  },
   
   // Street districts
-  getAllStreetDistricts: db.prepare('SELECT * FROM street_districts ORDER BY district, street'),
+  get getAllStreetDistricts() {
+    return getDatabase().prepare('SELECT * FROM street_districts ORDER BY district, street');
+  },
   
-  insertStreetDistrict: db.prepare(`
-    INSERT INTO street_districts (street, district) VALUES (?, ?)
-  `),
+  get insertStreetDistrict() {
+    return getDatabase().prepare(`
+      INSERT INTO street_districts (street, district) VALUES (?, ?)
+    `);
+  },
   
-  getDistrictByStreet: db.prepare('SELECT district FROM street_districts WHERE street = ?'),
+  get getDistrictByStreet() {
+    return getDatabase().prepare('SELECT district FROM street_districts WHERE street = ?');
+  },
   
   // Scraping state
-  getScrapingState: db.prepare('SELECT * FROM scraping_state WHERE id = 1'),
+  get getScrapingState() {
+    return getDatabase().prepare('SELECT * FROM scraping_state WHERE id = 1');
+  },
   
-  updateScrapingState: db.prepare(`
-    UPDATE scraping_state 
-    SET last_page = ?, last_url = ?, last_processed_id = ?, total_processed = ?, last_run = datetime('now'), status = ?
-    WHERE id = 1
-  `),
+  get updateScrapingState() {
+    return getDatabase().prepare(`
+      UPDATE scraping_state 
+      SET last_page = ?, last_url = ?, last_processed_id = ?, total_processed = ?, last_run = datetime('now'), status = ?
+      WHERE id = 1
+    `);
+  },
   
   // Activity log
-  insertActivity: db.prepare(`
-    INSERT INTO activity_log (message, type) VALUES (?, ?)
-  `),
+  get insertActivity() {
+    return getDatabase().prepare(`
+      INSERT INTO activity_log (message, type) VALUES (?, ?)
+    `);
+  },
   
-  getRecentActivities: db.prepare('SELECT * FROM activity_log ORDER BY timestamp DESC LIMIT ?'),
+  get getRecentActivities() {
+    return getDatabase().prepare('SELECT * FROM activity_log ORDER BY timestamp DESC LIMIT ?');
+  },
   
   // Statistics
-  getPropertyStats: db.prepare(`
-    SELECT 
-      COUNT(*) as total_properties,
-      SUM(CASE WHEN is_owner = 1 THEN 1 ELSE 0 END) as from_owners,
-      SUM(CASE WHEN is_owner = 0 THEN 1 ELSE 0 END) as from_agencies,
-      AVG(price_usd) as avg_price,
-      MAX(last_updated) as last_update
-    FROM properties 
-    WHERE is_active = 1
-  `),
+  get getPropertyStats() {
+    return getDatabase().prepare(`
+      SELECT 
+        COUNT(*) as total_properties,
+        SUM(CASE WHEN is_owner = 1 THEN 1 ELSE 0 END) as from_owners,
+        SUM(CASE WHEN is_owner = 0 THEN 1 ELSE 0 END) as from_agencies,
+        AVG(price_usd) as avg_price,
+        MAX(last_updated) as last_update
+      FROM properties 
+      WHERE is_active = 1
+    `);
+  },
   
-  getDistrictStats: db.prepare(`
-    SELECT 
-      district,
-      COUNT(*) as count,
-      AVG(price_usd) as avg_price,
-      AVG(area) as avg_area
-    FROM properties 
-    WHERE is_active = 1 
-    GROUP BY district 
-    ORDER BY count DESC
-  `)
+  get getDistrictStats() {
+    return getDatabase().prepare(`
+      SELECT 
+        district,
+        COUNT(*) as count,
+        AVG(price_usd) as avg_price,
+        AVG(area) as avg_area
+      FROM properties 
+      WHERE is_active = 1 
+      GROUP BY district 
+      ORDER BY count DESC
+    `);
+  }
 };
 
-export default db;
+export default getDatabase;
