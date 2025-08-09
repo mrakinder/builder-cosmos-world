@@ -466,25 +466,77 @@ async def stream_events():
     async def event_stream():
         try:
             last_event_id = 0
-            
+
             while True:
                 events = event_logger.get_recent_events(since_id=last_event_id, limit=10)
-                
+
                 for event in events:
                     data = json.dumps(event)
                     yield f"data: {data}\n\n"
                     last_event_id = max(last_event_id, event.get('id', 0))
-                
+
                 await asyncio.sleep(1)  # Check for new events every second
-                
+
         except Exception as e:
             error_data = json.dumps({"error": str(e)})
             yield f"data: {error_data}\n\n"
-    
+
     return StreamingResponse(
         event_stream(),
         media_type="text/plain",
         headers={"Cache-Control": "no-cache", "Connection": "keep-alive"}
+    )
+
+
+# Scraper Progress SSE Endpoint
+@app.get("/scraper/progress/stream")
+async def stream_scraper_progress():
+    """Server-Sent Events stream for real-time scraper progress"""
+    async def progress_stream():
+        try:
+            while True:
+                scraper_status = await task_manager.get_scraping_status()
+
+                # Format progress data for SSE
+                progress_data = {
+                    "type": "progress",
+                    "module": "scraper",
+                    "status": scraper_status.get('status', 'idle'),
+                    "progress": scraper_status.get('progress', 0),
+                    "current_page": scraper_status.get('current_page', 0),
+                    "total_pages": scraper_status.get('max_pages', 0),
+                    "current_items": scraper_status.get('current_items', 0),
+                    "total_items": scraper_status.get('total_items', 0),
+                    "message": scraper_status.get('message', ''),
+                    "timestamp": time.time()
+                }
+
+                data = json.dumps(progress_data)
+                yield f"data: {data}\n\n"
+
+                # Stop streaming if completed or failed
+                if scraper_status.get('status') in ['completed', 'error', 'cancelled']:
+                    break
+
+                await asyncio.sleep(1)  # Update every second
+
+        except Exception as e:
+            error_data = json.dumps({
+                "type": "error",
+                "module": "scraper",
+                "error": str(e)
+            })
+            yield f"data: {error_data}\n\n"
+
+    return StreamingResponse(
+        progress_stream(),
+        media_type="text/plain",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "Cache-Control"
+        }
     )
 
 
@@ -538,11 +590,38 @@ async def get_property_statistics():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# CORS preflight for SSE
+@app.options("/scraper/progress/stream")
+async def scraper_progress_stream_options():
+    """Handle CORS preflight for scraper progress stream"""
+    return JSONResponse(
+        content={"message": "OK"},
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, OPTIONS",
+            "Access-Control-Allow-Headers": "Cache-Control, Content-Type"
+        }
+    )
+
+
+@app.options("/events/stream")
+async def events_stream_options():
+    """Handle CORS preflight for events stream"""
+    return JSONResponse(
+        content={"message": "OK"},
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, OPTIONS",
+            "Access-Control-Allow-Headers": "Cache-Control, Content-Type"
+        }
+    )
+
+
 # Run server
 def run_server(host: str = "0.0.0.0", port: int = 8080, debug: bool = True):
     """Run the FastAPI server"""
     logger.info(f"🌐 Starting API server on {host}:{port}")
-    
+
     uvicorn.run(
         "cli.server:app",
         host=host,
