@@ -374,7 +374,7 @@ export const handleAddStreet: RequestHandler = (req, res) => {
   
   if (!street || !district) {
     return res.status(400).json({
-      error: 'Потрібні назва вулиці та район'
+      error: 'Потрібні назва вулиці ��а район'
     });
   }
 
@@ -402,6 +402,8 @@ export const handleAddStreet: RequestHandler = (req, res) => {
 
 // Check for property updates (price changes)
 export const handleCheckPropertyUpdates: RequestHandler = (req, res) => {
+  ensureDatabase();
+
   try {
     // Get all properties from database
     const properties = dbOperations.getAllProperties.all() as any[];
