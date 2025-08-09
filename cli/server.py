@@ -121,15 +121,20 @@ async def health_check():
 # Module 1: Botasaurus Scraper Endpoints
 @app.post("/scraper/start")
 async def start_scraping(request: ScrapingRequest, background_tasks: BackgroundTasks):
-    """Start Botasaurus OLX scraping - returns JSON-only response"""
+    """Start Botasaurus OLX scraping - GUARANTEED JSON-only response, never empty body"""
+
+    # ENTRY LOG for diagnostics
+    logger.info(f"🚪 HIT /scraper/start - listing_type={request.listing_type}, max_pages={request.max_pages}, delay_ms={request.delay_ms}")
+
     try:
         # Check if scraper is already running
         current_status = await task_manager.get_scraping_status()
         if current_status.get('status') == 'running':
+            logger.info("🔁 RETURN /scraper/start 409 - already running")
             return JSONResponse(
-                {"ok": False, "error": "Scraper already running"},
+                {"ok": False, "error": "Scraper already running", "status": "running"},
                 status_code=409,
-                headers={"Content-Type": "application/json"}
+                headers={"Content-Type": "application/json", "Cache-Control": "no-cache"}
             )
 
         logger.info(f"🕷️ Starting scraper: {request.listing_type}, {request.max_pages} pages")
