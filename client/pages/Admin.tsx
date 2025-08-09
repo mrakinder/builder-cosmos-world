@@ -49,7 +49,8 @@ export default function Admin() {
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [streetToDistrictMap, setStreetToDistrictMap] = useState({});
   const [mlModuleStatus, setMLModuleStatus] = useState({
-    ml_trained: false,
+    botasaurus_ready: false,
+    lightautoml_trained: false,
     prophet_ready: false,
     streamlit_running: false,
     superset_running: false
@@ -713,7 +714,7 @@ export default function Admin() {
               </CardHeader>
               <CardContent>
                 <div className="bg-slate-900 text-green-400 p-4 rounded-lg font-mono text-sm">
-                  <div className="mb-2 text-slate-300"># Доступні команди:</div>
+                  <div className="mb-2 text-slate-300"># Досту��ні команди:</div>
                   <div className="space-y-1 text-xs">
                     <div><span className="text-blue-400">python property_monitor_cli.py</span> <span className="text-yellow-400">scraper</span> start</div>
                     <div><span className="text-blue-400">python property_monitor_cli.py</span> <span className="text-yellow-400">ml</span> train</div>
