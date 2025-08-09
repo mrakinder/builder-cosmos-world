@@ -1,340 +1,342 @@
 """
-Utility functions for the OLX scraper
-====================================
-
-Helper functions for delays, retries, data normalization, and other utilities.
+Utility functions for OLX scraper
 """
 
 import re
-import time
-import random
 import logging
-from typing import Optional, List, Any, Union
-from functools import wraps
-from fake_useragent import UserAgent
-from selenium.webdriver.remote.webelement import WebElement
-from selenium.common.exceptions import WebDriverException
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+from typing import Optional, Tuple
+from datetime import datetime
+import os
 
-logger = logging.getLogger(__name__)
 
-class UserAgentRotator:
-    """Manages user agent rotation for requests"""
+class Logger:
+    """Custom logger for scraper"""
     
-    def __init__(self):
-        self.ua = UserAgent()
-        self.used_agents = []
-        self.max_used = 10  # Keep track of last 10 used agents
+    def __init__(self, log_file: str, level: str = "INFO"):
+        self.logger = logging.getLogger("botasaurus_scraper")
+        self.logger.setLevel(getattr(logging, level.upper()))
+        
+        # Create logs directory if not exists
+        os.makedirs(os.path.dirname(log_file), exist_ok=True)
+        
+        # File handler
+        file_handler = logging.FileHandler(log_file, encoding='utf-8')
+        file_handler.setLevel(logging.DEBUG)
+        
+        # Console handler
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(getattr(logging, level.upper()))
+        
+        # Formatter
+        formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        )
+        file_handler.setFormatter(formatter)
+        console_handler.setFormatter(formatter)
+        
+        self.logger.addHandler(file_handler)
+        self.logger.addHandler(console_handler)
     
-    def get_random_agent(self) -> str:
-        """Get a random user agent"""
-        try:
-            agent = self.ua.random
-            
-            # Avoid recently used agents
-            attempts = 0
-            while agent in self.used_agents and attempts < 5:
-                agent = self.ua.random
-                attempts += 1
-            
-            # Update used agents list
-            self.used_agents.append(agent)
-            if len(self.used_agents) > self.max_used:
-                self.used_agents.pop(0)
-            
-            return agent
-        except Exception:
-            # Fallback user agent
-            return ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                   "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+    def info(self, message: str):
+        self.logger.info(message)
     
-    def get_chrome_agent(self) -> str:
-        """Get a Chrome user agent specifically"""
-        try:
-            return self.ua.chrome
-        except Exception:
-            return self.get_random_agent()
+    def error(self, message: str):
+        self.logger.error(message)
+    
+    def warning(self, message: str):
+        self.logger.warning(message)
+    
+    def debug(self, message: str):
+        self.logger.debug(message)
 
-def human_delay(min_seconds: float = 1.5, max_seconds: float = 4.0) -> None:
+
+def extract_price(price_text: str) -> Tuple[Optional[float], str]:
     """
-    Create a human-like delay with random timing
+    Extract price and currency from price text
     
     Args:
-        min_seconds: Minimum delay time
-        max_seconds: Maximum delay time
-    """
-    delay = random.uniform(min_seconds, max_seconds)
-    logger.debug(f"Waiting {delay:.2f} seconds...")
-    time.sleep(delay)
-
-def progressive_delay(attempt: int, base_delay: float = 2.0, max_delay: float = 30.0) -> None:
-    """
-    Create progressive delay for retries (exponential backoff)
-    
-    Args:
-        attempt: Current attempt number (0-based)
-        base_delay: Base delay time
-        max_delay: Maximum delay time
-    """
-    delay = min(base_delay * (2 ** attempt), max_delay)
-    # Add some randomness
-    delay *= random.uniform(0.8, 1.2)
-    logger.debug(f"Progressive delay (attempt {attempt + 1}): {delay:.2f} seconds")
-    time.sleep(delay)
-
-def normalize_number(text: str) -> Optional[float]:
-    """
-    Extract and normalize a number from text
-    
-    Args:
-        text: Text containing a number
+        price_text: Raw price text from OLX
         
     Returns:
-        Normalized float number or None
+        Tuple[Optional[float], str]: (price_value, currency)
     """
-    if not text:
-        return None
+    if not price_text:
+        return None, ""
     
-    # Remove spaces and common separators
-    cleaned = re.sub(r'[^\d,.]', '', str(text))
+    # Clean text
+    price_text = price_text.replace(',', '').replace(' ', '')
     
-    if not cleaned:
-        return None
+    # Extract number
+    price_match = re.search(r'(\d+(?:\.\d+)?)', price_text)
+    if not price_match:
+        return None, ""
     
-    # Handle Ukrainian decimal notation (comma as decimal separator)
-    if ',' in cleaned and '.' in cleaned:
-        # If both comma and dot, assume dot is thousand separator
-        cleaned = cleaned.replace('.', '').replace(',', '.')
-    elif ',' in cleaned:
-        # Only comma - treat as decimal separator
-        cleaned = cleaned.replace(',', '.')
+    price_value = float(price_match.group(1))
     
-    try:
-        return float(cleaned)
-    except ValueError:
-        logger.warning(f"Could not normalize number: {text}")
-        return None
-
-def extract_currency(text: str) -> str:
-    """
-    Extract currency from price text
-    
-    Args:
-        text: Text containing price and currency
-        
-    Returns:
-        Currency code (USD, UAH, EUR, etc.)
-    """
-    if not text:
-        return 'USD'
-    
-    text_lower = text.lower()
-    
-    # Ukrainian hryvnia
-    if any(symbol in text_lower for symbol in ['грн', '₴', 'uah', 'гривн']):
-        return 'UAH'
-    
-    # US Dollar  
-    if any(symbol in text_lower for symbol in ['$', 'usd', 'долар', 'dollar']):
-        return 'USD'
-    
-    # Euro
-    if any(symbol in text_lower for symbol in ['€', 'eur', 'евро', 'euro']):
-        return 'EUR'
-    
-    # Default to USD if not specified
-    return 'USD'
-
-def safe_extract_text(element: Union[WebElement, None]) -> str:
-    """
-    Safely extract text from a WebElement
-    
-    Args:
-        element: Selenium WebElement or None
-        
-    Returns:
-        Extracted text or empty string
-    """
-    if element is None:
-        return ""
-    
-    try:
-        text = element.text
-        if text:
-            return text.strip()
-        
-        # Fallback to innerHTML if text is empty
-        text = element.get_attribute('innerHTML')
-        if text:
-            # Remove HTML tags
-            text = re.sub(r'<[^>]+>', '', text)
-            return text.strip()
-        
-        return ""
-    except WebDriverException:
-        return ""
-
-def safe_extract_attribute(element: Union[WebElement, None], attribute: str) -> str:
-    """
-    Safely extract an attribute from a WebElement
-    
-    Args:
-        element: Selenium WebElement or None
-        attribute: Attribute name to extract
-        
-    Returns:
-        Attribute value or empty string
-    """
-    if element is None:
-        return ""
-    
-    try:
-        value = element.get_attribute(attribute)
-        return value.strip() if value else ""
-    except WebDriverException:
-        return ""
-
-@retry(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1, min=2, max=10),
-    retry=retry_if_exception_type(Exception)
-)
-def retry_on_failure(func):
-    """
-    Decorator for retrying functions on failure
-    
-    Args:
-        func: Function to retry
-        
-    Returns:
-        Decorated function with retry logic
-    """
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        return func(*args, **kwargs)
-    return wrapper
-
-def clean_text(text: str) -> str:
-    """
-    Clean and normalize text content
-    
-    Args:
-        text: Raw text to clean
-        
-    Returns:
-        Cleaned text
-    """
-    if not text:
-        return ""
-    
-    # Remove excessive whitespace
-    text = re.sub(r'\s+', ' ', text)
-    
-    # Remove special characters (keep Ukrainian characters)
-    text = re.sub(r'[^\w\s\-.,!?()\u0400-\u04FF]', '', text)
-    
-    return text.strip()
-
-def validate_url(url: str) -> bool:
-    """
-    Validate if URL is a proper OLX property URL
-    
-    Args:
-        url: URL to validate
-        
-    Returns:
-        True if valid OLX property URL
-    """
-    if not url:
-        return False
-    
-    # Must be OLX domain
-    if 'olx.ua' not in url:
-        return False
-    
-    # Must be a property listing (contains /d/)
-    if '/d/' not in url:
-        return False
-    
-    # Must be HTTPS
-    if not url.startswith('https://'):
-        return False
-    
-    return True
-
-def format_price(price: Optional[float], currency: str = 'USD') -> str:
-    """
-    Format price for display
-    
-    Args:
-        price: Price value
-        currency: Currency code
-        
-    Returns:
-        Formatted price string
-    """
-    if price is None:
-        return "Ціна не вказана"
-    
-    if currency == 'USD':
-        return f"${price:,.0f}"
-    elif currency == 'UAH':
-        return f"{price:,.0f} грн"
-    elif currency == 'EUR':
-        return f"€{price:,.0f}"
+    # Determine currency
+    if any(currency in price_text.upper() for currency in ['USD', '$', 'DOLLAR']):
+        return price_value, "USD"
+    elif any(currency in price_text.upper() for currency in ['EUR', '€', 'EURO']):
+        return price_value, "EUR"
+    elif any(currency in price_text.upper() for currency in ['UAH', '₴', 'ГРН']):
+        return price_value, "UAH"
     else:
-        return f"{price:,.0f} {currency}"
+        # Default to USD if unclear
+        return price_value, "USD"
 
-def extract_rooms_from_text(text: str) -> Optional[int]:
+
+def extract_area(text: str) -> Optional[float]:
+    """
+    Extract area in square meters from text
+    
+    Args:
+        text: Text to search for area
+        
+    Returns:
+        Optional[float]: Area in square meters or None
+    """
+    if not text:
+        return None
+    
+    # Common area patterns
+    area_patterns = [
+        r'(\d+(?:\.\d+)?)\s*м²',
+        r'(\d+(?:\.\d+)?)\s*кв\.?\s*м',
+        r'(\d+(?:\.\d+)?)\s*sq\.?\s*m',
+        r'(\d+(?:\.\d+)?)\s*м\s*кв',
+        r'площа\s*(\d+(?:\.\d+)?)',
+        r'(\d+(?:\.\d+)?)\s*метр'
+    ]
+    
+    for pattern in area_patterns:
+        match = re.search(pattern, text, re.IGNORECASE)
+        if match:
+            area_value = float(match.group(1))
+            # Sanity check (reasonable apartment sizes)
+            if 10 <= area_value <= 500:
+                return area_value
+    
+    return None
+
+
+def extract_rooms(text: str) -> Optional[int]:
     """
     Extract number of rooms from text
     
     Args:
-        text: Text that may contain room information
+        text: Text to search for room count
         
     Returns:
-        Number of rooms or None
+        Optional[int]: Number of rooms or None
     """
     if not text:
         return None
     
-    # Common patterns for room numbers
-    patterns = [
-        r'(\d+)[\s-]*кімн',  # "2-кімн", "2 кімн"
-        r'(\d+)[\s-]*к\.',   # "2-к.", "2 к."
-        r'(\d+)[\s-]*room',  # "2-room", "2 room"
-        r'(\d+)r\b',         # "2r"
+    room_patterns = [
+        r'(\d+)\s*кімн',
+        r'(\d+)\s*к\.',
+        r'(\d+)\s*комн',
+        r'(\d+)\s*room',
+        r'(\d+)\s*спальн'
     ]
     
-    for pattern in patterns:
-        match = re.search(pattern, text.lower())
+    for pattern in room_patterns:
+        match = re.search(pattern, text, re.IGNORECASE)
         if match:
-            try:
-                rooms = int(match.group(1))
-                if 1 <= rooms <= 10:  # Reasonable range
-                    return rooms
-            except ValueError:
-                continue
+            rooms = int(match.group(1))
+            # Sanity check (1-10 rooms)
+            if 1 <= rooms <= 10:
+                return rooms
     
     return None
 
-def generate_session_id() -> str:
-    """Generate a unique session ID for tracking"""
-    import uuid
-    return str(uuid.uuid4())[:8]
 
-def log_performance_metrics(func):
-    """Decorator to log performance metrics for functions"""
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        start_time = time.time()
-        try:
-            result = func(*args, **kwargs)
-            duration = time.time() - start_time
-            logger.info(f"{func.__name__} completed in {duration:.2f} seconds")
-            return result
-        except Exception as e:
-            duration = time.time() - start_time
-            logger.error(f"{func.__name__} failed after {duration:.2f} seconds: {str(e)}")
-            raise
-    return wrapper
+def extract_floor(text: str) -> Tuple[Optional[int], Optional[int]]:
+    """
+    Extract floor and total floors from text
+    
+    Args:
+        text: Text to search for floor info
+        
+    Returns:
+        Tuple[Optional[int], Optional[int]]: (floor, total_floors)
+    """
+    if not text:
+        return None, None
+    
+    # Pattern: "5/9 поверх" or "5 из 9" or "5th floor of 9"
+    floor_patterns = [
+        r'(\d+)\s*/\s*(\d+)\s*поверх',
+        r'(\d+)\s*из\s*(\d+)',
+        r'(\d+)\s*of\s*(\d+)\s*floor',
+        r'(\d+)\s*/\s*(\d+)\s*эт',
+        r'поверх\s*(\d+)\s*/\s*(\d+)'
+    ]
+    
+    for pattern in floor_patterns:
+        match = re.search(pattern, text, re.IGNORECASE)
+        if match:
+            floor = int(match.group(1))
+            total_floors = int(match.group(2))
+            
+            # Sanity check
+            if 1 <= floor <= total_floors <= 50:
+                return floor, total_floors
+    
+    # Single floor pattern
+    single_floor_patterns = [
+        r'(\d+)\s*поверх',
+        r'(\d+)\s*этаж',
+        r'floor\s*(\d+)'
+    ]
+    
+    for pattern in single_floor_patterns:
+        match = re.search(pattern, text, re.IGNORECASE)
+        if match:
+            floor = int(match.group(1))
+            if 1 <= floor <= 50:
+                return floor, None
+    
+    return None, None
+
+
+def clean_text(text: str) -> str:
+    """
+    Clean and normalize text
+    
+    Args:
+        text: Raw text
+        
+    Returns:
+        str: Cleaned text
+    """
+    if not text:
+        return ""
+    
+    # Remove extra whitespace
+    text = re.sub(r'\s+', ' ', text).strip()
+    
+    # Remove special characters but keep Ukrainian letters
+    text = re.sub(r'[^\w\s\u0400-\u04FF.,!?()-]', '', text)
+    
+    return text
+
+
+def format_currency(amount: float, currency: str) -> str:
+    """
+    Format currency amount for display
+    
+    Args:
+        amount: Numeric amount
+        currency: Currency code
+        
+    Returns:
+        str: Formatted currency string
+    """
+    if currency == "USD":
+        return f"${amount:,.0f}"
+    elif currency == "EUR":
+        return f"€{amount:,.0f}"
+    elif currency == "UAH":
+        return f"₴{amount:,.0f}"
+    else:
+        return f"{amount:,.0f} {currency}"
+
+
+def validate_property_data(property_dict: dict) -> dict:
+    """
+    Validate and clean property data
+    
+    Args:
+        property_dict: Property data dictionary
+        
+    Returns:
+        dict: Validated property data
+    """
+    # Ensure required fields
+    required_fields = ['olx_id', 'title', 'listing_url']
+    for field in required_fields:
+        if not property_dict.get(field):
+            raise ValueError(f"Missing required field: {field}")
+    
+    # Validate numeric fields
+    if property_dict.get('price_usd'):
+        price = float(property_dict['price_usd'])
+        if price <= 0 or price > 10_000_000:  # Reasonable price range
+            property_dict['price_usd'] = None
+    
+    if property_dict.get('area'):
+        area = float(property_dict['area'])
+        if area <= 0 or area > 1000:  # Reasonable area range
+            property_dict['area'] = None
+    
+    if property_dict.get('rooms'):
+        rooms = int(property_dict['rooms'])
+        if rooms <= 0 or rooms > 20:
+            property_dict['rooms'] = None
+    
+    if property_dict.get('floor'):
+        floor = int(property_dict['floor'])
+        if floor <= 0 or floor > 100:
+            property_dict['floor'] = None
+    
+    return property_dict
+
+
+def detect_building_type(title: str, description: str = "") -> Optional[str]:
+    """
+    Detect building type from title and description
+    
+    Args:
+        title: Property title
+        description: Property description
+        
+    Returns:
+        Optional[str]: Building type or None
+    """
+    text = (title + " " + description).lower()
+    
+    building_types = {
+        'новобудова': ['новобудова', 'новострой', 'новостройка', 'new building'],
+        'вторинка': ['вторинка', 'вторичка', 'вторичное жилье', 'secondary'],
+        'котедж': ['котедж', 'коттедж', 'house', 'будинок', 'дом'],
+        'таунхаус': ['таунхаус', 'townhouse', 'таун-хаус'],
+        'квартира': ['квартира', 'apartment', 'кв.', 'кварт.']
+    }
+    
+    for building_type, keywords in building_types.items():
+        for keyword in keywords:
+            if keyword in text:
+                return building_type
+    
+    return 'квартира'  # Default
+
+
+def detect_renovation_status(title: str, description: str = "") -> Optional[str]:
+    """
+    Detect renovation status from title and description
+    
+    Args:
+        title: Property title
+        description: Property description
+        
+    Returns:
+        Optional[str]: Renovation status or None
+    """
+    text = (title + " " + description).lower()
+    
+    renovation_statuses = {
+        'євроремонт': ['євроремонт', 'евроремонт', 'euro renovation'],
+        'дизайнерський': ['дизайнерський', 'дизайнерский', 'design renovation'],
+        'відмінний': ['відмінний', 'отличный', 'excellent'],
+        'хороший': ['хороший', 'good', 'добрий'],
+        'косметичний': ['косметичний', 'косметический', 'cosmetic'],
+        'потребує ремонту': ['потребує ремонт', 'требует ремонт', 'needs repair', 'під ремонт']
+    }
+    
+    for status, keywords in renovation_statuses.items():
+        for keyword in keywords:
+            if keyword in text:
+                return status
+    
+    return None
