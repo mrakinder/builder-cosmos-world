@@ -492,7 +492,7 @@ export default function Admin() {
                         <SelectValue placeholder="Оберіть район" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Центр">Центр</SelectItem>
+                        <SelectItem value="Ц��нтр">Центр</SelectItem>
                         <SelectItem value="Пасічна">Пасічна</SelectItem>
                         <SelectItem value="БАМ">БАМ</SelectItem>
                         <SelectItem value="Каскад">Каскад</SelectItem>
@@ -651,7 +651,7 @@ export default function Admin() {
                         try {
                           const response = await fetch(`/api/ml/forecast?district=${encodeURIComponent(district)}`);
                           const data = await response.json();
-                          alert(`✅ Прогноз для "${district}" готовий!`);
+                          alert(`✅ Прог��оз для "${district}" готовий!`);
                         } catch (error) {
                           alert('❌ Помилка прогнозування району');
                         }
@@ -678,7 +678,7 @@ export default function Admin() {
                     Streamlit Веб-Інтерфейс
                   </CardTitle>
                   <CardDescription>
-                    Публічний інтерфейс для оцінки нерухомості
+                    Публ��чний інтерфейс для оцінки нерухомості
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -932,6 +932,7 @@ export default function Admin() {
                     disabled={mlTrainingStatus === "training"}
                     onClick={async () => {
                       try {
+                        addLogEntry('🧠 Запуск LightAutoML навчання...');
                         setMLTrainingStatus("training");
                         setMLTrainingProgress(0);
 
@@ -939,14 +940,19 @@ export default function Admin() {
                         const data = await response.json();
 
                         if (response.ok) {
+                          addLogEntry('✅ LightAutoML навчання успішно запущено');
+                          addLogEntry(`🎯 Ціль: MAPE ≤ 15%`);
+                          addLogEntry('📊 Завантаження даних з бази...');
                           alert('✅ LightAutoML навчання запущено!');
                           startMLProgressMonitoring();
                           loadMLModuleStatus();
                         } else {
+                          addLogEntry(`❌ Помилка LightAutoML: ${data.error || 'невідома помилка'}`);
                           setMLTrainingStatus("failed");
                           alert(`❌ Помилка: ${data.error}`);
                         }
                       } catch (error) {
+                        addLogEntry('❌ Критична помилка запуску LightAutoML');
                         setMLTrainingStatus("failed");
                         alert('❌ Помилка запуску навчання');
                       }
