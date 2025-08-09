@@ -90,6 +90,11 @@ export function createServer() {
   app.get("/api/superset/status", handleSupersetStatus);
   app.get("/api/pipeline/status", handlePipelineStatus);
 
+  // New 5-Module System Routes
+  app.post("/api/scraper/start", handleStartScraping);
+  app.get("/api/scraper/status", handleScrapingStatus);
+  app.post("/api/scraper/stop", handleStopScraping);
+
   // SPA fallback - serve index.html for any non-API routes
   // This ensures React Router works correctly for direct URL access
   app.get('*', (req, res, next) => {
