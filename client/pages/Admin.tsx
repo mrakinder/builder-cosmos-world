@@ -77,13 +77,11 @@ export default function Admin() {
 
   const loadStats = async () => {
     try {
-      console.log('Loading stats...');
       const response = await fetch('/api/property-stats');
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      console.log('Stats loaded:', data);
       setStats(data);
     } catch (error) {
       console.error('Failed to load stats:', error);
@@ -427,7 +425,7 @@ export default function Admin() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Центр">Центр</SelectItem>
-                        <SelectItem value="Пасічна">Пасічн��</SelectItem>
+                        <SelectItem value="Пасічна">Пасічна</SelectItem>
                         <SelectItem value="БАМ">БАМ</SelectItem>
                         <SelectItem value="Каскад">Каскад</SelectItem>
                         <SelectItem value="Залізничний (Вокзал)">Залізничний (Вокзал)</SelectItem>
@@ -896,7 +894,7 @@ export default function Admin() {
                   <li>• Максимум 10 сторінок за запуск</li>
                   <li>• Затримка 4-8 секунд м��ж запитами</li>
                   <li>• Лише USD валюта</li>
-                  <li>• Антибан захис�� активний</li>
+                  <li>• Антибан захист активний</li>
                 </ul>
               </div>
             </CardContent>
@@ -920,7 +918,7 @@ export default function Admin() {
                   onClick={handleManualPropertyAdd}
                 >
                   <Upload className="w-4 h-4 mr-2" />
-                  Додати тестове оголошення
+                  Дода��и тестове оголошення
                 </Button>
 
                 <div className="grid grid-cols-2 gap-2">
