@@ -413,7 +413,7 @@ export default function Admin() {
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center">
                 <Settings className="w-5 h-5 mr-2 text-purple-600" />
-                Ручні ��аписи
+                Ручні записи
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -893,12 +893,22 @@ export default function Admin() {
                     className="w-full bg-green-600 hover:bg-green-700 mb-2"
                     onClick={async () => {
                       try {
+                        addLogEntry('🤖 Запуск Botasaurus парсингу...');
                         const response = await fetch('/api/scraper/start', { method: 'POST' });
+                        const data = await response.json();
+
                         if (response.ok) {
+                          addLogEntry('✅ Botasaurus успішно запущено з антидетекційним захистом');
+                          addLogEntry('🛡️ AntiDetectionDriver активовано');
+                          addLogEntry('🔄 Stealth режим увімкнено');
                           alert('✅ Botasaurus запущено!');
                           loadMLModuleStatus();
+                        } else {
+                          addLogEntry(`❌ Помилка запуску Botasaurus: ${data.error || 'невідома помилка'}`);
+                          alert('❌ Помилка запуску Botasaurus');
                         }
                       } catch (error) {
+                        addLogEntry('❌ Критична помилка запуску Botasaurus');
                         alert('❌ Помилка запуску Botasaurus');
                       }
                     }}
