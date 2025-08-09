@@ -147,12 +147,21 @@ export const handleStartScraping: RequestHandler = async (req, res) => {
       })
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.detail || 'Python backend error');
+    // Safe JSON parsing to prevent "Unexpected end of JSON input"
+    const parsedResponse = await safeJsonParse(response);
+
+    if (!parsedResponse.ok) {
+      addActivity(`❌ JSON parse error: ${parsedResponse.error}`);
+      throw new Error(`Python backend JSON error: ${parsedResponse.error}`);
     }
 
-    const pythonResult = await response.json();
+    const pythonResult = parsedResponse.data;
+
+    if (!response.ok || !pythonResult?.ok) {
+      const errorMsg = pythonResult?.error || pythonResult?.detail || `HTTP ${response.status}`;
+      addActivity(`❌ Python backend error: ${errorMsg}`);
+      throw new Error(errorMsg);
+    }
 
     // Update local status for compatibility
     scrapingStatus = {
@@ -248,7 +257,7 @@ const addRandomProperty = () => {
       floor,
       randomStreet.street,
       randomStreet.district,
-      `Продається ${rooms}-кімнатна квартира площею ${area}м² на вулиці ${randomStreet.street} в районі ${randomStreet.district}. ${isOwner ? 'Від власника.' : 'Через агентство.'}`,
+      `Продається ${rooms}-кімнатна квартира площею ${area}м² на вулиці ${randomStreet.street} в районі ${randomStreet.district}. ${isOwner ? 'Від власника.' : 'Через аг��нтство.'}`,
       isOwner ? 1 : 0,
       `https://olx.ua/property/${Math.floor(Math.random() * 100000)}`
     );
@@ -370,7 +379,7 @@ export const handleStopScraping: RequestHandler = async (req, res) => {
 
     res.status(500).json({
       success: false,
-      error: `Помилка зупинки через Python backend: ${error.message}`,
+      error: `Помилка з��пинки через Python backend: ${error.message}`,
       status: 'error'
     });
   }
@@ -461,7 +470,7 @@ export const handleAddStreet: RequestHandler = (req, res) => {
     });
   } catch (error) {
     console.error('Failed to add street:', error);
-    res.status(500).json({ error: 'Помилка додавання вулиці' });
+    res.status(500).json({ error: 'Помил��а додавання вулиці' });
   }
 };
 
@@ -499,7 +508,7 @@ export const handleCheckPropertyUpdates: RequestHandler = (req, res) => {
     });
     
     if (updatedProperties.length > 0) {
-      addActivity(`Знайдено ${updatedProperties.length} оновлень цін`);
+      addActivity(`Знайдено ${updatedProperties.length} оно��лень цін`);
     }
     
     res.json({
