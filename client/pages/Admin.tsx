@@ -472,7 +472,7 @@ export default function Admin() {
                   Комплексна ML Система (5 модулів)
                 </CardTitle>
                 <CardDescription>
-                  Повнофункціональна сис��ема машинного навчання для аналізу нерухомості
+                  Повнофункціональна система машинного навчання для аналізу нерухомості
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -542,7 +542,7 @@ export default function Admin() {
                   <div className="p-3 bg-blue-50 rounded-lg text-sm">
                     <p><strong>Ціль:</strong> MAPE ≤ 15%</p>
                     <p><strong>Фічі:</strong> площа, район, кімнати, поверх, тип, ремонт</p>
-                    <p><strong>Статус:</strong> {mlModuleStatus.ml_trained ? '✅ Готово' : '⏳ Не тренована'}</p>
+                    <p><strong>Статус:</strong> {mlModuleStatus.lightautoml_trained ? '✅ Готово' : '⏳ Не тренована'}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -892,7 +892,7 @@ export default function Admin() {
                 <h4 className="text-sm font-medium text-slate-900 mb-1">Налаштування:</h4>
                 <ul className="text-xs text-slate-600 space-y-1">
                   <li>• Максимум 10 сторінок за запуск</li>
-                  <li>• Затримка 4-8 секунд м���� запитами</li>
+                  <li>• Затримка 4-8 секунд м��ж запитами</li>
                   <li>• Лише USD валюта</li>
                   <li>• Антибан захист активний</li>
                 </ul>
@@ -991,7 +991,7 @@ export default function Admin() {
                 Навчання моделей
               </CardTitle>
               <CardDescription>
-                Перетренування ML-моделей на нових даних
+                Перет��енування ML-моделей на нових даних
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
