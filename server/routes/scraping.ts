@@ -270,6 +270,13 @@ export const handlePropertyStats: RequestHandler = (req, res) => {
 
 // New endpoint for activity log
 export const handleActivityLog: RequestHandler = (req, res) => {
+  ensureDatabase();
+
+  // Load recent activities if not already loaded
+  if (activityLog.length === 0) {
+    loadRecentActivities();
+  }
+
   res.json({
     logs: activityLog,
     last_update: new Date().toISOString()
