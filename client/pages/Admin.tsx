@@ -153,11 +153,23 @@ export default function Admin() {
 
   const loadMLModuleStatus = async () => {
     try {
+      console.log('Loading ML module status...');
       const response = await fetch('/api/pipeline/status');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
+      console.log('ML status loaded:', data);
       setMLModuleStatus(data);
     } catch (error) {
       console.error('Failed to load ML module status:', error);
+      // Set default status on error
+      setMLModuleStatus({
+        ml_trained: false,
+        prophet_ready: false,
+        streamlit_running: false,
+        superset_running: false
+      });
     }
   };
 
@@ -196,7 +208,7 @@ export default function Admin() {
       area: 60,
       floor: 3,
       district: "Центр",
-      description: "Тестовий опис для налагодження",
+      description: "Тестовий опи�� для налагодження",
       isOwner: true,
       url: "manual_entry",
       olx_id: `manual_${Date.now()}`
@@ -233,7 +245,7 @@ export default function Admin() {
       }
     } catch (error) {
       console.error('Failed to delete manual properties:', error);
-      alert('Помилка вида��ення');
+      alert('Помилка видалення');
     }
   };
 
@@ -422,7 +434,7 @@ export default function Admin() {
                         <SelectItem value="Каскад">Каскад</SelectItem>
                         <SelectItem value="Залізничний (Вокзал)">Залізничний (Вокзал)</SelectItem>
                         <SelectItem value="Брати">Брати</SelectItem>
-                        <SelectItem value="Софіївка">��офіївка</SelectItem>
+                        <SelectItem value="Софіївка">Софіївка</SelectItem>
                         <SelectItem value="Будівельників">Будівельників</SelectItem>
                         <SelectItem value="Набережна">Набережна</SelectItem>
                         <SelectItem value="Опришівці">Опришівці</SelectItem>
@@ -643,7 +655,7 @@ export default function Admin() {
                   <div className="p-3 bg-orange-50 rounded-lg text-sm">
                     <p><strong>Функції:</strong> ML прогноз, схожі об'єкти, аналіз</p>
                     <p><strong>Відгук:</strong> ≤1.5 сек на запит</p>
-                    <p><strong>Статус:</strong> {mlModuleStatus.streamlit_running ? '✅ Запущено' : '⏹️ Зупинено'}</p>
+                    <p><strong>Статус:</strong> {mlModuleStatus.streamlit_running ? '✅ З��пущено' : '⏹️ Зупинено'}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -702,7 +714,7 @@ export default function Admin() {
                   Уніфікований CLI Інтерфейс
                 </CardTitle>
                 <CardDescription>
-                  Командний рядок для управління всіма 5 модулями системи
+                  Командний рядок для управління всіма 5 м��дулями системи
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -784,7 +796,7 @@ export default function Admin() {
                   <div className="text-center py-8 text-slate-500">
                     <Database className="w-12 h-12 mx-auto mb-3 text-slate-300" />
                     <p>Немає оголошень для перегляду</p>
-                    <p className="text-sm">Запустіть парсинг для збору даних</p>
+                    <p className="text-sm">Запустіть парсинг для зб��ру даних</p>
                   </div>
                 )}
               </div>
@@ -1021,7 +1033,7 @@ export default function Admin() {
                       const response = await fetch('/api/retrain-model', { method: 'POST' });
                       const data = await response.json();
                       if (response.ok) {
-                        alert(`✅ ${data.message}\nОч��куваний час: ${data.estimatedTime}`);
+                        alert(`✅ ${data.message}\nОчікуваний час: ${data.estimatedTime}`);
                         setModelProgress(0); // Reset progress
                       }
                     } catch (error) {
@@ -1099,7 +1111,7 @@ export default function Admin() {
               {activityLogs.length > 0 ? (
                 activityLogs.map((log, index) => (
                   <div key={index} className={`mb-1 ${
-                    log.includes('Парсинг') || log.includes('па��синг') ? 'text-green-400' :
+                    log.includes('Парсинг') || log.includes('парсинг') ? 'text-green-400' :
                     log.includes('Модель') || log.includes('модель') || log.includes('тренування') ? 'text-purple-400' :
                     log.includes('Помилка') || log.includes('помилка') ? 'text-red-400' :
                     'text-blue-400'
