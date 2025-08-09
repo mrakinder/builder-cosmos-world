@@ -12,13 +12,13 @@ from typing import Dict, List, Optional, Any
 import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from pydantic import BaseModel
 import uvicorn
-
-from .routes import router
 from .tasks import TaskManager
 from .utils import Logger, EventLogger
 
@@ -119,7 +119,32 @@ async def health_check():
     }
 
 
-# Module 1: Botasaurus Scraper Endpoints
+# ---- CUSTOM JSON HANDLERS FOR 404/422 TO PREVENT EMPTY BODY ----
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    # Всюди JSON, навіть на 404
+    return JSONResponse(
+        {"ok": False, "error": f"{exc.status_code} {exc.detail}", "path": str(request.url.path)},
+        status_code=exc.status_code
+    )
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse({"ok": False, "error": "ValidationError", "details": exc.errors()}, status_code=422)
+
+# ---- ROUTE LOGGING AT STARTUP ----
+@app.on_event("startup")
+async def dump_routes():
+    logger.info("📍 AVAILABLE ROUTES:")
+    for r in app.routes:
+        try:
+            if hasattr(r, 'methods') and hasattr(r, 'path'):
+                methods = ','.join(r.methods) if r.methods else 'N/A'
+                logger.info(f"   {methods} {r.path}")
+        except Exception as e:
+            logger.warning(f"   Could not log route: {e}")
+
+# Module 1: Botasaurus Scraper Endpoints - DIRECT APP DECORATORS
 @app.post("/scraper/start")
 @app.post("/api/scraper/start")  # alias для проксі з префіксом
 async def start_scraping(request: ScrapingRequest, background_tasks: BackgroundTasks):
