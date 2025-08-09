@@ -182,9 +182,9 @@ export const handleStartScraping: RequestHandler = async (req, res) => {
       }
     };
 
-    addActivity(`✅ Python backend response: ${pythonResult.message}`);
-    addActivity(`📊 Task ID: ${pythonResult.task_id}`);
-    addActivity(`🕐 Estimated time: ${pythonResult.estimated_time}`);
+    addActivity(`✅ Python backend response: ${pythonResult.message || 'Scraping started'}`);
+    addActivity(`📊 Task ID: ${pythonResult.task || 'unknown'}`);
+    addActivity(`🕐 Estimated time: ${pythonResult.estimated_time || 'calculating...'}`);
 
     res.json({
       success: true,
@@ -227,7 +227,7 @@ const addRandomProperty = () => {
     const basePrice = area * (800 + Math.random() * 800); // $800-1600 per m²
     const rooms = Math.floor(Math.random() * 4) + 1; // 1-4 rooms
 
-    const title = `${rooms}-кімн. квартира на вул. ${randomStreet.street}, ${area}м²`;
+    const title = `${rooms}-кімн. кв��ртира на вул. ${randomStreet.street}, ${area}м²`;
     const finalPrice = Math.round(basePrice);
     const floor = Math.floor(Math.random() * 9) + 1;
 
@@ -475,7 +475,7 @@ export const handleAddStreet: RequestHandler = (req, res) => {
     addActivity(`Додано вулицю "${street}" до району "${district}"`);
     
     res.json({
-      message: `Вулицю "${street}" успішно додано до району "${district}"`
+      message: `Вули��ю "${street}" успішно додано до району "${district}"`
     });
   } catch (error) {
     console.error('Failed to add street:', error);
