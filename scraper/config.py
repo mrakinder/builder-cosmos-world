@@ -62,8 +62,8 @@ class ScrapingConfig:
         "promoted": "[data-cy='promoted-badge']"
     }
     
-    # Database settings
-    DB_URL: str = os.getenv("DB_URL", "sqlite:///data/olx_offers.sqlite")
+    # Database settings - consistent with Node.js
+    DB_URL: str = os.getenv("DB_URL", "sqlite:///glow_nest.db")
     
     # Logging settings
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
@@ -171,7 +171,7 @@ STREET_TO_DISTRICT = {
     
     # Будівельників
     "Будівельників": "Будівельників",
-    "Конструкторська": "Будівельників",
+    "Конструкторська": "Б��дівельників",
     "Робітнича": "Будівельників",
     "Енергетична": "Будівельників",
     "Монтажна": "Будівельників",
