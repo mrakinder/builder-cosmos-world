@@ -160,8 +160,9 @@ export async function handleMLProgress(req: Request, res: Response) {
       const progress = Math.min(Math.floor((elapsed / 30) * 100), 100); // 30 seconds = 100%
 
       if (progress >= 100) {
-        // Training completed, reset start time
+        // Training completed, reset start time and mark model as trained
         trainingStartTime = null;
+        modelTrained = true;
         res.json({
           status: "completed",
           progress: 100,
