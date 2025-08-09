@@ -133,7 +133,8 @@ export async function handlePipelineStatus(req: Request, res: Response) {
     // In development, return mock data instead of trying to execute Python CLI
     if (process.env.NODE_ENV !== 'production') {
       res.json({
-        ml_trained: false,
+        botasaurus_ready: false,
+        lightautoml_trained: false,
         prophet_ready: false,
         streamlit_running: false,
         superset_running: false,
