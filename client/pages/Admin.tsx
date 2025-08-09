@@ -560,14 +560,14 @@ export default function Admin() {
                     </label>
                     <Select value={selectedDistrict} onValueChange={setSelectedDistrict}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Оберіть район" />
+                        <SelectValue placeholder="О��еріть район" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Центр">Центр</SelectItem>
                         <SelectItem value="Пасічна">Пасічна</SelectItem>
                         <SelectItem value="БАМ">БАМ</SelectItem>
                         <SelectItem value="Каскад">Каскад</SelectItem>
-                        <SelectItem value="Залізничний (Вокз��л)">Залізничний (Вокзал)</SelectItem>
+                        <SelectItem value="Залізничний (Вокзал)">Залізничний (Вокзал)</SelectItem>
                         <SelectItem value="Брати">Брати</SelectItem>
                         <SelectItem value="Софіївка">Софі��вка</SelectItem>
                         <SelectItem value="Будівельників">Будівельників</SelectItem>
@@ -735,7 +735,7 @@ export default function Admin() {
 
                   <div className="p-3 bg-purple-50 rounded-lg text-sm">
                     <p><strong>Метод:</strong> Facebook Prophet</p>
-                    <p><strong>Прогно��:</strong> 6 місяців з довірчими інтервалами</p>
+                    <p><strong>Прогноз:</strong> 6 місяців з довірчими інтервалами</p>
                     <p><strong>Стат��с:</strong> {mlModuleStatus.prophet_ready ? '✅ Готово' : '⏳ Не готово'}</p>
                   </div>
                 </CardContent>
@@ -962,32 +962,61 @@ export default function Admin() {
                   <Button
                     size="sm"
                     className="w-full bg-green-600 hover:bg-green-700 mb-2"
+                    disabled={scraperStatus === "running"}
                     onClick={async () => {
                       try {
+                        console.log('🤖 Starting Botasaurus scraping...');
                         addLogEntry('🤖 Запуск Botasaurus парсингу...');
+                        setScraperStatus("running");
+                        setScraperProgress(0);
+
                         const response = await fetch('/api/scraper/start', { method: 'POST' });
                         const data = await response.json();
 
-                        if (response.ok) {
+                        console.log('Scraper API response:', response.ok, data);
+
+                        if (response.ok && data.success) {
                           addLogEntry('✅ Botasaurus успішно запущено з антидетекційним захистом');
                           addLogEntry('🛡️ AntiDetectionDriver активовано');
                           addLogEntry('🔄 Stealth режим увімкнено');
                           alert('✅ Botasaurus запущено!');
+                          startScraperProgressMonitoring();
                           loadMLModuleStatus();
                         } else {
                           addLogEntry(`❌ Помилка запуску Botasaurus: ${data.error || 'невідома помилка'}`);
+                          setScraperStatus("failed");
                           alert('❌ Помилка запуску Botasaurus');
                         }
                       } catch (error) {
+                        console.error('Scraper error:', error);
                         addLogEntry('❌ Критична помилка запуску Botasaurus');
+                        setScraperStatus("failed");
                         alert('❌ Помилка запуску Botasaurus');
                       }
                     }}
                   >
-                    Запустити парсинг
+                    {scraperStatus === "running" ? 'Парсинг...' : 'Запустити парсинг'}
                   </Button>
+
+                  {scraperStatus === "running" && (
+                    <div className="mb-2">
+                      <div className="flex justify-between text-xs text-green-700 mb-1">
+                        <span>Прогрес парсингу</span>
+                        <span>{scraperProgress}%</span>
+                      </div>
+                      <div className="w-full bg-green-200 rounded-full h-2">
+                        <div
+                          className="bg-green-600 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${scraperProgress}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  )}
+
                   <p className="text-xs text-green-700">
-                    Статус: {mlModuleStatus.botasaurus_ready ? '✅ Активний' : '⏳ Неактивний'}
+                    Статус: {scraperStatus === "running" ? '🔄 Парсинг' :
+                             scraperStatus === "completed" ? '✅ Завершено' :
+                             scraperStatus === "failed" ? '❌ Помилка' : '⏳ Неактивний'}
                   </p>
                 </div>
 
@@ -1015,7 +1044,7 @@ export default function Admin() {
                         console.log('Train API response:', response.ok, data);
 
                         if (response.ok && data.success) {
-                          addLogEntry('✅ LightAutoML навчання успішно запущено');
+                          addLogEntry('✅ LightAutoML навчанн�� успішно запущено');
                           addLogEntry(`🎯 Ціль: MAPE ≤ 15%`);
                           addLogEntry('📊 Завантаження даних з бази...');
                           alert('✅ LightAutoML навчання запущено!');
@@ -1083,7 +1112,7 @@ export default function Admin() {
                             alert('❌ Помилка запуску');
                           }
                         } catch (error) {
-                          addLogEntry('❌ Критична помилка запуску Streamlit');
+                          addLogEntry('❌ Кри��ична помилка запуску Streamlit');
                           alert('❌ Помилка запуску');
                         }
                       }}
