@@ -85,6 +85,7 @@ export function createServer() {
   app.post("/api/ml/predict", handleMLPredict);
   app.get("/api/ml/forecast", handleProphetForecast);
   app.post("/api/ml/train", handleTrainML);
+  app.get("/api/ml/progress", handleMLProgress);
   app.get("/api/streamlit/status", handleStreamlitStatus);
   app.post("/api/streamlit/start", handleStartStreamlit);
   app.post("/api/streamlit/stop", handleStopStreamlit);
