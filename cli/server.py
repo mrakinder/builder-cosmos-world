@@ -125,8 +125,9 @@ async def health_check():
 async def start_scraping(request: ScrapingRequest, background_tasks: BackgroundTasks):
     """Start Botasaurus OLX scraping - GUARANTEED JSON-only response, never empty body"""
 
-    # ENTRY LOG for diagnostics
+    # ENTRY LOG for diagnostics + request body details
     logger.info(f"🚪 HIT /scraper/start - listing_type={request.listing_type}, max_pages={request.max_pages}, delay_ms={request.delay_ms}")
+    logger.info(f"📋 Request body parsed successfully: {request.model_dump()}")
 
     try:
         # Check if scraper is already running
