@@ -97,6 +97,29 @@ export function createServer() {
   app.get("/api/scraper/status", handleScrapingStatus);
   app.post("/api/scraper/stop", handleStopScraping);
 
+  // Server-Sent Events for real-time updates
+  app.get("/api/events/stream", (req, res) => {
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'Cache-Control'
+    });
+
+    // Send initial connection message
+    res.write(`data: ${JSON.stringify({ type: 'connected', message: 'SSE connected' })}\n\n`);
+
+    // Keep connection alive
+    const heartbeat = setInterval(() => {
+      res.write(`data: ${JSON.stringify({ type: 'heartbeat', timestamp: Date.now() })}\n\n`);
+    }, 30000);
+
+    req.on('close', () => {
+      clearInterval(heartbeat);
+    });
+  });
+
   // SPA fallback - serve index.html for any non-API routes
   // This ensures React Router works correctly for direct URL access
   app.get('*', (req, res, next) => {
