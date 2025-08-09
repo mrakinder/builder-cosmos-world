@@ -1,220 +1,424 @@
 """
-Utility functions for LightAutoML module
-=======================================
-
-Data loading, model persistence, and validation functions.
+Utilities for LightAutoML module
+Progress tracking, evaluation, and logging
 """
 
-import sqlite3
-import pandas as pd
-import pickle
 import json
+import time
 import logging
-from pathlib import Path
-from typing import Dict, Any, Optional, Tuple
+import os
+from datetime import datetime
+from typing import Dict, Any, Optional, List
+import pandas as pd
+import numpy as np
+from sklearn.metrics import mean_absolute_percentage_error, mean_squared_error, r2_score
 
-logger = logging.getLogger(__name__)
 
-def load_data(source: str, path: str) -> pd.DataFrame:
+class ProgressTracker:
     """
-    Load data from SQLite database or CSV file
+    Real-time progress tracker for ML training
+    Writes progress to JSON file for live updates
+    """
     
-    Args:
-        source: 'sqlite' or 'csv'
-        path: Path to data source
+    def __init__(self, progress_file: str):
+        self.progress_file = progress_file
+        self.start_time = None
+        self.current_progress = 0.0
+        self.current_stage = "idle"
+        self.is_training = False
         
-    Returns:
-        DataFrame with property data
-    """
-    try:
-        if source == 'sqlite':
-            return load_from_sqlite(path)
-        elif source == 'csv':
-            return load_from_csv(path)
+        # Ensure directory exists
+        os.makedirs(os.path.dirname(progress_file), exist_ok=True)
+        
+        # Initialize progress file
+        self._write_progress({
+            'status': 'idle',
+            'progress': 0.0,
+            'stage': 'idle',
+            'message': 'Ready to start training',
+            'start_time': None,
+            'elapsed_time': 0,
+            'estimated_total_time': None,
+            'success': None,
+            'error': None
+        })
+    
+    def start_training(self):
+        """Start training progress tracking"""
+        self.start_time = time.time()
+        self.is_training = True
+        self.current_progress = 0.0
+        self.current_stage = "starting"
+        
+        self._write_progress({
+            'status': 'training',
+            'progress': 0.0,
+            'stage': 'starting',
+            'message': 'Starting LightAutoML training...',
+            'start_time': self.start_time,
+            'elapsed_time': 0,
+            'estimated_total_time': 3600,  # 1 hour estimate
+            'success': None,
+            'error': None
+        })
+    
+    def update_progress(self, stage: str, progress: float, message: str = ""):
+        """
+        Update training progress
+        
+        Args:
+            stage: Current training stage
+            progress: Progress percentage (0-100)
+            message: Status message
+        """
+        if not self.is_training:
+            return
+        
+        self.current_progress = min(100.0, max(0.0, progress))
+        self.current_stage = stage
+        
+        elapsed = time.time() - self.start_time if self.start_time else 0
+        
+        # Estimate remaining time
+        if progress > 0:
+            estimated_total = (elapsed / progress) * 100
         else:
-            raise ValueError(f"Unsupported source: {source}")
-    except Exception as e:
-        logger.error(f"Error loading data from {source}:{path} - {str(e)}")
-        raise
+            estimated_total = 3600  # Default 1 hour
+        
+        self._write_progress({
+            'status': 'training',
+            'progress': self.current_progress,
+            'stage': stage,
+            'message': message or f"Training stage: {stage}",
+            'start_time': self.start_time,
+            'elapsed_time': elapsed,
+            'estimated_total_time': estimated_total,
+            'estimated_remaining': max(0, estimated_total - elapsed),
+            'success': None,
+            'error': None
+        })
+    
+    def complete_training(self, success: bool, final_mape: float = None, error: str = None, message: str = ""):
+        """
+        Complete training progress tracking
+        
+        Args:
+            success: Whether training succeeded
+            final_mape: Final MAPE score if successful
+            error: Error message if failed
+            message: Completion message
+        """
+        self.is_training = False
+        elapsed = time.time() - self.start_time if self.start_time else 0
+        
+        self._write_progress({
+            'status': 'completed' if success else 'failed',
+            'progress': 100.0 if success else self.current_progress,
+            'stage': 'completed' if success else 'failed',
+            'message': message or ('Training completed successfully' if success else f'Training failed: {error}'),
+            'start_time': self.start_time,
+            'elapsed_time': elapsed,
+            'estimated_total_time': elapsed,
+            'estimated_remaining': 0,
+            'success': success,
+            'error': error,
+            'final_mape': final_mape,
+            'completion_time': time.time()
+        })
+    
+    def _write_progress(self, progress_data: Dict[str, Any]):
+        """Write progress data to JSON file"""
+        try:
+            progress_data['timestamp'] = time.time()
+            progress_data['readable_time'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            
+            with open(self.progress_file, 'w', encoding='utf-8') as f:
+                json.dump(progress_data, f, indent=2, ensure_ascii=False)
+                
+        except Exception as e:
+            print(f"Error writing progress: {e}")
+    
+    def get_progress(self) -> Dict[str, Any]:
+        """Get current progress data"""
+        try:
+            with open(self.progress_file, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except:
+            return {
+                'status': 'idle',
+                'progress': 0.0,
+                'stage': 'idle',
+                'message': 'No training in progress'
+            }
 
-def load_from_sqlite(db_path: str) -> pd.DataFrame:
-    """Load data from SQLite database"""
-    query = """
-    SELECT 
-        ad_id,
-        price_value as price_value_usd,
-        price_currency,
-        area_total,
-        rooms,
-        floor,
-        floors_total,
-        district,
-        street,
-        building_type,
-        renovation,
-        seller_type,
-        location_text,
-        description,
-        scraped_at,
-        first_seen_at,
-        last_seen_at,
-        is_active
-    FROM offers 
-    WHERE is_active = 1 
-      AND price_value IS NOT NULL 
-      AND price_currency = 'USD'
-      AND area_total IS NOT NULL
-      AND area_total > 0
-    ORDER BY scraped_at ASC
+
+class ModelEvaluator:
+    """
+    Model evaluation utilities
     """
     
-    with sqlite3.connect(db_path) as conn:
-        df = pd.read_sql_query(query, conn)
+    def __init__(self):
+        pass
     
-    logger.info(f"Loaded {len(df)} records from SQLite database")
-    return df
+    def evaluate_regression(self, y_true: np.ndarray, y_pred: np.ndarray) -> Dict[str, float]:
+        """
+        Evaluate regression model performance
+        
+        Args:
+            y_true: True values
+            y_pred: Predicted values
+            
+        Returns:
+            Dict[str, float]: Evaluation metrics
+        """
+        metrics = {}
+        
+        # MAPE - Main metric for this project
+        mape = mean_absolute_percentage_error(y_true, y_pred) * 100
+        metrics['mape'] = round(mape, 2)
+        
+        # RMSE
+        rmse = np.sqrt(mean_squared_error(y_true, y_pred))
+        metrics['rmse'] = round(rmse, 2)
+        
+        # R²
+        r2 = r2_score(y_true, y_pred)
+        metrics['r2'] = round(r2, 4)
+        
+        # MAE
+        mae = np.mean(np.abs(y_true - y_pred))
+        metrics['mae'] = round(mae, 2)
+        
+        # Median APE
+        ape = np.abs((y_true - y_pred) / y_true) * 100
+        median_ape = np.median(ape)
+        metrics['median_ape'] = round(median_ape, 2)
+        
+        # Max error
+        max_error = np.max(np.abs(y_true - y_pred))
+        metrics['max_error'] = round(max_error, 2)
+        
+        # Residual analysis
+        residuals = y_true - y_pred
+        metrics['residual_mean'] = round(np.mean(residuals), 2)
+        metrics['residual_std'] = round(np.std(residuals), 2)
+        
+        return metrics
+    
+    def evaluate_by_segments(self, y_true: np.ndarray, y_pred: np.ndarray, 
+                           segments: pd.Series) -> Dict[str, Dict[str, float]]:
+        """
+        Evaluate model performance by segments (e.g., districts, price ranges)
+        
+        Args:
+            y_true: True values
+            y_pred: Predicted values
+            segments: Segment labels
+            
+        Returns:
+            Dict[str, Dict[str, float]]: Metrics by segment
+        """
+        segment_metrics = {}
+        
+        for segment in segments.unique():
+            if pd.isna(segment):
+                continue
+                
+            mask = segments == segment
+            if mask.sum() < 5:  # Skip segments with too few samples
+                continue
+            
+            y_true_seg = y_true[mask]
+            y_pred_seg = y_pred[mask]
+            
+            segment_metrics[str(segment)] = self.evaluate_regression(y_true_seg, y_pred_seg)
+            segment_metrics[str(segment)]['sample_count'] = int(mask.sum())
+        
+        return segment_metrics
+    
+    def calculate_prediction_intervals(self, y_pred: np.ndarray, 
+                                     confidence: float = 0.8) -> Dict[str, np.ndarray]:
+        """
+        Calculate prediction intervals (simplified approach)
+        
+        Args:
+            y_pred: Predictions
+            confidence: Confidence level
+            
+        Returns:
+            Dict[str, np.ndarray]: Lower and upper bounds
+        """
+        # Simplified approach - use std of predictions
+        pred_std = np.std(y_pred)
+        
+        # Z-score for confidence interval
+        from scipy import stats
+        z_score = stats.norm.ppf((1 + confidence) / 2)
+        
+        margin = z_score * pred_std
+        
+        return {
+            'lower': y_pred - margin,
+            'upper': y_pred + margin,
+            'margin': margin
+        }
 
-def load_from_csv(csv_path: str) -> pd.DataFrame:
-    """Load data from CSV file"""
-    df = pd.read_csv(csv_path)
-    
-    # Filter for USD properties only
-    df = df[
-        (df['is_active'] == True) & 
-        (df['price_currency'] == 'USD') &
-        (df['price_value'].notna()) &
-        (df['area_total'].notna()) &
-        (df['area_total'] > 0)
-    ].copy()
-    
-    logger.info(f"Loaded {len(df)} records from CSV file")
-    return df
 
-def split_data_by_time(df: pd.DataFrame, train_ratio: float = 0.8) -> Tuple[pd.DataFrame, pd.DataFrame]:
+class Logger:
     """
-    Split data by time (older data for training, newer for validation)
+    Custom logger for ML training
+    """
+    
+    def __init__(self, log_file: str, level: str = "INFO"):
+        self.logger = logging.getLogger("laml_trainer")
+        self.logger.setLevel(getattr(logging, level.upper()))
+        
+        # Create log directory if not exists
+        os.makedirs(os.path.dirname(log_file), exist_ok=True)
+        
+        # File handler
+        file_handler = logging.FileHandler(log_file, encoding='utf-8')
+        file_handler.setLevel(logging.DEBUG)
+        
+        # Console handler
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(getattr(logging, level.upper()))
+        
+        # Formatter
+        formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        )
+        file_handler.setFormatter(formatter)
+        console_handler.setFormatter(formatter)
+        
+        self.logger.addHandler(file_handler)
+        self.logger.addHandler(console_handler)
+    
+    def info(self, message: str):
+        self.logger.info(message)
+    
+    def error(self, message: str):
+        self.logger.error(message)
+    
+    def warning(self, message: str):
+        self.logger.warning(message)
+    
+    def debug(self, message: str):
+        self.logger.debug(message)
+
+
+class ModelValidator:
+    """
+    Cross-validation and model validation utilities
+    """
+    
+    def __init__(self):
+        pass
+    
+    def time_series_split_validate(self, X: pd.DataFrame, y: pd.Series, 
+                                  model_class, n_splits: int = 5) -> Dict[str, Any]:
+        """
+        Perform time series cross-validation
+        
+        Args:
+            X: Feature matrix
+            y: Target variable
+            model_class: Model class to validate
+            n_splits: Number of splits
+            
+        Returns:
+            Dict[str, Any]: Validation results
+        """
+        from sklearn.model_selection import TimeSeriesSplit
+        
+        tscv = TimeSeriesSplit(n_splits=n_splits)
+        
+        fold_metrics = []
+        
+        for i, (train_idx, val_idx) in enumerate(tscv.split(X)):
+            X_train_fold = X.iloc[train_idx]
+            X_val_fold = X.iloc[val_idx]
+            y_train_fold = y.iloc[train_idx]
+            y_val_fold = y.iloc[val_idx]
+            
+            # Train model
+            model = model_class()
+            model.fit(X_train_fold, y_train_fold)
+            
+            # Predict
+            y_pred_fold = model.predict(X_val_fold)
+            
+            # Evaluate
+            evaluator = ModelEvaluator()
+            metrics = evaluator.evaluate_regression(y_val_fold.values, y_pred_fold)
+            metrics['fold'] = i + 1
+            metrics['train_size'] = len(train_idx)
+            metrics['val_size'] = len(val_idx)
+            
+            fold_metrics.append(metrics)
+        
+        # Aggregate metrics
+        cv_results = {
+            'fold_metrics': fold_metrics,
+            'mean_mape': np.mean([m['mape'] for m in fold_metrics]),
+            'std_mape': np.std([m['mape'] for m in fold_metrics]),
+            'mean_r2': np.mean([m['r2'] for m in fold_metrics]),
+            'std_r2': np.std([m['r2'] for m in fold_metrics])
+        }
+        
+        return cv_results
+
+
+def load_training_progress() -> Dict[str, Any]:
+    """
+    Load current training progress from file
+    
+    Returns:
+        Dict[str, Any]: Current progress data
+    """
+    progress_file = "ml/reports/training_progress.json"
+    
+    try:
+        with open(progress_file, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except:
+        return {
+            'status': 'idle',
+            'progress': 0.0,
+            'stage': 'idle',
+            'message': 'No training in progress'
+        }
+
+
+def format_time(seconds: float) -> str:
+    """
+    Format seconds to human-readable time string
     
     Args:
-        df: DataFrame with scraped_at column
-        train_ratio: Ratio of data for training
+        seconds: Time in seconds
         
     Returns:
-        Tuple of (train_df, val_df)
+        str: Formatted time string
     """
-    # Convert scraped_at to datetime if it's string
-    df = df.copy()
-    df['scraped_at'] = pd.to_datetime(df['scraped_at'])
-    
-    # Sort by time
-    df = df.sort_values('scraped_at')
-    
-    # Split by time
-    split_idx = int(len(df) * train_ratio)
-    train_df = df.iloc[:split_idx].copy()
-    val_df = df.iloc[split_idx:].copy()
-    
-    logger.info(f"Split data: {len(train_df)} train, {len(val_df)} validation samples")
-    return train_df, val_df
+    if seconds < 60:
+        return f"{seconds:.0f}s"
+    elif seconds < 3600:
+        minutes = seconds / 60
+        return f"{minutes:.1f}m"
+    else:
+        hours = seconds / 3600
+        return f"{hours:.1f}h"
 
-def save_model(model, path: str, metadata: Dict[str, Any] = None):
-    """Save trained model and metadata"""
-    model_path = Path(path)
-    model_path.parent.mkdir(parents=True, exist_ok=True)
-    
-    # Save model
-    with open(model_path, 'wb') as f:
-        pickle.dump(model, f)
-    
-    # Save metadata
-    if metadata:
-        metadata_path = model_path.with_suffix('.json')
-        with open(metadata_path, 'w', encoding='utf-8') as f:
-            json.dump(metadata, f, indent=2, ensure_ascii=False)
-    
-    logger.info(f"Model saved to {model_path}")
 
-def load_model(path: str):
-    """Load trained model"""
-    with open(path, 'rb') as f:
-        model = pickle.load(f)
-    
-    logger.info(f"Model loaded from {path}")
-    return model
-
-def validate_input_data(data: Dict[str, Any]) -> Dict[str, Any]:
+def save_model_metadata(model_path: str, metadata: Dict[str, Any]):
     """
-    Validate and clean input data for prediction
+    Save model metadata to accompany saved model
     
     Args:
-        data: Input property data
-        
-    Returns:
-        Cleaned and validated data
+        model_path: Path to saved model
+        metadata: Metadata to save
     """
-    required_fields = ['area_total', 'district']
+    metadata_path = model_path.replace('.pkl', '_metadata.json')
     
-    # Check required fields
-    for field in required_fields:
-        if field not in data or data[field] is None:
-            raise ValueError(f"Missing required field: {field}")
-    
-    # Clean and validate
-    cleaned = {
-        'area_total': float(data['area_total']),
-        'district': str(data['district']),
-        'rooms': int(data.get('rooms', 2)),
-        'floor': int(data.get('floor', 1)),
-        'floors_total': int(data.get('floors_total', 9)),
-        'street': str(data.get('street', '')),
-        'building_type': str(data.get('building_type', 'панель')),
-        'renovation': str(data.get('renovation', 'косметичний')),
-        'seller_type': str(data.get('seller_type', 'owner'))
-    }
-    
-    # Validate ranges
-    if cleaned['area_total'] <= 0 or cleaned['area_total'] > 500:
-        raise ValueError("Invalid area_total: must be between 0 and 500")
-    
-    if cleaned['rooms'] < 1 or cleaned['rooms'] > 10:
-        raise ValueError("Invalid rooms: must be between 1 and 10")
-    
-    if cleaned['floor'] < 1 or cleaned['floor'] > 50:
-        raise ValueError("Invalid floor: must be between 1 and 50")
-    
-    return cleaned
-
-def calculate_metrics(y_true, y_pred) -> Dict[str, float]:
-    """Calculate prediction metrics"""
-    import numpy as np
-    from sklearn.metrics import mean_absolute_percentage_error, mean_squared_error
-    
-    # Remove any NaN values
-    mask = ~(np.isnan(y_true) | np.isnan(y_pred))
-    y_true_clean = y_true[mask]
-    y_pred_clean = y_pred[mask]
-    
-    if len(y_true_clean) == 0:
-        return {'mape': float('inf'), 'rmse': float('inf'), 'mae': float('inf')}
-    
-    metrics = {
-        'mape': mean_absolute_percentage_error(y_true_clean, y_pred_clean) * 100,
-        'rmse': np.sqrt(mean_squared_error(y_true_clean, y_pred_clean)),
-        'mae': np.mean(np.abs(y_true_clean - y_pred_clean)),
-        'count': len(y_true_clean)
-    }
-    
-    return metrics
-
-def create_sample_request() -> Dict[str, Any]:
-    """Create a sample request for testing"""
-    return {
-        "area_total": 65.0,
-        "rooms": 2,
-        "floor": 5,
-        "floors_total": 9,
-        "district": "Центр",
-        "street": "Галицька",
-        "building_type": "цегла",
-        "renovation": "євроремонт",
-        "seller_type": "owner"
-    }
+    with open(metadata_path, 'w', encoding='utf-8') as f:
+        json.dump(metadata, f, indent=2, ensure_ascii=False)
