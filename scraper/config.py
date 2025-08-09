@@ -1,169 +1,203 @@
 """
-Configuration module for OLX scraper
-====================================
-
-Manages all configuration settings, URLs, and environment variables.
+Configuration for Botasaurus OLX Scraper
+Module 1: Anti-detection web scraping for Ivano-Frankivsk real estate
 """
 
 import os
-from typing import Dict, List
 from dataclasses import dataclass
-from pathlib import Path
+from typing import List, Dict, Optional
 from dotenv import load_dotenv
 
-# Load environment variables
 load_dotenv()
 
 @dataclass
-class ScraperConfig:
-    """Configuration class for OLX scraper settings"""
+class ScrapingConfig:
+    """Configuration class for OLX scraping with Botasaurus"""
     
-    # Base URLs for different scraping modes
-    BASE_URLS = {
-        "sale": "https://www.olx.ua/nedvizhimost/kvartiry/prodazha/ivanofrankovsk/",
-        "rent": "https://www.olx.ua/nedvizhimost/kvartiry/arenda/ivanofrankovsk/"
+    # Base URLs and search parameters
+    BASE_URL: str = "https://www.olx.ua"
+    CITY_URL: str = "https://www.olx.ua/d/uk/nedvizhimost/kvartiry/ivano-frankivsk/"
+    
+    # Scraping behavior
+    MAX_PAGES: int = int(os.getenv("SCRAPER_MAX_PAGES", 50))
+    DELAY_MS: int = int(os.getenv("SCRAPER_DELAY_MS", 5000))
+    HEADFUL: bool = os.getenv("SCRAPER_HEADFUL", "false").lower() == "true"
+    PROXY_ENABLED: bool = os.getenv("SCRAPER_PROXY_ENABLED", "false").lower() == "true"
+    
+    # Anti-detection settings
+    USER_AGENTS: List[str] = [
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15"
+    ]
+    
+    # Request headers
+    HEADERS: Dict[str, str] = {
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Language": "uk-UA,uk;q=0.9,en;q=0.8",
+        "Accept-Encoding": "gzip, deflate, br",
+        "DNT": "1",
+        "Connection": "keep-alive",
+        "Upgrade-Insecure-Requests": "1",
     }
     
-    # Browser and scraping settings
-    HEADLESS: bool = True
-    USER_AGENT_ROTATION: bool = True
-    ENABLE_STEALTH: bool = True
-    BLOCK_IMAGES: bool = True  # Faster loading
-    BLOCK_CSS: bool = False    # Keep CSS for proper selectors
+    # Search filters
+    PROPERTY_TYPES: List[str] = ["kvartiry"]  # apartments
+    LISTING_TYPES: List[str] = ["rent", "sale"]  # оренда, продаж
+    CURRENCY_FILTER: str = "USD"  # Only USD listings
     
-    # Timing and retry settings
-    BASE_DELAY_MS: int = 1500
-    MAX_DELAY_MS: int = 4000
-    RETRY_ATTEMPTS: int = 5
-    RETRY_DELAY: float = 2.0
-    PAGE_TIMEOUT: int = 30000
-    ELEMENT_TIMEOUT: int = 10000
+    # Selectors for parsing
+    SELECTORS = {
+        "listing_container": "[data-cy='l-card']",
+        "title": "h6[data-cy='l-card-title']",
+        "price": "[data-testid='ad-price']",
+        "location": "[data-cy='l-card-location']", 
+        "details": "[data-cy='l-card-details']",
+        "seller_info": "[data-cy='seller-info']",
+        "link": "a[data-cy='l-card-link']",
+        "image": "img[data-cy='l-card-image']",
+        "date": "[data-cy='l-card-date']",
+        "promoted": "[data-cy='promoted-badge']"
+    }
     
-    # Data persistence settings
-    DATABASE_PATH: str = "data/olx_offers.sqlite"
-    EXPORT_PATH: str = "data/exports/olx_offers_latest.csv"
-    LOGS_PATH: str = "scraper/logs"
+    # Database settings
+    DB_URL: str = os.getenv("DB_URL", "sqlite:///data/olx_offers.sqlite")
     
-    # Scraping limits
-    DEFAULT_MAX_PAGES: int = 10
-    MAX_ITEMS_PER_PAGE: int = 50
+    # Logging settings
+    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
+    LOG_FILE: str = "scraper/logs/botasaurus_scraper.log"
     
-    # Target city and location settings
-    TARGET_CITY: str = "Івано-Франківськ"
-    TARGET_CURRENCY: str = "USD"
+    # Output settings
+    EXPORT_CSV: bool = True
+    CSV_PATH: str = "data/exports/olx_offers_latest.csv"
     
-    def __post_init__(self):
-        """Create necessary directories"""
-        os.makedirs(Path(self.DATABASE_PATH).parent, exist_ok=True)
-        os.makedirs(Path(self.EXPORT_PATH).parent, exist_ok=True)
-        os.makedirs(self.LOGS_PATH, exist_ok=True)
+    # Retry settings
+    MAX_RETRIES: int = 3
+    RETRY_DELAY: int = 10  # seconds
     
-    @classmethod
-    def from_env(cls) -> 'ScraperConfig':
-        """Create config from environment variables"""
-        return cls(
-            HEADLESS=os.getenv('SCRAPER_HEADLESS', 'true').lower() == 'true',
-            BASE_DELAY_MS=int(os.getenv('SCRAPER_DELAY_MS', '1500')),
-            MAX_DELAY_MS=int(os.getenv('SCRAPER_MAX_DELAY_MS', '4000')),
-            RETRY_ATTEMPTS=int(os.getenv('SCRAPER_RETRY_ATTEMPTS', '5')),
-            DATABASE_PATH=os.getenv('SCRAPER_DB_PATH', 'data/olx_offers.sqlite'),
-            EXPORT_PATH=os.getenv('SCRAPER_EXPORT_PATH', 'data/exports/olx_offers_latest.csv'),
-            DEFAULT_MAX_PAGES=int(os.getenv('SCRAPER_MAX_PAGES', '10'))
-        )
+    # Anti-ban settings
+    MIN_DELAY: int = 4000  # ms
+    MAX_DELAY: int = 8000  # ms
+    RANDOM_VIEWPORT: bool = True
+    ROTATE_USER_AGENT: bool = True
+    
+    # Street to district mapping
+    STREETS_MAPPING_FILE: str = os.getenv("STREET_MAPPING_FILE", "districts/streets_mapping.csv")
+    DEFAULT_DISTRICT: str = os.getenv("DEFAULT_DISTRICT", "Центр")
 
-# CSS Selectors for OLX elements
-class OLXSelectors:
-    """CSS selectors for OLX website elements"""
-    
-    # Listing page selectors
-    LISTING_CONTAINER = '[data-cy="l-card"]'
-    LISTING_LINK = 'a[data-cy="listing-ad-title"]'
-    LISTING_TITLE = '[data-cy="listing-ad-title"]'
-    LISTING_PRICE = '[data-testid="ad-price"]'
-    LISTING_LOCATION = '[data-testid="location-date"]'
-    
-    # Individual ad page selectors  
-    AD_TITLE = 'h1[data-cy="ad_title"]'
-    AD_PRICE = '[data-testid="ad-price-container"]'
-    AD_DESCRIPTION = '[data-cy="ad_description"] div'
-    AD_PARAMETERS = '[data-testid="parameters-container"]'
-    AD_LOCATION = '[data-cy="ad-location"]'
-    AD_ID = '[data-cy="ad-id"]'
-    
-    # Seller information
-    SELLER_NAME = '[data-cy="seller_card"] h4'
-    SELLER_TYPE = '[data-cy="seller_card"] .css-1kn2r8g'
-    
-    # Pagination
-    NEXT_PAGE = '[data-testid="pagination-forward"]'
-    PAGE_NUMBER = '[data-testid="pagination-list"] button[aria-current="page"]'
+# Ivano-Frankivsk districts
+DISTRICTS = [
+    "Центр",
+    "Пасічна", 
+    "БАМ",
+    "Каскад",
+    "Залізничний (Вокзал)",
+    "Брати",
+    "Софіївка",
+    "Будівельників",
+    "Набережна",
+    "Опришівці"
+]
 
-# Street to District mapping for Ivano-Frankivsk
-STREET_DISTRICT_MAPPING = {
+# Street to district mapping for Ivano-Frankivsk
+STREET_TO_DISTRICT = {
     # Центр
+    "Августина Волошина": "Центр",
+    "Арсенальна": "Центр",
+    "Вічева": "Центр",
     "Галицька": "Центр",
-    "Незалежності": "Центр", 
+    "Гетьмана Мазепи": "Центр",
     "Грушевського": "Центр",
+    "Данила Галицького": "Центр",
+    "Дністровська": "Центр",
+    "Європейська": "Центр",
+    "Євгена Коновальця": "Центр",
     "Січових Стрільців": "Центр",
     "Шевченка": "Центр",
+    "Незалежності": "Центр",
     "Леся Курбаса": "Центр",
-    "Чорновола": "Центр",
-    "Василіянок": "Центр",
+    "Мазепи": "Центр",
+    "Міцкевича": "Центр",
+    "Курбаса": "Центр",
     
     # Пасічна
-    "Тролейбусна": "Пасічна",
     "Пасічна": "Пасічна",
-    "Федьковича": "Пасічна",
-    "Бандери": "Пасічна",
+    "Старопасічна": "Пасічна",
+    "Пасічна Нова": "Пасічна",
+    "Пасічний провулок": "Пасічна",
+    "Трускавецька": "Пасічна",
+    "Промислова": "Пасічна",
+    "Зелена": "Пасічна",
     
     # БАМ
-    "Івасюка": "БАМ",
-    "Надрічна": "БАМ",
-    "Вовчинецька": "БАМ",
-    "Мазепи": "БАМ",
+    "Північна": "БАМ",
+    "Відінська": "БАМ", 
+    "БАМ": "БАМ",
+    "Богдана Хмельницького": "БАМ",
+    "Будівельна": "БАМ",
+    "Молодіжна": "БАМ",
+    "Польова": "БАМ",
     
     # Каскад
-    "24 Серпня": "Каскад",
     "Каскадна": "Каскад",
-    "Короля Данила": "Каскад",
-    "Хмельницького": "Каскад",
+    "Тисменицька": "Каскад",
+    "Вишнева": "Каскад",
+    "Ярослава Мудрого": "Каскад",
+    "Пушкіна": "Каскад",
+    "Лермонтова": "Каскад",
     
     # Залізничний (Вокзал)
-    "Стефаника": "Залізничний (Вокзал)",
+    "Залізнична": "Залізничний (Вокзал)",
     "Привокзальна": "Залізничний (Вокзал)",
-    "Залізнична": "Залізничний (В��кзал)",
-    "Коновальця": "Залізничний (Вокзал)",
+    "Вокзальна": "Залізничний (Вокзал)",
+    "Станційна": "Залізничний (Вокзал)",
+    "Перонна": "Залізничний (Вокзал)",
     
     # Брати
-    "Хоткевича": "Брати",
-    "Миколайчука": "Брати", 
-    "Довга": "Брати",
-    "Є. Коновальця": "Брати",
+    "Братів Бойчуків": "Брати",
+    "Братів Рогатинців": "Брати",
+    "Чорновола": "Брати",
+    "Стуса": "Брати",
+    "Антоновича": "Брати",
     
     # Софіївка
-    "Пстрака": "Софіївка",
-    "Софійська": "Софіївка",
-    "Левицького": "Софіївка",
-    "Пулюя": "Софіївка",
+    "Софіївська": "Софіївка",
+    "Академіка Сахарова": "Софіївка",
+    "Сахарова": "Софіївка",
+    "Надбережна": "Софіївка",
+    "Набережна Стефаника": "Софіївка",
     
     # Будівельників
-    "Селянська": "Будівельників",
     "Будівельників": "Будівельників",
-    "Промислова": "Будівельників",
-    "Автомобільна": "Будівельників",
+    "Конструкторська": "Будівельників",
+    "Робітнича": "Будівельників",
+    "Енергетична": "Будівельників",
+    "Монтажна": "Будівельників",
     
     # Набережна
-    "Набережна ім. В. Стефаника": "Набережна",
-    "Набережна": "Набережна", 
-    "Дністровська": "Набережна",
-    "Мільйонна": "Набережна",
+    "Набережна": "Набережна",
+    "Набережна Стефаника": "Набережна",
+    "Річна": "Набережна",
+    "Прибережна": "Набе��ежна",
     
     # Опришівці
     "Опришівська": "Опришівці",
-    "Гуцульська": "Опришівці",
+    "Довбуша": "Опришівці",
     "Карпатська": "Опришівці",
-    "Покутська": "Опришівц��"
+    "Гуцульська": "Опришівці"
 }
 
-# Default scraper configuration instance
-config = ScraperConfig.from_env()
+# Owner/agency classification keywords
+OWNER_KEYWORDS = [
+    "власник", "власниця", "від власника", "без посередників",
+    "приватна особа", "безпосередньо", "хазяїн", "хазяйка",
+    "особисто", "прямий продаж", "без агентства", "без комісії"
+]
+
+AGENCY_KEYWORDS = [
+    "агентство", "ріелтор", "нерухомість", "estate", "reality",
+    "девелопер", "забудовник", "компанія", "ТОВ", "ПП", "фірма",
+    "центр нерухомості", "операції з нерухомістю", "професійний ріелтор"
+]
