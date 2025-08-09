@@ -178,6 +178,13 @@ export default function Admin() {
     }
   };
 
+  // Add log entry to activity logs
+  const addLogEntry = (message: string) => {
+    const timestamp = new Date().toLocaleTimeString('uk-UA');
+    const logEntry = `[${timestamp}] ${message}`;
+    setActivityLogs(prevLogs => [logEntry, ...prevLogs.slice(0, 49)]); // Keep last 50 entries
+  };
+
   const loadProperties = async () => {
     try {
       const response = await fetch('/api/properties');
@@ -406,7 +413,7 @@ export default function Admin() {
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center">
                 <Settings className="w-5 h-5 mr-2 text-purple-600" />
-                Ручні записи
+                Ручні ��аписи
               </CardTitle>
             </CardHeader>
             <CardContent>
