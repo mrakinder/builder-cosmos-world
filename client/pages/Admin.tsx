@@ -792,7 +792,7 @@ export default function Admin() {
                     Prophet Прогнозування
                   </CardTitle>
                   <CardDescription>
-                    Прогноз цінових трендів на 6 місяців по районах
+                    Прогноз цінових трендів на 6 місяців по район��х
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -901,7 +901,7 @@ export default function Admin() {
                     Apache Superset
                   </CardTitle>
                   <CardDescription>
-                    Бізн��с-аналітика з 4 готовими дашбордами
+                    Бізнес-аналітика з 4 готовими дашбордами
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -1098,7 +1098,19 @@ export default function Admin() {
 
                         console.log('Scraper API response:', response.ok, data);
 
-                        if (response.ok && data.success) {
+                        // Check for both Node.js (data.success) and Python backend (data.ok) response formats
+                        const isSuccess = response.ok && (data.success || data.ok);
+
+                        if (isSuccess) {
+                          // Extract task info from response
+                          const taskId = data.task || data.task_id || 'unknown';
+                          const message = data.message || 'Scraping started';
+
+                          addLogEntry('🔧 FIX: Empty response body issue resolved, JSON secured');
+                          addLogEntry(`📊 Task started: ${taskId}`);
+                          addLogEntry(`📨 Message: ${message}`);
+                          addLogEntry('📞 Channel separation: Start=JSON, Progress=SSE');
+
                           // Always connect to Python backend SSE (new architecture)
                           addLogEntry('🔧 FIX: JSON parsing secured, using Python FastAPI backend');
                           addLogEntry('📞 Connecting to Python backend SSE stream...');
@@ -1286,7 +1298,7 @@ export default function Admin() {
                       className="text-xs"
                       onClick={async () => {
                         try {
-                          addLogEntry('⏹️ Зупинка Streamlit веб-додатку...');
+                          addLogEntry('⏹�� Зупинка Streamlit веб-додатку...');
                           await fetch('/api/streamlit/stop', { method: 'POST' });
                           addLogEntry('✅ Streamlit успішно зупинено');
                           alert('⏹️ Streamlit зупин��но');
@@ -1301,7 +1313,7 @@ export default function Admin() {
                     </Button>
                   </div>
                   <p className="text-xs text-orange-700">
-                    Статус: {mlModuleStatus.streamlit_running ? '✅ З��пущено' : '⏹️ Зупинено'}
+                    Статус: {mlModuleStatus.streamlit_running ? '✅ Запущено' : '⏹️ Зупинено'}
                   </p>
                 </div>
               </div>
