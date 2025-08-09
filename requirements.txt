@@ -1,0 +1,34 @@
+# Core scraping and automation
+botasaurus>=4.0.0
+playwright>=1.40.0
+selenium>=4.15.0
+
+# HTML parsing and data processing
+beautifulsoup4>=4.12.0
+lxml>=4.9.3
+pandas>=2.1.0
+
+# Database and storage
+sqlite3
+
+# Configuration and environment
+python-dotenv>=1.0.0
+pydantic>=2.5.0
+
+# Utilities and logging
+requests>=2.31.0
+fake-useragent>=1.4.0
+tenacity>=8.2.0
+
+# Data validation and serialization
+dataclasses-json>=0.6.0
+typing-extensions>=4.8.0
+
+# CLI interface
+click>=8.1.0
+rich>=13.6.0
+tqdm>=4.66.0
+
+# Testing (optional)
+pytest>=7.4.0
+pytest-mock>=3.12.0
