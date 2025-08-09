@@ -153,21 +153,28 @@ async def start_scraping(request: ScrapingRequest, background_tasks: BackgroundT
             "INFO"
         )
 
-        # Return consistent JSON structure
+        # Prepare response body
+        response_body = {
+            "ok": True,
+            "task": task_id,
+            "status": "running",
+            "message": f"Scraping started for {request.listing_type} listings",
+            "estimated_time": f"{request.max_pages * 10} seconds",
+            "parameters": {
+                "listing_type": request.listing_type,
+                "max_pages": request.max_pages,
+                "delay_ms": request.delay_ms
+            }
+        }
+
+        # LOG before return to ensure we reach this point
+        logger.info(f"✅ RETURN /scraper/start 202 JSON - task={task_id}")
+
+        # GUARANTEED JSON response
         return JSONResponse(
-            {
-                "ok": True,
-                "task": task_id,
-                "message": f"Scraping started for {request.listing_type} listings",
-                "estimated_time": f"{request.max_pages * 10} seconds",
-                "parameters": {
-                    "listing_type": request.listing_type,
-                    "max_pages": request.max_pages,
-                    "delay_ms": request.delay_ms
-                }
-            },
+            response_body,
             status_code=202,
-            headers={"Content-Type": "application/json"}
+            headers={"Content-Type": "application/json", "Cache-Control": "no-cache"}
         )
 
     except Exception as e:
