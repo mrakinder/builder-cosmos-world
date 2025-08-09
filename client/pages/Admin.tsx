@@ -78,6 +78,34 @@ export default function Admin() {
     return () => clearInterval(interval);
   }, []);
 
+  // Start ML progress monitoring
+  const startMLProgressMonitoring = () => {
+    const progressInterval = setInterval(async () => {
+      if (mlTrainingStatus === "training") {
+        try {
+          const response = await fetch('/api/ml/progress');
+          const data = await response.json();
+
+          setMLTrainingProgress(data.progress || 0);
+
+          if (data.status === "completed") {
+            setMLTrainingStatus("completed");
+            setMLTrainingProgress(100);
+            clearInterval(progressInterval);
+            loadMLModuleStatus();
+          } else if (data.status === "failed") {
+            setMLTrainingStatus("failed");
+            clearInterval(progressInterval);
+          }
+        } catch (error) {
+          console.error('Failed to get ML progress:', error);
+        }
+      } else {
+        clearInterval(progressInterval);
+      }
+    }, 1000);
+  };
+
   const loadStats = async () => {
     try {
       const response = await fetch('/api/property-stats');
@@ -380,7 +408,7 @@ export default function Admin() {
             }}
           >
             <Eye className="w-4 h-4 mr-2" />
-            {showProperties ? 'Сховати' : 'Перегляну��и'} оголошення
+            {showProperties ? 'Сховати' : 'Переглянути'} оголошення
           </Button>
           <Button
             variant={showStreetManager ? "default" : "outline"}
@@ -554,7 +582,7 @@ export default function Admin() {
 
                   <div className="p-3 bg-blue-50 rounded-lg text-sm">
                     <p><strong>Ціль:</strong> MAPE ≤ 15%</p>
-                    <p><strong>Фічі:</strong> площа, рай��н, кімнати, поверх, тип, ремонт</p>
+                    <p><strong>Фічі:</strong> площа, район, кімнати, поверх, тип, ремонт</p>
                     <p><strong>Статус:</strong> {mlModuleStatus.lightautoml_trained ? '✅ Готово' : '⏳ Не т��енована'}</p>
                   </div>
                 </CardContent>
@@ -579,7 +607,7 @@ export default function Admin() {
                         try {
                           const response = await fetch('/api/ml/forecast');
                           const data = await response.json();
-                          alert(`✅ Прогноз готовий!\n��айонів: ${data.districts?.length || 0}\nПеріод: 6 місяців`);
+                          alert(`✅ Прогноз готовий!\nРайонів: ${data.districts?.length || 0}\nПеріод: 6 місяців`);
                         } catch (error) {
                           alert('❌ Помилка створе��ня прогнозу');
                         }
@@ -709,7 +737,7 @@ export default function Admin() {
                       <li>Model Quality</li>
                       <li>Scraper Health</li>
                     </ul>
-                    <p className="mt-2"><strong>Статус:</strong> {mlModuleStatus.superset_running ? '�� Запущено' : '⏹️ Зупинено'}</p>
+                    <p className="mt-2"><strong>Статус:</strong> {mlModuleStatus.superset_running ? '✅ Запущено' : '⏹️ Зупинено'}</p>
                   </div>
                 </CardContent>
               </Card>
