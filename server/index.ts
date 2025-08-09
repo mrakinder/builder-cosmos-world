@@ -97,6 +97,22 @@ export function createServer() {
   app.get("/api/scraper/status", handleScrapingStatus);
   app.post("/api/scraper/stop", handleStopScraping);
 
+  // Global SSE connections array
+  const sseConnections: any[] = [];
+
+  // Global broadcast function
+  (global as any).broadcastSSE = (data: any) => {
+    const message = `data: ${JSON.stringify(data)}\n\n`;
+    sseConnections.forEach((res, index) => {
+      try {
+        res.write(message);
+      } catch (error) {
+        // Remove dead connections
+        sseConnections.splice(index, 1);
+      }
+    });
+  };
+
   // Server-Sent Events for real-time updates
   app.get("/api/events/stream", (req, res) => {
     res.writeHead(200, {
@@ -107,16 +123,27 @@ export function createServer() {
       'Access-Control-Allow-Headers': 'Cache-Control'
     });
 
+    // Add connection to list
+    sseConnections.push(res);
+
     // Send initial connection message
     res.write(`data: ${JSON.stringify({ type: 'connected', message: 'SSE connected' })}\n\n`);
 
     // Keep connection alive
     const heartbeat = setInterval(() => {
-      res.write(`data: ${JSON.stringify({ type: 'heartbeat', timestamp: Date.now() })}\n\n`);
+      try {
+        res.write(`data: ${JSON.stringify({ type: 'heartbeat', timestamp: Date.now() })}\n\n`);
+      } catch (error) {
+        clearInterval(heartbeat);
+      }
     }, 30000);
 
     req.on('close', () => {
       clearInterval(heartbeat);
+      const index = sseConnections.indexOf(res);
+      if (index !== -1) {
+        sseConnections.splice(index, 1);
+      }
     });
   });
 
