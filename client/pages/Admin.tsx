@@ -127,6 +127,54 @@ export default function Admin() {
     return progressInterval;
   };
 
+  // Start Scraper progress monitoring
+  const startScraperProgressMonitoring = () => {
+    let attempts = 0;
+    const maxAttempts = 60; // 1 minute max
+
+    const progressInterval = setInterval(async () => {
+      attempts++;
+
+      try {
+        const response = await fetch('/api/scraping-status');
+        const data = await response.json();
+
+        console.log('Scraper Progress response:', data);
+
+        setScraperProgress(data.progressPercent || 0);
+
+        if (data.status === "completed") {
+          addLogEntry('✅ Botasaurus парсинг завершено успішно!');
+          setScraperStatus("completed");
+          setScraperProgress(100);
+          clearInterval(progressInterval);
+          loadStats();
+        } else if (data.status === "error") {
+          addLogEntry('❌ Botasaurus парсинг завершилось з помилкою');
+          setScraperStatus("failed");
+          clearInterval(progressInterval);
+        } else if (data.status === "running") {
+          setScraperStatus("running");
+          if (data.currentPage && data.totalPages) {
+            addLogEntry(`📄 Обробка сторінки ${data.currentPage}/${data.totalPages} - знайдено ${data.currentItems || 0} оголошень`);
+          }
+        } else if (attempts >= maxAttempts) {
+          addLogEntry('⏰ Час очікування парсингу вичерпано');
+          setScraperStatus("timeout");
+          clearInterval(progressInterval);
+        }
+      } catch (error) {
+        console.error('Failed to get scraper progress:', error);
+        if (attempts >= 5) {
+          setScraperStatus("failed");
+          clearInterval(progressInterval);
+        }
+      }
+    }, 2000); // Check every 2 seconds
+
+    return progressInterval;
+  };
+
   const loadStats = async () => {
     try {
       const response = await fetch('/api/property-stats');
@@ -378,7 +426,7 @@ export default function Admin() {
               🛡️ Botasaurus v4.0.10+
             </span>
             <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-              ���� LightAutoML v0.3.7+
+              🧠 LightAutoML v0.3.7+
             </span>
             <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">
               📈 Prophet v1.1.4+
@@ -519,7 +567,7 @@ export default function Admin() {
                         <SelectItem value="Пасічна">Пасічна</SelectItem>
                         <SelectItem value="БАМ">БАМ</SelectItem>
                         <SelectItem value="Каскад">Каскад</SelectItem>
-                        <SelectItem value="Залізничний (Вокзал)">Залізничний (Вокзал)</SelectItem>
+                        <SelectItem value="Залізничний (Вокз��л)">Залізничний (Вокзал)</SelectItem>
                         <SelectItem value="Брати">Брати</SelectItem>
                         <SelectItem value="Софіївка">Софі��вка</SelectItem>
                         <SelectItem value="Будівельників">Будівельників</SelectItem>
@@ -646,7 +694,7 @@ export default function Admin() {
                     Prophet Прогнозування
                   </CardTitle>
                   <CardDescription>
-                    Прогноз цін��вих трендів на 6 місяців по районах
+                    Прогноз цінових трендів на 6 місяців по районах
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -687,7 +735,7 @@ export default function Admin() {
 
                   <div className="p-3 bg-purple-50 rounded-lg text-sm">
                     <p><strong>Метод:</strong> Facebook Prophet</p>
-                    <p><strong>Прогноз:</strong> 6 місяців з довірчими інтервалами</p>
+                    <p><strong>Прогно��:</strong> 6 місяців з довірчими інтервалами</p>
                     <p><strong>Стат��с:</strong> {mlModuleStatus.prophet_ready ? '✅ Готово' : '⏳ Не готово'}</p>
                   </div>
                 </CardContent>
@@ -939,7 +987,7 @@ export default function Admin() {
                     Запустити парсинг
                   </Button>
                   <p className="text-xs text-green-700">
-                    Статус: {mlModuleStatus.botasaurus_ready ? '✅ Активний' : '⏳ Неа��тивний'}
+                    Статус: {mlModuleStatus.botasaurus_ready ? '✅ Активний' : '⏳ Неактивний'}
                   </p>
                 </div>
 
@@ -987,7 +1035,7 @@ export default function Admin() {
                       }
                     }}
                   >
-                    {mlTrainingStatus === "training" ? 'Тренув��ння...' : 'Тренувати модель'}
+                    {mlTrainingStatus === "training" ? 'Тренування...' : 'Тренувати модель'}
                   </Button>
 
                   {mlTrainingStatus === "training" && (
