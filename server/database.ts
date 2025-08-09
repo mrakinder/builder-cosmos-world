@@ -16,6 +16,8 @@ const getDatabase = () => {
 
 // Create tables if they don't exist
 export const initializeDatabase = () => {
+  const db = getDatabase();
+
   // Properties table
   db.exec(`
     CREATE TABLE IF NOT EXISTS properties (
@@ -130,7 +132,7 @@ export const initializeDatabase = () => {
       // Budivelnikiv
       ["Селянська", "Будівельників"],
       ["Будівельників", "Будівельників"],
-      ["Промислова", "Будівельників"],
+      ["Промислова", "Будіве��ьників"],
       
       // Naberezhna
       ["Набережна ім. В. Стефаника", "Набережна"],
