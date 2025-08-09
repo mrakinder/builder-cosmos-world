@@ -136,6 +136,16 @@ export default function Admin() {
     }
   };
 
+  const loadMLModuleStatus = async () => {
+    try {
+      const response = await fetch('/api/pipeline/status');
+      const data = await response.json();
+      setMLModuleStatus(data);
+    } catch (error) {
+      console.error('Failed to load ML module status:', error);
+    }
+  };
+
   const handleAddStreet = async () => {
     if (!newStreet.trim() || !selectedDistrict) {
       alert('Будь ласка, введіть назву вулиці та оберіть район');
@@ -260,7 +270,7 @@ export default function Admin() {
       <div className="container mx-auto px-4 py-8">
         {/* Dashboard Overview */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Панель адмін��стратора</h1>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">Панель адміністратора</h1>
           <p className="text-slate-600">Управління парсингом, моделями та базою даних</p>
         </div>
 
@@ -364,7 +374,7 @@ export default function Admin() {
                       Назва вулиці
                     </label>
                     <Input
-                      placeholder="Введіть назву вулиці..."
+                      placeholder="Введ��ть назву вулиці..."
                       value={newStreet}
                       onChange={(e) => setNewStreet(e.target.value)}
                     />
@@ -438,7 +448,7 @@ export default function Admin() {
                             <h4 className="font-medium text-slate-900 mb-1">{property.title}</h4>
                             <p className="text-sm text-slate-600">{property.district}</p>
                             <p className="text-xs text-slate-500 mt-1">
-                              {property.isOwner ? '👤 Власник' : '🏢 Агентство'}
+                              {property.isOwner ? '👤 Власник' : '��� Агентство'}
                             </p>
                           </div>
                           <div className="text-sm">
@@ -659,7 +669,7 @@ export default function Admin() {
             <CardHeader>
               <CardTitle className="flex items-center text-xl">
                 <Activity className="w-6 h-6 mr-3 text-purple-600" />
-                Навча��ня моделей
+                Навчання моделей
               </CardTitle>
               <CardDescription>
                 Перетренування ML-моделей на нових даних
@@ -741,7 +751,7 @@ export default function Admin() {
                       try {
                         const response = await fetch('/api/model-comparison');
                         const data = await response.json();
-                        alert(`Порівнян��я моделей:\nНайкраща: ${data.bestModel}\nДата: ${new Date(data.comparisonDate).toLocaleDateString('uk-UA')}`);
+                        alert(`Порівняння моделей:\nНайкраща: ${data.bestModel}\nДата: ${new Date(data.comparisonDate).toLocaleDateString('uk-UA')}`);
                       } catch (error) {
                         console.error('Comparison error:', error);
                         alert('❌ Помилка порівняння моделей');
