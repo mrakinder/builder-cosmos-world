@@ -89,5 +89,22 @@ export function createServer() {
   app.get("/api/superset/status", handleSupersetStatus);
   app.get("/api/pipeline/status", handlePipelineStatus);
 
+  // SPA fallback - serve index.html for any non-API routes
+  // This ensures React Router works correctly for direct URL access
+  app.get('*', (req, res, next) => {
+    // Skip API routes
+    if (req.path.startsWith('/api/')) {
+      return next();
+    }
+
+    // For development, let Vite handle static files
+    if (process.env.NODE_ENV !== 'production') {
+      return next();
+    }
+
+    // In production, serve the built React app
+    res.sendFile(path.join(__dirname, '../spa/index.html'));
+  });
+
   return app;
 }
