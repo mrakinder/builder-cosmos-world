@@ -41,80 +41,76 @@ class DatabaseManager:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
                 
-                # Properties table
+                # Properties table - COMPATIBLE WITH NODE.JS SCHEMA
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS properties (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         olx_id TEXT UNIQUE NOT NULL,
                         title TEXT NOT NULL,
-                        price_usd REAL,
-                        currency TEXT DEFAULT 'USD',
-                        area REAL,
-                        floor INTEGER,
-                        total_floors INTEGER,
+                        price_usd INTEGER NOT NULL,
+                        area INTEGER NOT NULL,
                         rooms INTEGER,
-                        district TEXT NOT NULL,
+                        floor INTEGER,
                         street TEXT,
-                        full_location TEXT,
+                        district TEXT NOT NULL,
                         description TEXT,
-                        seller_type TEXT CHECK(seller_type IN ('owner', 'agency')),
-                        listing_type TEXT CHECK(listing_type IN ('rent', 'sale')),
-                        listing_url TEXT NOT NULL,
-                        image_url TEXT,
-                        posted_date TEXT,
-                        is_promoted BOOLEAN DEFAULT FALSE,
-                        scraped_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        building_type TEXT,
-                        renovation_status TEXT,
-                        is_active BOOLEAN DEFAULT TRUE
+                        is_owner BOOLEAN NOT NULL DEFAULT 0,
+                        url TEXT,
+                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        last_updated DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        is_active BOOLEAN DEFAULT 1
                     )
                 """)
                 
-                # Street to district mapping table
+                # Street to district mapping table - COMPATIBLE WITH NODE.JS
                 cursor.execute("""
-                    CREATE TABLE IF NOT EXISTS street_district_map (
+                    CREATE TABLE IF NOT EXISTS street_districts (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         street TEXT UNIQUE NOT NULL,
                         district TEXT NOT NULL,
-                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
                     )
                 """)
                 
-                # Event log table
+                # Activity log table - COMPATIBLE WITH NODE.JS
                 cursor.execute("""
-                    CREATE TABLE IF NOT EXISTS event_log (
+                    CREATE TABLE IF NOT EXISTS activity_log (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        module TEXT NOT NULL,
-                        action TEXT NOT NULL,
-                        details TEXT,
-                        status TEXT CHECK(status IN ('INFO', 'WARNING', 'ERROR', 'SUCCESS')),
-                        properties_count INTEGER DEFAULT 0
+                        message TEXT NOT NULL,
+                        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        type TEXT DEFAULT 'info'
                     )
                 """)
                 
-                # Scraping sessions table
+                # Price history table - COMPATIBLE WITH NODE.JS
                 cursor.execute("""
-                    CREATE TABLE IF NOT EXISTS scraping_sessions (
+                    CREATE TABLE IF NOT EXISTS price_history (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        session_id TEXT UNIQUE NOT NULL,
-                        listing_type TEXT NOT NULL,
-                        start_time TIMESTAMP NOT NULL,
-                        end_time TIMESTAMP,
-                        total_pages INTEGER DEFAULT 0,
+                        property_id INTEGER NOT NULL,
+                        olx_id TEXT NOT NULL,
+                        price_usd INTEGER NOT NULL,
+                        recorded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (property_id) REFERENCES properties (id)
+                    )
+                """)
+
+                # Scraping state table - COMPATIBLE WITH NODE.JS
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS scraping_state (
+                        id INTEGER PRIMARY KEY,
+                        last_page INTEGER DEFAULT 0,
+                        last_url TEXT,
+                        last_processed_id TEXT,
                         total_processed INTEGER DEFAULT 0,
-                        new_listings INTEGER DEFAULT 0,
-                        updated_listings INTEGER DEFAULT 0,
-                        errors INTEGER DEFAULT 0,
-                        status TEXT DEFAULT 'running'
+                        last_run DATETIME,
+                        status TEXT DEFAULT 'idle'
                     )
                 """)
                 
                 # Create indexes for performance
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_properties_olx_id ON properties(olx_id)")
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_properties_district ON properties(district)")
-                cursor.execute("CREATE INDEX IF NOT EXISTS idx_properties_scraped_at ON properties(scraped_at)")
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_properties_created_at ON properties(created_at)")
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_properties_price ON properties(price_usd)")
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_properties_active ON properties(is_active)")
                 
