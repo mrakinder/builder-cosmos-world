@@ -178,12 +178,20 @@ async def start_scraping(request: ScrapingRequest, background_tasks: BackgroundT
         )
 
     except Exception as e:
-        logger.error(f"❌ Error starting scraper: {str(e)}")
-        # Always return JSON, never raise HTTPException which can return HTML
+        error_msg = f"{type(e).__name__}: {str(e)}"
+        logger.error(f"❌ Error starting scraper: {error_msg}")
+        logger.error(f"🔄 RETURN /scraper/start 500 JSON - error={error_msg}")
+
+        # GUARANTEED JSON error response - never empty
         return JSONResponse(
-            {"ok": False, "error": f"{type(e).__name__}: {str(e)}"},
+            {
+                "ok": False,
+                "error": error_msg,
+                "status": "error",
+                "timestamp": time.time()
+            },
             status_code=500,
-            headers={"Content-Type": "application/json"}
+            headers={"Content-Type": "application/json", "Cache-Control": "no-cache"}
         )
 
 
