@@ -80,30 +80,49 @@ export default function Admin() {
 
   // Start ML progress monitoring
   const startMLProgressMonitoring = () => {
+    let attempts = 0;
+    const maxAttempts = 120; // 2 minutes max
+
     const progressInterval = setInterval(async () => {
-      if (mlTrainingStatus === "training") {
-        try {
-          const response = await fetch('/api/ml/progress');
-          const data = await response.json();
+      attempts++;
 
-          setMLTrainingProgress(data.progress || 0);
+      try {
+        const response = await fetch('/api/ml/progress');
+        const data = await response.json();
 
-          if (data.status === "completed") {
-            setMLTrainingStatus("completed");
-            setMLTrainingProgress(100);
-            clearInterval(progressInterval);
-            loadMLModuleStatus();
-          } else if (data.status === "failed") {
-            setMLTrainingStatus("failed");
-            clearInterval(progressInterval);
-          }
-        } catch (error) {
-          console.error('Failed to get ML progress:', error);
+        console.log('ML Progress response:', data); // Debug log
+
+        setMLTrainingProgress(data.progress || 0);
+        addLogEntry(`📊 ML прогрес: ${data.progress || 0}% - ${data.stage || 'Навчання'}`);
+
+        if (data.status === "completed") {
+          addLogEntry('✅ LightAutoML навчання завершено успішно!');
+          setMLTrainingStatus("completed");
+          setMLTrainingProgress(100);
+          clearInterval(progressInterval);
+          loadMLModuleStatus();
+        } else if (data.status === "failed") {
+          addLogEntry('❌ LightAutoML навчання завершилось з помилкою');
+          setMLTrainingStatus("failed");
+          clearInterval(progressInterval);
+        } else if (attempts >= maxAttempts) {
+          addLogEntry('⏰ Час очікування навчання вичерпано');
+          setMLTrainingStatus("timeout");
+          clearInterval(progressInterval);
         }
-      } else {
-        clearInterval(progressInterval);
+      } catch (error) {
+        console.error('Failed to get ML progress:', error);
+        addLogEntry('❌ Помилка отримання прогресу навчання');
+
+        if (attempts >= 5) { // Stop after 5 failed attempts
+          setMLTrainingStatus("failed");
+          clearInterval(progressInterval);
+        }
       }
     }, 1000);
+
+    // Store interval ID for cleanup
+    return progressInterval;
   };
 
   const loadStats = async () => {
@@ -435,7 +454,7 @@ export default function Admin() {
             }}
           >
             <Eye className="w-4 h-4 mr-2" />
-            {showProperties ? 'Сховати' : 'Переглянути'} оголошення
+            {showProperties ? 'Сховати' : 'Пере��лянути'} оголошення
           </Button>
           <Button
             variant={showStreetManager ? "default" : "outline"}
@@ -494,7 +513,7 @@ export default function Admin() {
                       <SelectContent>
                         <SelectItem value="Центр">Центр</SelectItem>
                         <SelectItem value="Пасічна">Пасічна</SelectItem>
-                        <SelectItem value="БАМ">БАМ</SelectItem>
+                        <SelectItem value="БАМ">��АМ</SelectItem>
                         <SelectItem value="Каскад">Каскад</SelectItem>
                         <SelectItem value="Залізничний (Вокзал)">Залізничний (Вокзал)</SelectItem>
                         <SelectItem value="Брати">Брати</SelectItem>
