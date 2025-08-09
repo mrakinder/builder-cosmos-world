@@ -38,6 +38,10 @@ class DatabaseManager:
     def _init_sqlite_db(self):
         """Initialize SQLite database with required tables"""
         try:
+            # Log database path for consistency verification
+            import os
+            abs_db_path = os.path.abspath(self.db_path)
+            self.logger.info(f"📊 Python Scraper DB path: {abs_db_path}")
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
                 
