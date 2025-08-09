@@ -1,0 +1,41 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Системні залежності для playwright/botasaurus та інших інструментів
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    gnupg \
+    git \
+    build-essential \
+    sqlite3 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Копіюємо requirements і встановлюємо залежності
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Встановлюємо playwright браузери (якщо потрібно для botasaurus)
+RUN python -m playwright install --with-deps
+
+# Копіюємо весь код
+COPY . .
+
+# Створюємо директорії для даних і логів
+RUN mkdir -p data logs cli/logs scraper/logs reports
+
+# Environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PORT=8080
+ENV PYTHONPATH=/app
+
+# Відкриваємо порт
+EXPOSE 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+# Запускаємо FastAPI через uvicorn
+CMD ["uvicorn", "cli.server:app", "--host", "0.0.0.0", "--port", "8080", "--workers", "1"]
