@@ -48,6 +48,13 @@ export default function Admin() {
   const [newStreet, setNewStreet] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [streetToDistrictMap, setStreetToDistrictMap] = useState({});
+  const [mlModuleStatus, setMLModuleStatus] = useState({
+    ml_trained: false,
+    prophet_ready: false,
+    streamlit_running: false,
+    superset_running: false
+  });
+  const [showMLControls, setShowMLControls] = useState(false);
 
   useEffect(() => {
     loadStats();
@@ -129,7 +136,7 @@ export default function Admin() {
 
   const handleAddStreet = async () => {
     if (!newStreet.trim() || !selectedDistrict) {
-      alert('Будь ласка, введіть назву вулиці та оберіть район');
+      alert('Будь ласка, введіть назв�� вулиці та оберіть район');
       return;
     }
 
@@ -369,7 +376,7 @@ export default function Admin() {
                         <SelectValue placeholder="Оберіть район" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Центр">Центр</SelectItem>
+                        <SelectItem value="Цент��">Центр</SelectItem>
                         <SelectItem value="Пасічна">Пасічна</SelectItem>
                         <SelectItem value="БАМ">БАМ</SelectItem>
                         <SelectItem value="Каскад">Каскад</SelectItem>
@@ -580,7 +587,7 @@ export default function Admin() {
                   onClick={handleManualPropertyAdd}
                 >
                   <Upload className="w-4 h-4 mr-2" />
-                  Додати тестове оголошення
+                  Додати тестове о��олошення
                 </Button>
 
                 <div className="grid grid-cols-2 gap-2">
@@ -719,7 +726,7 @@ export default function Admin() {
                         }
                       } catch (error) {
                         console.error('Advanced retrain error:', error);
-                        alert('❌ Помилка запус��у розширеного навчання');
+                        alert('❌ Помилка запус��у розшир��ного навчання');
                       }
                     }}
                   >
