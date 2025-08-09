@@ -18,7 +18,14 @@
     "start": "node dist/server/node-build.mjs",
     "test": "vitest --run",
     "format.fix": "prettier --write .",
-    "typecheck": "tsc"
+    "typecheck": "tsc",
+    "ml:cli": "python property_monitor_cli.py",
+    "ml:train": "python property_monitor_cli.py ml train",
+    "ml:forecast": "python property_monitor_cli.py forecasting predict --all",
+    "ml:streamlit": "python property_monitor_cli.py web start",
+    "ml:superset": "python property_monitor_cli.py superset start",
+    "ml:pipeline": "python property_monitor_cli.py pipeline full",
+    "ml:status": "python property_monitor_cli.py status"
   },
   "dependencies": {
     "@types/better-sqlite3": "^7.6.13",
