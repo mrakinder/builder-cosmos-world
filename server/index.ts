@@ -79,5 +79,15 @@ export function createServer() {
   app.delete("/api/manual-property/delete-manual-properties", handleDeleteManualProperties);
   app.get("/api/export-properties", handleExportProperties);
 
+  // ML Integration routes
+  app.post("/api/ml/predict", handleMLPredict);
+  app.get("/api/ml/forecast", handleProphetForecast);
+  app.post("/api/ml/train", handleTrainML);
+  app.get("/api/streamlit/status", handleStreamlitStatus);
+  app.post("/api/streamlit/start", handleStartStreamlit);
+  app.post("/api/streamlit/stop", handleStopStreamlit);
+  app.get("/api/superset/status", handleSupersetStatus);
+  app.get("/api/pipeline/status", handlePipelineStatus);
+
   return app;
 }
