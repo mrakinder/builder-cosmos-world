@@ -1,72 +1,93 @@
-# Core scraping and automation (Botasaurus)
-botasaurus>=4.0.0
+# Core Python requirements for Property Monitor IF (5-module system)
+# Property Monitor Ivano-Frankivsk - Real Estate Analysis Platform
+
+# Module 1: Botasaurus Web Scraper (Anti-detect OLX scraping)
+botasaurus>=4.0.10
 playwright>=1.40.0
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
 selenium>=4.15.0
 
-# HTML parsing and data processing
-beautifulsoup4>=4.12.0
-lxml>=4.9.3
+# Module 2: LightAutoML (Automated Machine Learning)
+lightautoml>=0.3.7.1
+scikit-learn>=1.3.0
+catboost>=1.2.0
+xgboost>=1.7.6
+optuna>=3.4.0
+numpy>=1.24.0
+scipy>=1.11.0
+
+# Module 3: Prophet (Time Series Forecasting)
+prophet>=1.1.4
+cmdstanpy>=1.2.0
+matplotlib>=3.7.0
+plotly>=5.17.0
+
+# Module 4: Streamlit (Public Web Interface)
+streamlit>=1.28.0
+streamlit-option-menu>=0.3.6
+altair>=5.1.0
+
+# Module 5: Apache Superset (Business Intelligence)
+apache-superset>=3.0.0
+sqlalchemy>=1.4.0
+redis>=4.6.0
+
+# Core Data Processing
 pandas>=2.1.0
+polars>=0.19.0
+pyarrow>=13.0.0
 
-# Database and storage
+# Database & Storage
 sqlite3
+psycopg2-binary>=2.9.7
+alembic>=1.12.0
 
-# Configuration and environment
+# Web Framework & API
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+httpx>=0.25.0
+sse-starlette>=1.6.5
+
+# Configuration & Environment
 python-dotenv>=1.0.0
-pydantic>=2.5.0
+pydantic>=2.4.0
+pydantic-settings>=2.0.0
 
-# Utilities and logging
-requests>=2.31.0
-fake-useragent>=1.4.0
-tenacity>=8.2.0
-
-# Data validation and serialization
-dataclasses-json>=0.6.0
-typing-extensions>=4.8.0
-
-# CLI interface
-click>=8.1.0
+# Logging & Monitoring
+loguru>=0.7.2
 rich>=13.6.0
 tqdm>=4.66.0
 
-# Testing (optional)
+# Utilities
+click>=8.1.7
+python-multipart>=0.0.6
+aiofiles>=23.2.1
+pillow>=10.0.0
+requests>=2.31.0
+
+# Development & Testing (optional)
 pytest>=7.4.0
-pytest-mock>=3.12.0
+pytest-asyncio>=0.21.0
+black>=23.9.0
+flake8>=6.1.0
 
-# LightAutoML dependencies
-lightautoml>=0.3.7.1
-scikit-learn>=1.3.0
-numpy>=1.24.0
-catboost>=1.2.0
-lightgbm>=3.3.5
-optuna>=3.0.0
-joblib>=1.3.0
+# Geographic & Street Mapping
+fuzzywuzzy>=0.18.0
+python-Levenshtein>=0.21.0
 
-# Prophet forecasting
-prophet>=1.1.4
-holidays>=0.29
-cmdstanpy>=1.1.0
-pystan>=3.5.0
-
-# Streamlit web app
-streamlit>=1.28.0
-plotly>=5.15.0
-streamlit-plotly-events>=0.0.6
-
-# Apache Superset
-apache-superset>=3.0.0
-sqlalchemy>=2.0.0
-redis>=4.5.0
+# Task Queue (for background processing)
 celery>=5.3.0
+redis>=4.6.0
 
-# Additional data science libraries
-matplotlib>=3.7.0
+# Additional ML utilities
+joblib>=1.3.0
 seaborn>=0.12.0
-scipy>=1.11.0
+missingno>=0.5.2
 
-# Development tools
-jupyter>=1.0.0
-ipykernel>=6.25.0
-black>=23.7.0
-flake8>=6.0.0
-mypy>=1.5.0
+# Performance optimization
+numba>=0.58.0
+cython>=3.0.0
+
+# Ukrainian language support
+pymorphy2>=0.9.1
