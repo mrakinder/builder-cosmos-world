@@ -32,6 +32,9 @@ let scrapingStatus = {
 // Activity log for real-time updates (in-memory for quick access)
 let activityLog: string[] = [];
 
+// SSE connections for real-time updates
+let sseConnections: any[] = [];
+
 // Load recent activities from database on startup
 const loadRecentActivities = () => {
   try {
@@ -406,7 +409,7 @@ export const handleAddStreet: RequestHandler = (req, res) => {
     const existing = dbOperations.getDistrictByStreet.get(street) as any;
     if (existing) {
       return res.status(400).json({
-        error: `Вулиця "${street}" вже існує в районі "${existing.district}"`
+        error: `Вули��я "${street}" вже існує в районі "${existing.district}"`
       });
     }
 
