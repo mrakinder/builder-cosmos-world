@@ -139,6 +139,36 @@ export async function handleStopStreamlit(req: Request, res: Response) {
   }
 }
 
+// ML Training Progress endpoint
+export async function handleMLProgress(req: Request, res: Response) {
+  try {
+    // In development, simulate progressive training
+    if (process.env.NODE_ENV !== 'production') {
+      // Create a simple progress simulation
+      const startTime = Date.now();
+      const elapsed = (Date.now() - startTime) / 1000; // seconds
+      const progress = Math.min(Math.floor((elapsed / 60) * 100), 100); // 60 seconds = 100%
+
+      res.json({
+        status: progress >= 100 ? "completed" : "training",
+        progress: progress,
+        stage: progress < 25 ? "loading_data" :
+               progress < 50 ? "feature_engineering" :
+               progress < 75 ? "model_training" : "evaluation",
+        message: progress >= 100 ? "Training completed" : `Training in progress: ${progress}%`
+      });
+      return;
+    }
+
+    // In production, get real progress from CLI
+    const { stdout } = await execAsync("python property_monitor_cli.py ml progress");
+    const progress = JSON.parse(stdout);
+    res.json(progress);
+  } catch (error) {
+    res.json({ status: "idle", progress: 0, message: "No training in progress" });
+  }
+}
+
 // Get Superset status
 export async function handleSupersetStatus(req: Request, res: Response) {
   try {
