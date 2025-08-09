@@ -370,7 +370,7 @@ export default function Admin() {
         {/* Dashboard Overview */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-slate-900 mb-2">Панель адміністратора</h1>
-          <p className="text-slate-600">Нова система з 5 модулями: Botasaurus + LightAutoML + Prophet + Streamlit + Superset</p>
+          <p className="text-slate-600">Нова сист��ма з 5 модулями: Botasaurus + LightAutoML + Prophet + Streamlit + Superset</p>
           <div className="mt-3 flex flex-wrap gap-2">
             <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
               🛡️ Botasaurus v4.0.10+
@@ -396,7 +396,7 @@ export default function Admin() {
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center">
                 <Database className="w-5 h-5 mr-2 text-blue-600" />
-                Всього оголошень
+                В��ього оголошень
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -454,7 +454,7 @@ export default function Admin() {
             }}
           >
             <Eye className="w-4 h-4 mr-2" />
-            {showProperties ? 'Сховати' : 'Пере��лянути'} оголошення
+            {showProperties ? 'Сховати' : 'Переглянути'} оголошення
           </Button>
           <Button
             variant={showStreetManager ? "default" : "outline"}
@@ -513,7 +513,7 @@ export default function Admin() {
                       <SelectContent>
                         <SelectItem value="Центр">Центр</SelectItem>
                         <SelectItem value="Пасічна">Пасічна</SelectItem>
-                        <SelectItem value="БАМ">��АМ</SelectItem>
+                        <SelectItem value="БАМ">БАМ</SelectItem>
                         <SelectItem value="Каскад">Каскад</SelectItem>
                         <SelectItem value="Залізничний (Вокзал)">Залізничний (Вокзал)</SelectItem>
                         <SelectItem value="Брати">Брати</SelectItem>
@@ -684,7 +684,7 @@ export default function Admin() {
                   <div className="p-3 bg-purple-50 rounded-lg text-sm">
                     <p><strong>Метод:</strong> Facebook Prophet</p>
                     <p><strong>Прогноз:</strong> 6 місяців з довірчими інтервалами</p>
-                    <p><strong>Статус:</strong> {mlModuleStatus.prophet_ready ? '✅ Готово' : '⏳ Не готово'}</p>
+                    <p><strong>Стат��с:</strong> {mlModuleStatus.prophet_ready ? '✅ Готово' : '⏳ Не готово'}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -951,18 +951,23 @@ export default function Admin() {
                     disabled={mlTrainingStatus === "training"}
                     onClick={async () => {
                       try {
+                        console.log('🧠 Starting LightAutoML training...');
                         addLogEntry('🧠 Запуск LightAutoML навчання...');
                         setMLTrainingStatus("training");
                         setMLTrainingProgress(0);
 
+                        console.log('Making API call to /api/ml/train');
                         const response = await fetch('/api/ml/train', { method: 'POST' });
                         const data = await response.json();
 
-                        if (response.ok) {
+                        console.log('Train API response:', response.ok, data);
+
+                        if (response.ok && data.success) {
                           addLogEntry('✅ LightAutoML навчання успішно запущено');
                           addLogEntry(`🎯 Ціль: MAPE ≤ 15%`);
                           addLogEntry('📊 Завантаження даних з бази...');
                           alert('✅ LightAutoML навчання запущено!');
+                          console.log('Starting progress monitoring...');
                           startMLProgressMonitoring();
                           loadMLModuleStatus();
                         } else {
@@ -971,6 +976,7 @@ export default function Admin() {
                           alert(`❌ Помилка: ${data.error}`);
                         }
                       } catch (error) {
+                        console.error('Training error:', error);
                         addLogEntry('❌ Критична помилка запуску LightAutoML');
                         setMLTrainingStatus("failed");
                         alert('❌ Помилка запуску навчання');
