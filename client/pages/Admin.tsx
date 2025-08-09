@@ -29,6 +29,8 @@ import {
 } from "lucide-react";
 
 export default function Admin() {
+  console.log('Admin component is rendering...');
+
   const [stats, setStats] = useState({
     totalProperties: 0,
     fromOwners: 0,
