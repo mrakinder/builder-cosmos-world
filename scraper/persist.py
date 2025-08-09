@@ -1,423 +1,410 @@
 """
-Data persistence module
-======================
-
-Handles SQLite database operations and CSV exports with deduplication.
+Database persistence module for scraped properties
+Handles SQLite/PostgreSQL storage with deduplication
 """
 
 import sqlite3
-import pandas as pd
-import logging
+import os
+from datetime import datetime
+from typing import List, Tuple, Dict, Any, Optional
 import json
-from datetime import datetime, timezone
-from typing import List, Dict, Any, Optional, Tuple
-from pathlib import Path
+from dataclasses import asdict
 
-from .models import PropertyData
-from .config import config
+from .utils import Logger
 
-logger = logging.getLogger(__name__)
 
-class DataPersistence:
-    """Handles data storage, retrieval, and export operations"""
+class DatabaseManager:
+    """
+    Database manager for property listings with deduplication
+    """
     
-    def __init__(self, db_path: str = None):
-        self.db_path = db_path or config.DATABASE_PATH
-        self.export_path = config.EXPORT_PATH
-        self._ensure_database_exists()
-    
-    def _ensure_database_exists(self):
-        """Create database and tables if they don't exist"""
-        Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
+    def __init__(self, db_url: str):
+        self.db_url = db_url
+        self.logger = Logger("scraper/logs/database.log")
         
-        with sqlite3.connect(self.db_path) as conn:
-            conn.execute('''
-                CREATE TABLE IF NOT EXISTS offers (
-                    ad_id TEXT PRIMARY KEY,
-                    title TEXT NOT NULL,
-                    url TEXT NOT NULL,
-                    price_value REAL,
-                    price_currency TEXT DEFAULT 'USD',
-                    location_city TEXT,
-                    location_text TEXT,
-                    district TEXT,
-                    street TEXT,
-                    rooms INTEGER,
-                    area_total REAL,
-                    floor INTEGER,
-                    floors_total INTEGER,
-                    building_type TEXT,
-                    renovation TEXT,
-                    description TEXT,
-                    seller_type TEXT DEFAULT 'unknown',
-                    seller_name TEXT,
-                    seller_signals TEXT,
-                    district_source TEXT DEFAULT 'unknown',
-                    is_active BOOLEAN DEFAULT 1,
-                    first_seen_at TEXT,
-                    last_seen_at TEXT,
-                    scraped_at TEXT,
-                    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-                )
-            ''')
-            
-            # Create indices for better performance
-            conn.execute('CREATE INDEX IF NOT EXISTS idx_is_active ON offers(is_active)')
-            conn.execute('CREATE INDEX IF NOT EXISTS idx_district ON offers(district)')
-            conn.execute('CREATE INDEX IF NOT EXISTS idx_price ON offers(price_value)')
-            conn.execute('CREATE INDEX IF NOT EXISTS idx_scraped_at ON offers(scraped_at)')
-            
-            # Create scraping sessions table for tracking
-            conn.execute('''
-                CREATE TABLE IF NOT EXISTS scraping_sessions (
-                    session_id TEXT PRIMARY KEY,
-                    start_time TEXT,
-                    end_time TEXT,
-                    mode TEXT,
-                    pages_scraped INTEGER,
-                    total_processed INTEGER,
-                    total_new INTEGER,
-                    total_updated INTEGER,
-                    total_errors INTEGER,
-                    success BOOLEAN,
-                    error_message TEXT
-                )
-            ''')
-            
-            conn.commit()
-            logger.info(f"Database initialized at {self.db_path}")
+        # Extract database path from URL
+        if db_url.startswith("sqlite:///"):
+            self.db_path = db_url.replace("sqlite:///", "")
+            self._ensure_directories()
+            self._init_sqlite_db()
+        else:
+            raise ValueError("Only SQLite databases are supported currently")
     
-    def save_property(self, property_data: PropertyData) -> Tuple[bool, str]:
-        """
-        Save or update property data in database
-        
-        Args:
-            property_data: PropertyData object to save
-            
-        Returns:
-            Tuple of (is_new, operation_type)
-        """
+    def _ensure_directories(self):
+        """Create necessary directories"""
+        os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
+        os.makedirs("scraper/logs", exist_ok=True)
+    
+    def _init_sqlite_db(self):
+        """Initialize SQLite database with required tables"""
         try:
             with sqlite3.connect(self.db_path) as conn:
-                # Check if property already exists
-                existing = conn.execute(
-                    'SELECT ad_id, first_seen_at FROM offers WHERE ad_id = ?',
-                    (property_data.ad_id,)
-                ).fetchone()
+                cursor = conn.cursor()
                 
-                if existing:
-                    # Update existing property
-                    property_data.first_seen_at = datetime.fromisoformat(existing[1])
-                    property_data.last_seen_at = datetime.utcnow()
-                    
-                    conn.execute('''
-                        UPDATE offers SET
-                            title = ?, url = ?, price_value = ?, price_currency = ?,
-                            location_city = ?, location_text = ?, district = ?, street = ?,
-                            rooms = ?, area_total = ?, floor = ?, floors_total = ?,
-                            building_type = ?, renovation = ?, description = ?,
-                            seller_type = ?, seller_name = ?, seller_signals = ?,
-                            district_source = ?, is_active = 1,
-                            last_seen_at = ?, scraped_at = ?, updated_at = CURRENT_TIMESTAMP
-                        WHERE ad_id = ?
-                    ''', (
-                        property_data.title, property_data.url, property_data.price_value,
-                        property_data.price_currency, property_data.location_city,
-                        property_data.location_text, property_data.district, property_data.street,
-                        property_data.rooms, property_data.area_total, property_data.floor,
-                        property_data.floors_total, property_data.building_type,
-                        property_data.renovation, property_data.description,
-                        property_data.seller_type, property_data.seller_name,
-                        json.dumps(property_data.seller_signals),
-                        property_data.district_source,
-                        property_data.last_seen_at.isoformat(),
-                        property_data.scraped_at.isoformat(),
-                        property_data.ad_id
-                    ))
-                    
-                    conn.commit()
-                    logger.debug(f"Updated property: {property_data.ad_id}")
-                    return False, "updated"
-                else:
-                    # Insert new property
-                    property_data.first_seen_at = datetime.utcnow()
-                    property_data.last_seen_at = property_data.first_seen_at
-                    
-                    conn.execute('''
-                        INSERT INTO offers (
-                            ad_id, title, url, price_value, price_currency,
-                            location_city, location_text, district, street,
-                            rooms, area_total, floor, floors_total,
-                            building_type, renovation, description,
-                            seller_type, seller_name, seller_signals,
-                            district_source, is_active,
-                            first_seen_at, last_seen_at, scraped_at
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    ''', (
-                        property_data.ad_id, property_data.title, property_data.url,
-                        property_data.price_value, property_data.price_currency,
-                        property_data.location_city, property_data.location_text,
-                        property_data.district, property_data.street,
-                        property_data.rooms, property_data.area_total,
-                        property_data.floor, property_data.floors_total,
-                        property_data.building_type, property_data.renovation,
-                        property_data.description, property_data.seller_type,
-                        property_data.seller_name, json.dumps(property_data.seller_signals),
-                        property_data.district_source, property_data.is_active,
-                        property_data.first_seen_at.isoformat(),
-                        property_data.last_seen_at.isoformat(),
-                        property_data.scraped_at.isoformat()
-                    ))
-                    
-                    conn.commit()
-                    logger.debug(f"Inserted new property: {property_data.ad_id}")
-                    return True, "inserted"
-                    
-        except Exception as e:
-            logger.error(f"Error saving property {property_data.ad_id}: {str(e)}")
-            return False, "error"
-    
-    def save_properties_batch(self, properties: List[PropertyData]) -> Dict[str, int]:
-        """
-        Save multiple properties in a batch
-        
-        Args:
-            properties: List of PropertyData objects
-            
-        Returns:
-            Dictionary with counts of operations
-        """
-        results = {"new": 0, "updated": 0, "errors": 0}
-        
-        for prop in properties:
-            try:
-                is_new, operation = self.save_property(prop)
-                if operation == "inserted":
-                    results["new"] += 1
-                elif operation == "updated":
-                    results["updated"] += 1
-                elif operation == "error":
-                    results["errors"] += 1
-            except Exception as e:
-                logger.error(f"Error in batch save for {prop.ad_id}: {str(e)}")
-                results["errors"] += 1
-        
-        logger.info(f"Batch save completed: {results}")
-        return results
-    
-    def mark_inactive_properties(self, seen_ad_ids: List[str], session_time: datetime):
-        """
-        Mark properties as inactive if they weren't seen in current session
-        
-        Args:
-            seen_ad_ids: List of ad_ids that were seen in current session
-            session_time: Time of current scraping session
-        """
-        try:
-            with sqlite3.connect(self.db_path) as conn:
-                if seen_ad_ids:
-                    # Convert list to comma-separated string for SQL
-                    placeholders = ','.join(['?' for _ in seen_ad_ids])
-                    
-                    conn.execute(f'''
-                        UPDATE offers 
-                        SET is_active = 0, last_seen_at = ?
-                        WHERE ad_id NOT IN ({placeholders}) AND is_active = 1
-                    ''', [session_time.isoformat()] + seen_ad_ids)
-                else:
-                    # No properties seen - mark all as inactive
-                    conn.execute('''
-                        UPDATE offers 
-                        SET is_active = 0, last_seen_at = ?
-                        WHERE is_active = 1
-                    ''', (session_time.isoformat(),))
+                # Properties table
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS properties (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        olx_id TEXT UNIQUE NOT NULL,
+                        title TEXT NOT NULL,
+                        price_usd REAL,
+                        currency TEXT DEFAULT 'USD',
+                        area REAL,
+                        floor INTEGER,
+                        total_floors INTEGER,
+                        rooms INTEGER,
+                        district TEXT NOT NULL,
+                        street TEXT,
+                        full_location TEXT,
+                        description TEXT,
+                        seller_type TEXT CHECK(seller_type IN ('owner', 'agency')),
+                        listing_type TEXT CHECK(listing_type IN ('rent', 'sale')),
+                        listing_url TEXT NOT NULL,
+                        image_url TEXT,
+                        posted_date TEXT,
+                        is_promoted BOOLEAN DEFAULT FALSE,
+                        scraped_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        building_type TEXT,
+                        renovation_status TEXT,
+                        is_active BOOLEAN DEFAULT TRUE
+                    )
+                """)
                 
-                affected = conn.total_changes
+                # Street to district mapping table
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS street_district_map (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        street TEXT UNIQUE NOT NULL,
+                        district TEXT NOT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                
+                # Event log table
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS event_log (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        module TEXT NOT NULL,
+                        action TEXT NOT NULL,
+                        details TEXT,
+                        status TEXT CHECK(status IN ('INFO', 'WARNING', 'ERROR', 'SUCCESS')),
+                        properties_count INTEGER DEFAULT 0
+                    )
+                """)
+                
+                # Scraping sessions table
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS scraping_sessions (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        session_id TEXT UNIQUE NOT NULL,
+                        listing_type TEXT NOT NULL,
+                        start_time TIMESTAMP NOT NULL,
+                        end_time TIMESTAMP,
+                        total_pages INTEGER DEFAULT 0,
+                        total_processed INTEGER DEFAULT 0,
+                        new_listings INTEGER DEFAULT 0,
+                        updated_listings INTEGER DEFAULT 0,
+                        errors INTEGER DEFAULT 0,
+                        status TEXT DEFAULT 'running'
+                    )
+                """)
+                
+                # Create indexes for performance
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_properties_olx_id ON properties(olx_id)")
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_properties_district ON properties(district)")
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_properties_scraped_at ON properties(scraped_at)")
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_properties_price ON properties(price_usd)")
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_properties_active ON properties(is_active)")
+                
                 conn.commit()
-                logger.info(f"Marked {affected} properties as inactive")
+                self.logger.info("✅ Database initialized successfully")
                 
         except Exception as e:
-            logger.error(f"Error marking inactive properties: {str(e)}")
+            self.logger.error(f"❌ Error initializing database: {str(e)}")
+            raise
     
-    def get_active_properties(self) -> List[Dict[str, Any]]:
-        """Get all active properties from database"""
+    def save_properties(self, properties: List) -> Tuple[int, int]:
+        """
+        Save properties to database with deduplication
+        
+        Args:
+            properties: List of Property objects
+            
+        Returns:
+            Tuple[int, int]: (new_count, updated_count)
+        """
+        if not properties:
+            return 0, 0
+        
+        new_count = 0
+        updated_count = 0
+        
         try:
             with sqlite3.connect(self.db_path) as conn:
-                conn.row_factory = sqlite3.Row
-                cursor = conn.execute('''
-                    SELECT * FROM offers 
-                    WHERE is_active = 1 
-                    ORDER BY scraped_at DESC
-                ''')
+                cursor = conn.cursor()
                 
-                properties = []
-                for row in cursor.fetchall():
-                    prop_dict = dict(row)
-                    # Parse seller_signals JSON
-                    if prop_dict.get('seller_signals'):
-                        try:
-                            prop_dict['seller_signals'] = json.loads(prop_dict['seller_signals'])
-                        except json.JSONDecodeError:
-                            prop_dict['seller_signals'] = {}
-                    
-                    properties.append(prop_dict)
+                for property_obj in properties:
+                    try:
+                        # Convert property object to dict
+                        if hasattr(property_obj, '__dict__'):
+                            prop_dict = asdict(property_obj)
+                        else:
+                            prop_dict = property_obj
+                        
+                        # Check if property already exists
+                        cursor.execute(
+                            "SELECT id, updated_at FROM properties WHERE olx_id = ?",
+                            (prop_dict['olx_id'],)
+                        )
+                        existing = cursor.fetchone()
+                        
+                        if existing:
+                            # Update existing property
+                            self._update_property(cursor, prop_dict, existing[0])
+                            updated_count += 1
+                        else:
+                            # Insert new property
+                            self._insert_property(cursor, prop_dict)
+                            new_count += 1
+                            
+                    except Exception as e:
+                        self.logger.error(f"❌ Error saving property {prop_dict.get('olx_id', 'unknown')}: {str(e)}")
+                        continue
                 
-                logger.info(f"Retrieved {len(properties)} active properties")
-                return properties
+                conn.commit()
+                
+                # Log the operation
+                self._log_event(
+                    cursor,
+                    module="scraper",
+                    action="save_properties",
+                    details=f"Saved {new_count} new, updated {updated_count} existing properties",
+                    status="SUCCESS",
+                    properties_count=len(properties)
+                )
+                
+                conn.commit()
                 
         except Exception as e:
-            logger.error(f"Error retrieving active properties: {str(e)}")
+            self.logger.error(f"❌ Error in save_properties: {str(e)}")
+            raise
+        
+        return new_count, updated_count
+    
+    def _insert_property(self, cursor, prop_dict: Dict[str, Any]):
+        """Insert new property into database"""
+        insert_sql = """
+            INSERT INTO properties (
+                olx_id, title, price_usd, currency, area, floor, total_floors,
+                rooms, district, street, full_location, description, seller_type,
+                listing_type, listing_url, image_url, posted_date, is_promoted,
+                scraped_at, building_type, renovation_status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """
+        
+        values = (
+            prop_dict['olx_id'],
+            prop_dict['title'],
+            prop_dict.get('price_usd'),
+            prop_dict.get('currency', 'USD'),
+            prop_dict.get('area'),
+            prop_dict.get('floor'),
+            prop_dict.get('total_floors'),
+            prop_dict.get('rooms'),
+            prop_dict['district'],
+            prop_dict.get('street'),
+            prop_dict.get('full_location'),
+            prop_dict.get('description', ''),
+            prop_dict.get('seller_type', 'agency'),
+            prop_dict.get('listing_type', 'sale'),
+            prop_dict['listing_url'],
+            prop_dict.get('image_url'),
+            prop_dict.get('posted_date'),
+            prop_dict.get('is_promoted', False),
+            prop_dict.get('scraped_at', datetime.now()),
+            prop_dict.get('building_type'),
+            prop_dict.get('renovation_status')
+        )
+        
+        cursor.execute(insert_sql, values)
+    
+    def _update_property(self, cursor, prop_dict: Dict[str, Any], property_id: int):
+        """Update existing property in database"""
+        update_sql = """
+            UPDATE properties SET
+                title = ?, price_usd = ?, currency = ?, area = ?, floor = ?,
+                total_floors = ?, rooms = ?, district = ?, street = ?,
+                full_location = ?, description = ?, seller_type = ?,
+                listing_type = ?, listing_url = ?, image_url = ?, posted_date = ?,
+                is_promoted = ?, updated_at = ?, building_type = ?, renovation_status = ?
+            WHERE id = ?
+        """
+        
+        values = (
+            prop_dict['title'],
+            prop_dict.get('price_usd'),
+            prop_dict.get('currency', 'USD'),
+            prop_dict.get('area'),
+            prop_dict.get('floor'),
+            prop_dict.get('total_floors'),
+            prop_dict.get('rooms'),
+            prop_dict['district'],
+            prop_dict.get('street'),
+            prop_dict.get('full_location'),
+            prop_dict.get('description', ''),
+            prop_dict.get('seller_type', 'agency'),
+            prop_dict.get('listing_type', 'sale'),
+            prop_dict['listing_url'],
+            prop_dict.get('image_url'),
+            prop_dict.get('posted_date'),
+            prop_dict.get('is_promoted', False),
+            datetime.now(),
+            prop_dict.get('building_type'),
+            prop_dict.get('renovation_status'),
+            property_id
+        )
+        
+        cursor.execute(update_sql, values)
+    
+    def _log_event(self, cursor, module: str, action: str, details: str = "", 
+                   status: str = "INFO", properties_count: int = 0):
+        """Log event to event_log table"""
+        cursor.execute("""
+            INSERT INTO event_log (module, action, details, status, properties_count)
+            VALUES (?, ?, ?, ?, ?)
+        """, (module, action, details, status, properties_count))
+    
+    def get_properties(self, limit: int = 100, district: str = None, 
+                      listing_type: str = None) -> List[Dict[str, Any]]:
+        """
+        Get properties from database with filters
+        
+        Args:
+            limit: Maximum number of properties to return
+            district: Filter by district
+            listing_type: Filter by listing type ('rent' or 'sale')
+            
+        Returns:
+            List[Dict[str, Any]]: List of properties
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                conn.row_factory = sqlite3.Row  # Enable dict-like access
+                cursor = conn.cursor()
+                
+                sql = "SELECT * FROM properties WHERE is_active = 1"
+                params = []
+                
+                if district:
+                    sql += " AND district = ?"
+                    params.append(district)
+                
+                if listing_type:
+                    sql += " AND listing_type = ?"
+                    params.append(listing_type)
+                
+                sql += " ORDER BY scraped_at DESC LIMIT ?"
+                params.append(limit)
+                
+                cursor.execute(sql, params)
+                rows = cursor.fetchall()
+                
+                return [dict(row) for row in rows]
+                
+        except Exception as e:
+            self.logger.error(f"❌ Error getting properties: {str(e)}")
             return []
     
     def get_statistics(self) -> Dict[str, Any]:
         """Get database statistics"""
         try:
             with sqlite3.connect(self.db_path) as conn:
-                stats = {}
+                cursor = conn.cursor()
                 
-                # Total counts
-                cursor = conn.execute('SELECT COUNT(*) FROM offers')
-                stats['total_properties'] = cursor.fetchone()[0]
-                
-                cursor = conn.execute('SELECT COUNT(*) FROM offers WHERE is_active = 1')
-                stats['active_properties'] = cursor.fetchone()[0]
+                # Total properties
+                cursor.execute("SELECT COUNT(*) FROM properties WHERE is_active = 1")
+                total_properties = cursor.fetchone()[0]
                 
                 # By seller type
-                cursor = conn.execute('''
+                cursor.execute("""
                     SELECT seller_type, COUNT(*) 
-                    FROM offers WHERE is_active = 1 
+                    FROM properties 
+                    WHERE is_active = 1 
                     GROUP BY seller_type
-                ''')
-                stats['by_seller_type'] = dict(cursor.fetchall())
+                """)
+                seller_stats = dict(cursor.fetchall())
                 
                 # By district
-                cursor = conn.execute('''
+                cursor.execute("""
                     SELECT district, COUNT(*) 
-                    FROM offers WHERE is_active = 1 AND district IS NOT NULL
+                    FROM properties 
+                    WHERE is_active = 1 
                     GROUP BY district 
                     ORDER BY COUNT(*) DESC
-                ''')
-                stats['by_district'] = dict(cursor.fetchall())
+                """)
+                district_stats = dict(cursor.fetchall())
                 
-                # Price statistics
-                cursor = conn.execute('''
-                    SELECT 
-                        AVG(price_value) as avg_price,
-                        MIN(price_value) as min_price,
-                        MAX(price_value) as max_price,
-                        COUNT(price_value) as priced_properties
-                    FROM offers 
-                    WHERE is_active = 1 AND price_value IS NOT NULL
-                ''')
-                price_stats = cursor.fetchone()
-                stats['price_stats'] = {
-                    'avg_price': round(price_stats[0], 2) if price_stats[0] else 0,
-                    'min_price': price_stats[1] or 0,
-                    'max_price': price_stats[2] or 0,
-                    'priced_properties': price_stats[3] or 0
+                # Average price by district
+                cursor.execute("""
+                    SELECT district, AVG(price_usd) 
+                    FROM properties 
+                    WHERE is_active = 1 AND price_usd IS NOT NULL 
+                    GROUP BY district
+                """)
+                avg_prices = dict(cursor.fetchall())
+                
+                # Latest scraping session
+                cursor.execute("""
+                    SELECT * FROM scraping_sessions 
+                    ORDER BY start_time DESC 
+                    LIMIT 1
+                """)
+                latest_session = cursor.fetchone()
+                
+                return {
+                    'total_properties': total_properties,
+                    'seller_stats': seller_stats,
+                    'district_stats': district_stats,
+                    'avg_prices': avg_prices,
+                    'latest_session': dict(latest_session) if latest_session else None
                 }
                 
-                # Last update
-                cursor = conn.execute('''
-                    SELECT MAX(scraped_at) FROM offers WHERE is_active = 1
-                ''')
-                last_update = cursor.fetchone()[0]
-                stats['last_update'] = last_update
-                
-                return stats
-                
         except Exception as e:
-            logger.error(f"Error getting statistics: {str(e)}")
+            self.logger.error(f"❌ Error getting statistics: {str(e)}")
             return {}
     
-    def export_to_csv(self, filepath: str = None) -> bool:
-        """
-        Export active properties to CSV
-        
-        Args:
-            filepath: Optional custom filepath
-            
-        Returns:
-            True if export successful
-        """
-        export_path = filepath or self.export_path
-        
-        try:
-            # Ensure export directory exists
-            Path(export_path).parent.mkdir(parents=True, exist_ok=True)
-            
-            properties = self.get_active_properties()
-            
-            if not properties:
-                logger.warning("No active properties to export")
-                return False
-            
-            # Convert to DataFrame
-            df = pd.DataFrame(properties)
-            
-            # Clean up seller_signals for CSV (convert back to JSON string)
-            if 'seller_signals' in df.columns:
-                df['seller_signals'] = df['seller_signals'].apply(
-                    lambda x: json.dumps(x) if isinstance(x, dict) else x
-                )
-            
-            # Export to CSV
-            df.to_csv(export_path, index=False, encoding='utf-8')
-            logger.info(f"Exported {len(properties)} properties to {export_path}")
-            return True
-            
-        except Exception as e:
-            logger.error(f"Error exporting to CSV: {str(e)}")
-            return False
-    
-    def save_scraping_session(self, session_data: Dict[str, Any]) -> bool:
-        """Save scraping session information"""
+    def save_street_mapping(self, street: str, district: str) -> bool:
+        """Save street to district mapping"""
         try:
             with sqlite3.connect(self.db_path) as conn:
-                conn.execute('''
-                    INSERT INTO scraping_sessions (
-                        session_id, start_time, end_time, mode,
-                        pages_scraped, total_processed, total_new, total_updated,
-                        total_errors, success, error_message
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ''', (
-                    session_data['session_id'],
-                    session_data['start_time'],
-                    session_data['end_time'],
-                    session_data['mode'],
-                    session_data['pages_scraped'],
-                    session_data['total_processed'],
-                    session_data['total_new'],
-                    session_data['total_updated'],
-                    session_data['total_errors'],
-                    session_data['success'],
-                    session_data.get('error_message')
-                ))
+                cursor = conn.cursor()
+                
+                cursor.execute("""
+                    INSERT OR REPLACE INTO street_district_map (street, district)
+                    VALUES (?, ?)
+                """, (street, district))
                 
                 conn.commit()
-                logger.info(f"Saved scraping session: {session_data['session_id']}")
+                self.logger.info(f"✅ Saved street mapping: {street} -> {district}")
                 return True
                 
         except Exception as e:
-            logger.error(f"Error saving scraping session: {str(e)}")
+            self.logger.error(f"❌ Error saving street mapping: {str(e)}")
             return False
     
-    def cleanup_old_sessions(self, days_to_keep: int = 30):
-        """Remove old scraping session records"""
+    def get_street_mappings(self) -> Dict[str, str]:
+        """Get all street to district mappings"""
         try:
-            cutoff_date = datetime.utcnow().replace(tzinfo=timezone.utc) - \
-                         datetime.timedelta(days=days_to_keep)
-            
             with sqlite3.connect(self.db_path) as conn:
-                cursor = conn.execute('''
-                    DELETE FROM scraping_sessions 
-                    WHERE start_time < ?
-                ''', (cutoff_date.isoformat(),))
+                cursor = conn.cursor()
                 
-                deleted = cursor.rowcount
-                conn.commit()
-                logger.info(f"Cleaned up {deleted} old scraping sessions")
+                cursor.execute("SELECT street, district FROM street_district_map")
+                rows = cursor.fetchall()
+                
+                return dict(rows)
                 
         except Exception as e:
-            logger.error(f"Error cleaning up old sessions: {str(e)}")
+            self.logger.error(f"❌ Error getting street mappings: {str(e)}")
+            return {}
