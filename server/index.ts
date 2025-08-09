@@ -26,6 +26,16 @@ import {
   handleDeleteManualProperties,
   handleExportProperties
 } from "./routes/manual-properties";
+import {
+  handleMLPredict,
+  handleProphetForecast,
+  handleTrainML,
+  handleStreamlitStatus,
+  handleStartStreamlit,
+  handleStopStreamlit,
+  handleSupersetStatus,
+  handlePipelineStatus
+} from "./routes/ml-integration";
 
 export function createServer() {
   const app = express();
