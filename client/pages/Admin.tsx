@@ -186,7 +186,7 @@ export default function Admin() {
       });
 
       if (response.ok) {
-        alert(`Вулицю "${newStreet}" додано до району "${selectedDistrict}"`);
+        alert(`Вул��цю "${newStreet}" додано до району "${selectedDistrict}"`);
         setNewStreet('');
         setSelectedDistrict('');
         loadStreetMap();
@@ -294,7 +294,24 @@ export default function Admin() {
         {/* Dashboard Overview */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-slate-900 mb-2">Панель адміністратора</h1>
-          <p className="text-slate-600">Управління парсингом, моделями та базою даних</p>
+          <p className="text-slate-600">Нова система з 5 модулями: Botasaurus + LightAutoML + Prophet + Streamlit + Superset</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+              🛡️ Botasaurus v4.0.10+
+            </span>
+            <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+              🧠 LightAutoML v0.3.7+
+            </span>
+            <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">
+              📈 Prophet v1.1.4+
+            </span>
+            <span className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">
+              🌐 Streamlit v1.28+
+            </span>
+            <span className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
+              📊 Superset v3.0+
+            </span>
+          </div>
         </div>
 
         {/* Stats Cards */}
@@ -430,7 +447,7 @@ export default function Admin() {
                         <SelectItem value="Каскад">Каскад</SelectItem>
                         <SelectItem value="Залізничний (Вокзал)">Залізничний (Вокзал)</SelectItem>
                         <SelectItem value="Брати">Брати</SelectItem>
-                        <SelectItem value="Софіївка">Софіївка</SelectItem>
+                        <SelectItem value="Софіївка">Софі��вка</SelectItem>
                         <SelectItem value="Будівельників">Будівельників</SelectItem>
                         <SelectItem value="Набережна">Набережна</SelectItem>
                         <SelectItem value="Опришівці">Опришівці</SelectItem>
@@ -516,7 +533,7 @@ export default function Admin() {
                     LightAutoML Прогнозування
                   </CardTitle>
                   <CardDescription>
-                    Автоматичн�� ML для прогнозування цін нерухомості
+                    Автоматичне ML для прогнозування цін нерухомості
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -542,7 +559,7 @@ export default function Admin() {
                   <div className="p-3 bg-blue-50 rounded-lg text-sm">
                     <p><strong>Ціль:</strong> MAPE ≤ 15%</p>
                     <p><strong>Фічі:</strong> площа, район, кімнати, поверх, тип, ремонт</p>
-                    <p><strong>Статус:</strong> {mlModuleStatus.lightautoml_trained ? '✅ Готово' : '⏳ Не тренована'}</p>
+                    <p><strong>Статус:</strong> {mlModuleStatus.lightautoml_trained ? '✅ Готово' : '⏳ Не т��енована'}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -568,7 +585,7 @@ export default function Admin() {
                           const data = await response.json();
                           alert(`✅ Прогноз готовий!\nРайонів: ${data.districts?.length || 0}\nПеріод: 6 місяців`);
                         } catch (error) {
-                          alert('❌ Помилка створення прогнозу');
+                          alert('❌ Помилка створе��ня прогнозу');
                         }
                       }}
                     >
@@ -675,9 +692,9 @@ export default function Admin() {
                         const response = await fetch('/api/superset/status');
                         const data = await response.json();
                         if (data.running) {
-                          alert(`✅ Superset активний!\nURL: ${data.url}\nДашборди: 4`);
+                          alert(`✅ Superset активний!\nURL: ${data.url}\n��ашборди: 4`);
                         } else {
-                          alert('⏳ Superset не запущений\nЗапуст��ть через CLI: python property_monitor_cli.py superset start');
+                          alert('⏳ Superset не запущений\nЗапустіть через CLI: python property_monitor_cli.py superset start');
                         }
                       } catch (error) {
                         alert('❌ Помилка перевірки Superset');
@@ -1214,7 +1231,7 @@ export default function Admin() {
               </div>
 
               <div className="p-3 bg-slate-50 rounded-lg">
-                <h4 className="text-sm font-medium text-slate-900 mb-1">Стан моделей:</h4>
+                <h4 className="text-sm font-medium text-slate-900 mb-1">Стан ��оделей:</h4>
                 <div className="space-y-1 text-xs text-slate-600">
                   <div>• Основна модель: Готова</div>
                   <div>• Розширена модель: Готова</div>
