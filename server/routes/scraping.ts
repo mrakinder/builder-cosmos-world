@@ -208,7 +208,7 @@ const addRandomProperty = () => {
     // Insert property into database
     const result = dbOperations.insertProperty.run(
       olxId,
-      `${rooms}-кімн. квартира на вул. ${randomStreet.street}, ${area}м²`,
+      `${rooms}-кімн. к��артира на вул. ${randomStreet.street}, ${area}м²`,
       finalPrice,
       area,
       rooms,
@@ -374,7 +374,7 @@ export const handleAddStreet: RequestHandler = (req, res) => {
   
   if (!street || !district) {
     return res.status(400).json({
-      error: 'Потрібні назва вулиці ��а район'
+      error: 'Потрібні назва вулиці та район'
     });
   }
 
@@ -451,6 +451,8 @@ export const handleCheckPropertyUpdates: RequestHandler = (req, res) => {
 
 // Generate price trends based on real data
 export const handlePriceTrends: RequestHandler = (req, res) => {
+  ensureDatabase();
+
   try {
     const properties = dbOperations.getAllProperties.all() as any[];
     
