@@ -1,8 +1,14 @@
 import { RequestHandler } from "express";
 import { initializeDatabase, dbOperations } from '../database';
 
-// Initialize database on module load
-initializeDatabase();
+// Ensure database is initialized (will be called when first route is accessed)
+const ensureDatabase = () => {
+  try {
+    initializeDatabase();
+  } catch (error) {
+    console.error('Database initialization failed:', error);
+  }
+};
 
 // Real scraping status with progress tracking
 let scrapingStatus = {
