@@ -58,6 +58,8 @@ export default function Admin() {
   const [showMLControls, setShowMLControls] = useState(false);
   const [mlTrainingProgress, setMLTrainingProgress] = useState(0);
   const [mlTrainingStatus, setMLTrainingStatus] = useState("idle");
+  const [scraperProgress, setScraperProgress] = useState(0);
+  const [scraperStatus, setScraperStatus] = useState("idle");
 
   useEffect(() => {
     loadStats();
@@ -376,7 +378,7 @@ export default function Admin() {
               🛡️ Botasaurus v4.0.10+
             </span>
             <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-              🧠 LightAutoML v0.3.7+
+              ���� LightAutoML v0.3.7+
             </span>
             <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">
               📈 Prophet v1.1.4+
@@ -644,7 +646,7 @@ export default function Admin() {
                     Prophet Прогнозування
                   </CardTitle>
                   <CardDescription>
-                    Прогноз цінових трендів на 6 місяців по районах
+                    Прогноз цін��вих трендів на 6 місяців по районах
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -937,7 +939,7 @@ export default function Admin() {
                     Запустити парсинг
                   </Button>
                   <p className="text-xs text-green-700">
-                    Статус: {mlModuleStatus.botasaurus_ready ? '✅ Активний' : '⏳ Неактивний'}
+                    Статус: {mlModuleStatus.botasaurus_ready ? '✅ Активний' : '⏳ Неа��тивний'}
                   </p>
                 </div>
 
@@ -985,7 +987,7 @@ export default function Admin() {
                       }
                     }}
                   >
-                    {mlTrainingStatus === "training" ? 'Тренування...' : 'Тренувати модель'}
+                    {mlTrainingStatus === "training" ? 'Тренув��ння...' : 'Тренувати модель'}
                   </Button>
 
                   {mlTrainingStatus === "training" && (
