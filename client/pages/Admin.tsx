@@ -560,7 +560,7 @@ export default function Admin() {
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center">
                 <CheckCircle className="w-5 h-5 mr-2 text-green-600" />
-                Від власників
+                Від вл��сників
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -1072,7 +1072,23 @@ export default function Admin() {
                         setScraperStatus("running");
                         setScraperProgress(0);
 
-                        const response = await fetch('/api/scraper/start', { method: 'POST' });
+                        // Proper JSON body as required by FastAPI
+                        const requestBody = {
+                          listing_type: 'sale',
+                          max_pages: 10,
+                          delay_ms: 5000,
+                          headful: false
+                        };
+
+                        addLogEntry(`📦 Sending JSON body: ${JSON.stringify(requestBody)}`);
+
+                        const response = await fetch('/api/scraper/start', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json'
+                          },
+                          body: JSON.stringify(requestBody)
+                        });
 
                         // Enhanced safe JSON parsing with detailed diagnostics
                         let data;
@@ -1168,7 +1184,7 @@ export default function Admin() {
                         console.error('Scraper error:', error);
                         addLogEntry('❌ Критична помилка запуску Botasaurus');
                         setScraperStatus("failed");
-                        alert('❌ Помилка запуску Botasaurus');
+                        alert('❌ Поми��ка запуску Botasaurus');
                       }
                     }}
                   >
@@ -1241,7 +1257,7 @@ export default function Admin() {
                       }
                     }}
                   >
-                    {mlTrainingStatus === "training" ? 'Тренування...' : 'Тренувати модель'}
+                    {mlTrainingStatus === "training" ? 'Тренування...' : '��ренувати модель'}
                   </Button>
 
                   {mlTrainingStatus === "training" && (
