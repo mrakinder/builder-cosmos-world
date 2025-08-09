@@ -77,7 +77,33 @@ export default function Admin() {
       loadMLModuleStatus();
     }, 2000); // Update every 2 seconds
 
-    return () => clearInterval(interval);
+    // Set up Server-Sent Events for real-time updates
+    const eventSource = new EventSource('/api/events/stream');
+
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'log') {
+          addLogEntry(data.message);
+        } else if (data.type === 'progress') {
+          if (data.module === 'scraper') {
+            setScraperProgress(data.progress);
+            setScraperStatus(data.status);
+          }
+        }
+      } catch (error) {
+        console.error('Error parsing SSE data:', error);
+      }
+    };
+
+    eventSource.onerror = (error) => {
+      console.error('SSE connection error:', error);
+    };
+
+    return () => {
+      clearInterval(interval);
+      eventSource.close();
+    };
   }, []);
 
   // Start ML progress monitoring
@@ -560,7 +586,7 @@ export default function Admin() {
                     </label>
                     <Select value={selectedDistrict} onValueChange={setSelectedDistrict}>
                       <SelectTrigger>
-                        <SelectValue placeholder="О��еріть район" />
+                        <SelectValue placeholder="Оберіть район" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Центр">Центр</SelectItem>
@@ -611,7 +637,7 @@ export default function Admin() {
                   Комплексна ML Система (5 модулів)
                 </CardTitle>
                 <CardDescription>
-                  Повнофункціональна система машинного навчання для аналізу нерухомості
+                  Повнофункціона��ьна система машинного навчання для аналізу нерухомості
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -1044,7 +1070,7 @@ export default function Admin() {
                         console.log('Train API response:', response.ok, data);
 
                         if (response.ok && data.success) {
-                          addLogEntry('✅ LightAutoML навчанн�� успішно запущено');
+                          addLogEntry('✅ LightAutoML навчання успішно запущено');
                           addLogEntry(`🎯 Ціль: MAPE ≤ 15%`);
                           addLogEntry('📊 Завантаження даних з бази...');
                           alert('✅ LightAutoML навчання запущено!');
@@ -1112,7 +1138,7 @@ export default function Admin() {
                             alert('❌ Помилка запуску');
                           }
                         } catch (error) {
-                          addLogEntry('❌ Кри��ична помилка запуску Streamlit');
+                          addLogEntry('❌ Критична помилка запуску Streamlit');
                           alert('❌ Помилка запуску');
                         }
                       }}
