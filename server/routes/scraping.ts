@@ -338,12 +338,21 @@ export const handleStopScraping: RequestHandler = async (req, res) => {
       }
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.detail || 'Python backend error');
+    // Safe JSON parsing to prevent "Unexpected end of JSON input"
+    const parsedResponse = await safeJsonParse(response);
+
+    if (!parsedResponse.ok) {
+      addActivity(`❌ Stop JSON parse error: ${parsedResponse.error}`);
+      throw new Error(`Python backend JSON error: ${parsedResponse.error}`);
     }
 
-    const pythonResult = await response.json();
+    const pythonResult = parsedResponse.data;
+
+    if (!response.ok || !pythonResult?.ok) {
+      const errorMsg = pythonResult?.error || pythonResult?.detail || `HTTP ${response.status}`;
+      addActivity(`❌ Python backend stop error: ${errorMsg}`);
+      throw new Error(errorMsg);
+    }
 
     // Update local status
     scrapingStatus.lastStoppedPage = scrapingStatus.currentPage;
