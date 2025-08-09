@@ -101,17 +101,32 @@ app.add_middleware(
 )
 
 
-# Health check endpoint
+# Enhanced health check endpoint with runtime info
 @app.get("/health")
 async def health_check():
-    """API health check"""
+    """Enhanced health check with process info"""
+    import os
+    import subprocess
+
+    # Get git info if available
+    git_info = "unknown"
+    try:
+        git_info = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"],
+                                          stderr=subprocess.DEVNULL).decode().strip()
+    except:
+        pass
+
     return {
+        "ok": True,
         "status": "healthy",
+        "pid": os.getpid(),
         "timestamp": datetime.now().isoformat(),
-        "version": "1.0.0",
+        "version": git_info,
+        "host": "0.0.0.0:8080",
+        "runtime": "FastAPI + Uvicorn",
         "modules": {
             "scraper": "ready",
-            "ml": "ready", 
+            "ml": "ready",
             "prophet": "ready",
             "streamlit": "ready",
             "superset": "ready"
@@ -143,6 +158,30 @@ async def dump_routes():
                 logger.info(f"   {methods} {r.path}")
         except Exception as e:
             logger.warning(f"   Could not log route: {e}")
+
+# ---- RUNTIME DEBUG ENDPOINT ----
+@app.get("/__debug/routes")
+def debug_routes():
+    """Runtime route inspection endpoint"""
+    routes = []
+    for r in app.routes:
+        try:
+            methods = list(r.methods or []) if hasattr(r, 'methods') else []
+            path = getattr(r, "path", None)
+            if path:
+                routes.append({"methods": methods, "path": path})
+        except Exception as e:
+            routes.append({"error": str(e)})
+    return {
+        "ok": True,
+        "total_routes": len(routes),
+        "routes": routes,
+        "critical_check": {
+            "scraper_start": any("/scraper/start" in r.get("path", "") for r in routes),
+            "api_scraper_start": any("/api/scraper/start" in r.get("path", "") for r in routes),
+            "health": any("/health" in r.get("path", "") for r in routes)
+        }
+    }
 
 # Module 1: Botasaurus Scraper Endpoints - DIRECT APP DECORATORS
 @app.post("/scraper/start")
