@@ -794,7 +794,7 @@ export default function Admin() {
                 Спаршені оголошення ({properties.length})
               </CardTitle>
               <CardDescription>
-                Перегляд усіх зібраних оголошень з OLX
+                ��ерегляд усіх зібраних оголошень з OLX
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -892,20 +892,46 @@ export default function Admin() {
                   <Button
                     size="sm"
                     className="w-full bg-blue-600 hover:bg-blue-700 mb-2"
+                    disabled={mlTrainingStatus === "training"}
                     onClick={async () => {
                       try {
+                        setMLTrainingStatus("training");
+                        setMLTrainingProgress(0);
+
                         const response = await fetch('/api/ml/train', { method: 'POST' });
+                        const data = await response.json();
+
                         if (response.ok) {
                           alert('✅ LightAutoML навчання запущено!');
+                          startMLProgressMonitoring();
                           loadMLModuleStatus();
+                        } else {
+                          setMLTrainingStatus("failed");
+                          alert(`❌ Помилка: ${data.error}`);
                         }
                       } catch (error) {
+                        setMLTrainingStatus("failed");
                         alert('❌ Помилка запуску навчання');
                       }
                     }}
                   >
-                    Тренувати модель
+                    {mlTrainingStatus === "training" ? 'Тренування...' : 'Тренувати модель'}
                   </Button>
+
+                  {mlTrainingStatus === "training" && (
+                    <div className="mb-2">
+                      <div className="flex justify-between text-xs text-blue-700 mb-1">
+                        <span>Прогрес тренування</span>
+                        <span>{mlTrainingProgress}%</span>
+                      </div>
+                      <div className="w-full bg-blue-200 rounded-full h-2">
+                        <div
+                          className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${mlTrainingProgress}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  )}
                   <p className="text-xs text-blue-700">
                     Статус: {mlModuleStatus.lightautoml_trained ? '✅ Навчена' : '⏳ Не навчена'}
                   </p>
