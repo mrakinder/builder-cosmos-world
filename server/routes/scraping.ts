@@ -177,7 +177,8 @@ export const handleStartScraping: RequestHandler = (req, res) => {
   setTimeout(() => scrapePage(resumeFromPage + 1), 1000);
 
   res.json({
-    message: 'Парсинг розпочато успішно',
+    success: true,
+    message: 'Botasaurus парсинг розпочато успішно з антидетекційним захистом',
     status: 'running',
     estimatedTime: `${Math.round(targetPages * 30 / 60)} хвилин`,
     progress: 0
