@@ -101,7 +101,7 @@ export const initializeDatabase = () => {
       
       // Pasichna
       ["Тролейбусна", "Пасічна"],
-      ["Пасічна", "Пасічна"],
+      ["Пасічна", "П��січна"],
       ["Чорновола", "Пасічна"],
       
       // BAM
@@ -135,7 +135,7 @@ export const initializeDatabase = () => {
       ["Промислова", "Будівельників"],
       
       // Naberezhna
-      ["Набережна ім. В. Стефаника", "Набережна"],
+      ["Набережна ім. В. Ст��фаника", "Набережна"],
       ["Набережна", "Набережна"],
       ["Дністровська", "Набережна"],
       
@@ -162,9 +162,16 @@ export const dbOperations = {
   // Properties
   get insertProperty() {
     return getDatabase().prepare(`
-      INSERT OR REPLACE INTO properties 
+      INSERT OR REPLACE INTO properties
       (olx_id, title, price_usd, area, rooms, floor, street, district, description, is_owner, url, last_updated)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+    `);
+  },
+
+  get checkPropertyExists() {
+    return getDatabase().prepare(`
+      SELECT COUNT(*) as count FROM properties
+      WHERE title = ? AND area = ? AND street = ? AND price_usd = ?
     `);
   },
   
