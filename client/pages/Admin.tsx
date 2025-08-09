@@ -352,6 +352,19 @@ export default function Admin() {
             <MapPin className="w-4 h-4 mr-2" />
             {showStreetManager ? 'Сховати' : 'Управління'} вулицями
           </Button>
+          <Button
+            variant={showMLControls ? "default" : "outline"}
+            onClick={() => {
+              setShowMLControls(!showMLControls);
+              if (!showMLControls) {
+                setShowProperties(false);
+                setShowStreetManager(false);
+              }
+            }}
+          >
+            <Brain className="w-4 h-4 mr-2" />
+            {showMLControls ? 'Сховати' : 'ML Модулі'} (5 систем)
+          </Button>
         </div>
 
         {/* Street Manager */}
@@ -374,7 +387,7 @@ export default function Admin() {
                       Назва вулиці
                     </label>
                     <Input
-                      placeholder="Введ��ть назву вулиці..."
+                      placeholder="Введіть назву вулиці..."
                       value={newStreet}
                       onChange={(e) => setNewStreet(e.target.value)}
                     />
@@ -448,7 +461,7 @@ export default function Admin() {
                             <h4 className="font-medium text-slate-900 mb-1">{property.title}</h4>
                             <p className="text-sm text-slate-600">{property.district}</p>
                             <p className="text-xs text-slate-500 mt-1">
-                              {property.isOwner ? '👤 Власник' : '��� Агентство'}
+                              {property.isOwner ? '👤 Власник' : '🏢 Агентство'}
                             </p>
                           </div>
                           <div className="text-sm">
@@ -637,7 +650,7 @@ export default function Admin() {
                     className="w-full justify-start"
                     onClick={loadStats}
                   >
-                    Оновити дані
+                    Оновити д��ні
                   </Button>
                   <Button
                     size="sm"
