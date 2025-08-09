@@ -190,34 +190,33 @@ class DatabaseManager:
         return new_count, updated_count
     
     def _insert_property(self, cursor, prop_dict: Dict[str, Any]):
-        """Insert new property into database"""
+        """Insert new property into database - Node.js compatible schema"""
         insert_sql = """
             INSERT INTO properties (
-                olx_id, title, price_usd, currency, area, floor, total_floors,
-                rooms, district, street, full_location, description, seller_type,
-                listing_type, listing_url, image_url, posted_date, is_promoted,
-                scraped_at, building_type, renovation_status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                olx_id, title, price_usd, area, rooms, floor, street, district,
+                description, is_owner, url
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """
-        
+
+        # Convert seller_type to is_owner boolean for compatibility
+        is_owner = 1 if prop_dict.get('seller_type') == 'owner' else 0
+
+        # Convert price and area to integers (Node.js schema)
+        price_usd = int(prop_dict.get('price_usd', 0)) if prop_dict.get('price_usd') else 0
+        area = int(prop_dict.get('area', 0)) if prop_dict.get('area') else 0
+
         values = (
             prop_dict['olx_id'],
             prop_dict['title'],
-            prop_dict.get('price_usd'),
-            prop_dict.get('currency', 'USD'),
-            prop_dict.get('area'),
-            prop_dict.get('floor'),
-            prop_dict.get('total_floors'),
+            price_usd,
+            area,
             prop_dict.get('rooms'),
-            prop_dict['district'],
+            prop_dict.get('floor'),
             prop_dict.get('street'),
-            prop_dict.get('full_location'),
+            prop_dict['district'],
             prop_dict.get('description', ''),
-            prop_dict.get('seller_type', 'agency'),
-            prop_dict.get('listing_type', 'sale'),
-            prop_dict['listing_url'],
-            prop_dict.get('image_url'),
-            prop_dict.get('posted_date'),
+            is_owner,
+            prop_dict.get('listing_url', '')
             prop_dict.get('is_promoted', False),
             prop_dict.get('scraped_at', datetime.now()),
             prop_dict.get('building_type'),
