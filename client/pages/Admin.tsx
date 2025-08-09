@@ -470,10 +470,12 @@ export default function Admin() {
           </Button>
           <Button
             variant="outline"
-            onClick={() => window.open('/statistics', '_blank')}
+            asChild
           >
-            <BarChart3 className="w-4 h-4 mr-2" />
-            Статистика
+            <Link to="/statistics">
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Статистика
+            </Link>
           </Button>
         </div>
 
