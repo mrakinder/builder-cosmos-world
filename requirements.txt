@@ -39,7 +39,7 @@ polars>=0.19.0
 pyarrow>=13.0.0
 
 # Database & Storage
-sqlite3
+# sqlite3 is built into Python, no need to install
 psycopg2-binary>=2.9.7
 alembic>=1.12.0
 
