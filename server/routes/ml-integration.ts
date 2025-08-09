@@ -59,8 +59,10 @@ export async function handleProphetForecast(req: Request, res: Response) {
 // Train ML Model endpoint
 export async function handleTrainML(req: Request, res: Response) {
   try {
-    // In development, return mock success response
+    // In development, return mock success response and start progress tracking
     if (process.env.NODE_ENV !== 'production') {
+      startTrainingProgress(); // Start the progress simulation
+
       res.json({
         success: true,
         message: "LightAutoML навчання запущено!",
