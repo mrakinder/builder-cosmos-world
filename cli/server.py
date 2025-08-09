@@ -540,8 +540,8 @@ async def stream_events():
     )
 
 
-# Scraper Progress SSE Endpoint
-@app.get("/scraper/progress/stream")
+# Scraper Progress SSE Endpoints (multiple paths for compatibility)
+@app.get("/progress/scrape")
 async def stream_scraper_progress():
     """Server-Sent Events stream for real-time scraper progress"""
     async def progress_stream():
