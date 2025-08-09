@@ -94,10 +94,16 @@ app = FastAPI(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
+    allow_origins=[
+        "https://dea706f0b3dd454188742d996e9d262a-58026be633ce45519cb96963e.fly.dev",  # Frontend URL
+        "http://localhost:3000",  # Local development
+        "http://localhost:8080",  # Local API testing
+        "*"  # Allow all for development (remove in production)
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
 
 
@@ -536,7 +542,7 @@ async def get_superset_status():
         return status
         
     except Exception as e:
-        logger.error(f"❌ Error getting Superset status: {str(e)}")
+        logger.error(f"�� Error getting Superset status: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
