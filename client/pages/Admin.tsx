@@ -20,7 +20,12 @@ import {
   Plus,
   Eye,
   Edit,
-  Save
+  Save,
+  Brain,
+  TrendingUp,
+  Globe,
+  BarChart3,
+  Zap
 } from "lucide-react";
 
 export default function Admin() {
