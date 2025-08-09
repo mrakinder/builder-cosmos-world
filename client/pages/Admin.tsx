@@ -709,7 +709,7 @@ export default function Admin() {
                   Комплексна ML Система (5 модулів)
                 </CardTitle>
                 <CardDescription>
-                  Повнофункціональна система машинного навчання для аналізу нерухомості
+                  Повнофункціональна система машинного навчання для а��алізу нерухомості
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -792,7 +792,7 @@ export default function Admin() {
                     Prophet Прогнозування
                   </CardTitle>
                   <CardDescription>
-                    Прогноз цінових трендів на 6 місяців по район��х
+                    Прогноз цінових трендів на 6 місяців по районах
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -803,7 +803,7 @@ export default function Admin() {
                         try {
                           const response = await fetch('/api/ml/forecast');
                           const data = await response.json();
-                          alert(`✅ Прогноз готовий!\nРайонів: ${data.districts?.length || 0}\nПеріод: 6 місяців`);
+                          alert(`✅ Про��ноз готовий!\nРайонів: ${data.districts?.length || 0}\nПеріод: 6 місяців`);
                         } catch (error) {
                           alert('❌ Помилка створе��ня прогнозу');
                         }
@@ -1113,11 +1113,11 @@ export default function Admin() {
 
                           // Always connect to Python backend SSE (new architecture)
                           addLogEntry('🔧 FIX: JSON parsing secured, using Python FastAPI backend');
-                          addLogEntry('📞 Connecting to Python backend SSE stream...');
 
                           // Connect to Python backend SSE for real-time progress
                           const pythonBackendUrl = 'http://localhost:8080';
-                          const pythonScraperSSE = new EventSource(`${pythonBackendUrl}/scraper/progress/stream`);
+                          addLogEntry(`🔗 Connecting to SSE: ${pythonBackendUrl}/progress/scrape`);
+                          const pythonScraperSSE = new EventSource(`${pythonBackendUrl}/progress/scrape`);
 
                             pythonScraperSSE.onmessage = (event) => {
                               try {
@@ -1298,14 +1298,14 @@ export default function Admin() {
                       className="text-xs"
                       onClick={async () => {
                         try {
-                          addLogEntry('⏹�� Зупинка Streamlit веб-додатку...');
+                          addLogEntry('⏹️ Зупинка Streamlit веб-додатку...');
                           await fetch('/api/streamlit/stop', { method: 'POST' });
                           addLogEntry('✅ Streamlit успішно зупинено');
                           alert('⏹️ Streamlit зупин��но');
                           loadMLModuleStatus();
                         } catch (error) {
                           addLogEntry('❌ Помилка зупи��ки Streamlit');
-                          alert('❌ Помилка зупинки');
+                          alert('��� Помилка зупинки');
                         }
                       }}
                     >
@@ -1332,7 +1332,7 @@ export default function Admin() {
           </Card>
         </div>
 
-        {/* Старі контрольні панелі видалені - тепер використовуємо тільки нові 5 модулів */}
+        {/* Старі контрольні ��анелі видалені - тепер використовуємо тільки нові 5 модулів */}
 
         {/* Logs Section */}
         <Card className="border-0 shadow-xl mt-8">
@@ -1360,7 +1360,7 @@ export default function Admin() {
               )}
             </div>
             <div className="mt-3 flex justify-between text-xs text-slate-500">
-              <span>Оновлюється кожні 2 секунди</span>
+              <span>Оновлюється кожні 2 се��унди</span>
               <span>Останніх записів: {activityLogs.length}</span>
             </div>
           </CardContent>
