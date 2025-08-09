@@ -201,14 +201,30 @@ const addRandomProperty = () => {
     const basePrice = area * (800 + Math.random() * 800); // $800-1600 per m²
     const rooms = Math.floor(Math.random() * 4) + 1; // 1-4 rooms
 
-    const olxId = `olx_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+    const title = `${rooms}-кімн. квартира на вул. ${randomStreet.street}, ${area}м²`;
     const finalPrice = Math.round(basePrice);
     const floor = Math.floor(Math.random() * 9) + 1;
-    
+
+    // Check if similar property already exists to avoid duplicates
+    const existingProperty = dbOperations.checkPropertyExists.get(
+      title,
+      area,
+      randomStreet.street,
+      finalPrice
+    ) as { count: number };
+
+    if (existingProperty.count > 0) {
+      // Property already exists, skip
+      console.log(`Skipping duplicate property: ${title}`);
+      return;
+    }
+
+    const olxId = `olx_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+
     // Insert property into database
     const result = dbOperations.insertProperty.run(
       olxId,
-      `${rooms}-кімн. квартира на вул. ${randomStreet.street}, ${area}м²`,
+      title,
       finalPrice,
       area,
       rooms,
