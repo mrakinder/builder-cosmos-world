@@ -62,6 +62,7 @@ export default function Admin() {
     loadModelStatus();
     loadActivityLogs();
     loadStreetMap();
+    loadMLModuleStatus();
 
     // Set up real-time monitoring
     const interval = setInterval(() => {
@@ -136,7 +137,7 @@ export default function Admin() {
 
   const handleAddStreet = async () => {
     if (!newStreet.trim() || !selectedDistrict) {
-      alert('Будь ласка, введіть назв�� вулиці та оберіть район');
+      alert('Будь ласка, введіть назву вулиці та оберіть район');
       return;
     }
 
@@ -376,11 +377,11 @@ export default function Admin() {
                         <SelectValue placeholder="Оберіть район" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Цент��">Центр</SelectItem>
+                        <SelectItem value="Центр">Центр</SelectItem>
                         <SelectItem value="Пасічна">Пасічна</SelectItem>
                         <SelectItem value="БАМ">БАМ</SelectItem>
                         <SelectItem value="Каскад">Каскад</SelectItem>
-                        <SelectItem value="Залізничний (Вокзал)">Залізничний (Вокзал)</SelectItem>
+                        <SelectItem value="Зал��зничний (Вокзал)">Залізничний (Вокзал)</SelectItem>
                         <SelectItem value="Брати">Брати</SelectItem>
                         <SelectItem value="Софіївка">Софіївка</SelectItem>
                         <SelectItem value="Будівельників">Будівельників</SelectItem>
@@ -587,7 +588,7 @@ export default function Admin() {
                   onClick={handleManualPropertyAdd}
                 >
                   <Upload className="w-4 h-4 mr-2" />
-                  Додати тестове о��олошення
+                  Додати тестове оголошення
                 </Button>
 
                 <div className="grid grid-cols-2 gap-2">
@@ -596,7 +597,7 @@ export default function Admin() {
                     onClick={handleExportData}
                   >
                     <Download className="w-4 h-4 mr-1" />
-                    Експорт
+                    Е��спорт
                   </Button>
                   <Button 
                     variant="destructive"
@@ -726,7 +727,7 @@ export default function Admin() {
                         }
                       } catch (error) {
                         console.error('Advanced retrain error:', error);
-                        alert('❌ Помилка запус��у розшир��ного навчання');
+                        alert('❌ Помилка запус��у розширеного навчання');
                       }
                     }}
                   >
