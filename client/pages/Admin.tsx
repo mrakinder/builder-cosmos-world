@@ -160,7 +160,8 @@ export default function Admin() {
       console.error('Failed to load ML module status:', error);
       // Set default status on error
       setMLModuleStatus({
-        ml_trained: false,
+        botasaurus_ready: false,
+        lightautoml_trained: false,
         prophet_ready: false,
         streamlit_running: false,
         superset_running: false
@@ -471,7 +472,7 @@ export default function Admin() {
                   Комплексна ML Система (5 модулів)
                 </CardTitle>
                 <CardDescription>
-                  Повнофункціональна система машинного навчання для аналізу нерухомості
+                  Повнофункціональна сис��ема машинного навчання для аналізу нерухомості
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -891,7 +892,7 @@ export default function Admin() {
                 <h4 className="text-sm font-medium text-slate-900 mb-1">Налаштування:</h4>
                 <ul className="text-xs text-slate-600 space-y-1">
                   <li>• Максимум 10 сторінок за запуск</li>
-                  <li>• Затримка 4-8 секунд м��ж запитами</li>
+                  <li>• Затримка 4-8 секунд м���� запитами</li>
                   <li>• Лише USD валюта</li>
                   <li>• Антибан захист активний</li>
                 </ul>
