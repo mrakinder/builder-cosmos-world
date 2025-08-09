@@ -371,7 +371,170 @@ def run_scraper(listing_type: str = "sale", max_pages: int = 10) -> Dict[str, An
     return scraper.scrape_olx_listings(data)
 
 
+def run_scraper_with_progress(listing_type: str = "sale", max_pages: int = 10,
+                               progress_callback=None, debug_html: bool = False) -> Dict[str, Any]:
+    """
+    Run scraper with real-time progress reporting
+    """
+    import sys
+    import json
+
+    config = ScrapingConfig()
+    scraper = BotasaurusOLXScraper(config)
+
+    # Override methods to emit progress
+    original_parse_page = scraper._parse_page
+
+    def progress_parse_page(driver, listing_type, page_num=1, total_pages=10):
+        """Parse page with progress reporting"""
+        properties = original_parse_page(driver, listing_type)
+
+        # Calculate progress
+        progress_percent = int((page_num / total_pages) * 100)
+        estimated_time_left = (total_pages - page_num) * 30  # 30 seconds per page
+
+        # Emit progress as JSON to stdout
+        progress_data = {
+            "type": "progress",
+            "current_page": page_num,
+            "total_pages": total_pages,
+            "page_items": len(properties),
+            "current_items": scraper.stats['total_processed'],
+            "total_items": scraper.stats['total_processed'],
+            "progress_percent": progress_percent,
+            "message": f"Обробка сторінки {page_num}/{total_pages}",
+            "estimated_time_left": estimated_time_left,
+            "page_completed": True
+        }
+
+        print(json.dumps(progress_data), flush=True)
+
+        # Save HTML snapshot for debugging
+        if debug_html:
+            html_file = f"scraper/logs/html/page_{page_num}.html"
+            try:
+                with open(html_file, 'w', encoding='utf-8') as f:
+                    f.write(driver.page_source)
+                print(f"📄 HTML snapshot saved: {html_file}", file=sys.stderr, flush=True)
+            except Exception as e:
+                print(f"❌ Failed to save HTML: {e}", file=sys.stderr, flush=True)
+
+        return properties
+
+    # Override the scrape method to include progress
+    original_scrape = scraper.scrape_olx_listings
+
+    def scrape_with_progress(driver, data):
+        """Main scraping with progress"""
+        scraper.stats['start_time'] = datetime.now()
+        scraper.logger.info("🚀 Starting Botasaurus OLX scraper for Ivano-Frankivsk")
+
+        try:
+            listing_type = data.get('listing_type', 'sale')
+            max_pages = data.get('max_pages', scraper.config.MAX_PAGES)
+
+            base_url = scraper._get_search_url(listing_type)
+
+            print(f"🔍 Початок парсингу OLX для Івано-Франківська", file=sys.stderr, flush=True)
+            print(f"📊 Планується обробити {max_pages} сторінок", file=sys.stderr, flush=True)
+            print(f"🌐 Базовий URL: {base_url}", file=sys.stderr, flush=True)
+
+            for page in range(1, max_pages + 1):
+                url = f"{base_url}&page={page}"
+                print(f"📄 Обробка сторінки {page}/{max_pages}: {url}", file=sys.stderr, flush=True)
+
+                try:
+                    # Navigate with random delay
+                    scraper._random_delay()
+                    driver.get(url)
+
+                    # Wait for listings to load
+                    driver.wait_for_element(scraper.config.SELECTORS['listing_container'], timeout=10)
+
+                    # Parse listings on current page with progress
+                    page_properties = progress_parse_page(driver, listing_type, page, max_pages)
+                    scraper.properties.extend(page_properties)
+
+                    print(f"✅ Сторінка {page}: знайдено {len(page_properties)} оголошень", file=sys.stderr, flush=True)
+
+                    # Check if last page (no more listings)
+                    if len(page_properties) == 0:
+                        print(f"📭 Більше оголошень не знайдено на сторінці {page}, зупинка", file=sys.stderr, flush=True)
+                        break
+
+                except Exception as e:
+                    print(f"❌ Помилка обробки сторінки {page}: {str(e)}", file=sys.stderr, flush=True)
+                    scraper.stats['errors'] += 1
+                    continue
+
+            # Save results
+            scraper._save_results()
+            scraper.stats['end_time'] = datetime.now()
+
+            print(f"🎉 Парсинг завершено! Статистика: {scraper.stats}", file=sys.stderr, flush=True)
+
+            # Final progress
+            final_progress = {
+                "type": "progress",
+                "current_page": max_pages,
+                "total_pages": max_pages,
+                "page_items": 0,
+                "current_items": scraper.stats['total_processed'],
+                "total_items": scraper.stats['total_processed'],
+                "progress_percent": 100,
+                "message": "Парсинг завершено",
+                "estimated_time_left": 0,
+                "page_completed": False
+            }
+            print(json.dumps(final_progress), flush=True)
+
+            return scraper.stats
+
+        except Exception as e:
+            print(f"💥 Критична помилка скрапера: {str(e)}", file=sys.stderr, flush=True)
+            raise
+
+    scraper.scrape_olx_listings = scrape_with_progress
+
+    data = {
+        'listing_type': listing_type,
+        'max_pages': max_pages
+    }
+
+    return scraper.scrape_olx_listings(data)
+
+
 if __name__ == "__main__":
-    # Run scraper standalone
-    stats = run_scraper(listing_type="sale", max_pages=5)
-    print(f"Scraping completed: {stats}")
+    import argparse
+
+    parser = argparse.ArgumentParser(description='Botasaurus OLX Scraper for Ivano-Frankivsk')
+    parser.add_argument('--listing-type', default='sale', choices=['sale', 'rent'],
+                       help='Type of listings to scrape')
+    parser.add_argument('--max-pages', type=int, default=10,
+                       help='Maximum pages to scrape')
+    parser.add_argument('--output-format', default='json', choices=['json', 'csv'],
+                       help='Output format')
+    parser.add_argument('--real-time-logs', default='false',
+                       help='Enable real-time progress logs')
+    parser.add_argument('--debug-html', default='false',
+                       help='Save HTML snapshots for debugging')
+
+    args = parser.parse_args()
+
+    debug_html = args.debug_html.lower() == 'true'
+
+    try:
+        if args.real_time_logs.lower() == 'true':
+            stats = run_scraper_with_progress(
+                listing_type=args.listing_type,
+                max_pages=args.max_pages,
+                debug_html=debug_html
+            )
+        else:
+            stats = run_scraper(listing_type=args.listing_type, max_pages=args.max_pages)
+
+        print(f"Scraping completed: {stats}")
+
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
