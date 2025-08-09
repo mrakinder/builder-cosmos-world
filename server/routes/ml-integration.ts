@@ -102,15 +102,26 @@ export async function handleStreamlitStatus(req: Request, res: Response) {
 // Start Streamlit endpoint
 export async function handleStartStreamlit(req: Request, res: Response) {
   try {
+    // In development, return mock success response
+    if (process.env.NODE_ENV !== 'production') {
+      res.json({
+        success: true,
+        message: "Streamlit запущено!",
+        url: "http://localhost:8501",
+        status: "running"
+      });
+      return;
+    }
+
     const { stdout, stderr } = await execAsync("python property_monitor_cli.py web start");
-    
+
     if (stderr) {
       console.error("Streamlit Start error:", stderr);
       return res.status(500).json({ error: "Failed to start Streamlit" });
     }
 
     const result = JSON.parse(stdout);
-    res.json(result);
+    res.json({ success: true, ...result });
   } catch (error) {
     console.error("Streamlit Start error:", error);
     res.status(500).json({ error: "Internal server error" });
