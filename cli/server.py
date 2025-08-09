@@ -28,6 +28,7 @@ class ScrapingRequest(BaseModel):
     listing_type: str = "sale"  # 'rent' or 'sale'
     max_pages: int = 10
     delay_ms: int = 5000
+    headful: bool = False  # додано для сумісності з майбутніми запитами
 
 class MLTrainingRequest(BaseModel):
     target_mape: float = 15.0
