@@ -105,7 +105,7 @@ export const handleStartScraping: RequestHandler = (req, res) => {
     lastStoppedPage: resumeFromPage
   };
 
-  addActivity(`Розпочато парсинг OLX (${targetPages} сторінок)`);
+  addActivity(`🤖 Розпочато Botasaurus парсинг OLX (${targetPages} сторінок)`);
 
   // Simulate progressive scraping
   const scrapePage = (pageNum: number) => {
@@ -129,7 +129,7 @@ export const handleStartScraping: RequestHandler = (req, res) => {
         console.error('Failed to update final scraping state:', error);
       }
 
-      addActivity(`Парсинг завершено! Зібрано ${scrapingStatus.totalItems} оголошень з ${targetPages} сторінок`);
+      addActivity(`Парсинг завершено! Зібрано ${scrapingStatus.totalItems} ог��лошень з ${targetPages} сторінок`);
       return;
     }
 
