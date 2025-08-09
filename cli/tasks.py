@@ -39,6 +39,17 @@ class TaskManager:
     async def initialize(self):
         """Initialize task manager"""
         self.logger.info("🔧 Initializing Task Manager")
+
+        # Log database path for consistency verification
+        import os
+        abs_db_path = os.path.abspath(self.db_path)
+        self.logger.info(f"📊 Python TaskManager DB path: {abs_db_path}")
+        self.event_logger.log_event(
+            "database",
+            "path_verification",
+            f"Python TaskManager using: {abs_db_path}",
+            "INFO"
+        )
         
         # Ensure directories exist
         os.makedirs("cli/logs", exist_ok=True)
@@ -552,7 +563,7 @@ class TaskManager:
             }
             
         except Exception as e:
-            self.logger.error(f"�� Error getting property statistics: {str(e)}")
+            self.logger.error(f"❌ Error getting property statistics: {str(e)}")
             return {}
     
     # System status
