@@ -65,7 +65,7 @@ export default function Index() {
     "Пасічна": ["Пасічна"],
     "Петлюри": ["Хриплин"],
     "Пстрака": ["Софіївка"],
-    "Привокзальна площа": ["Залізничний (Вокзал)"],
+    "Прив��кзальна площа": ["Залізничний (Вокзал)"],
     "Промислова": ["Залізничний (Вокзал)"],
     "Реміснича": ["Брати"],
     "Республіканська": ["Центр"],
@@ -244,12 +244,14 @@ export default function Index() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => window.open('/admin', '_blank')}
+                asChild
                 className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white"
               >
-                <Settings className="w-4 h-4 mr-1" />
-                <span className="hidden sm:inline">Адмін панель</span>
-                <span className="sm:hidden">Адмін</span>
+                <Link to="/admin">
+                  <Settings className="w-4 h-4 mr-1" />
+                  <span className="hidden sm:inline">Адмін панель</span>
+                  <span className="sm:hidden">Адмін</span>
+                </Link>
               </Button>
             </nav>
           </div>
@@ -594,7 +596,7 @@ export default function Index() {
                   <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-pink-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Shield className="w-8 h-8 text-purple-600" />
                   </div>
-                  <CardTitle>Ручні да��і</CardTitle>
+                  <CardTitle>Ручні дані</CardTitle>
                 </CardHeader>
                 <CardContent className="text-center space-y-4">
                   <Button
