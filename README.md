@@ -52,13 +52,15 @@ Frontend Layer                 API Layer                    ML Backend (5 Module
 **No more CLI commands!** Everything is managed through intuitive web interfaces:
 
 ### 🎛️ Main Admin Panel (`/admin/panel/`)
+
 - **5 Module Control Cards** with real-time status indicators
-- **One-Click Operations** for all system functions  
+- **One-Click Operations** for all system functions
 - **Live Progress Bars** with percentage completion
 - **Real-Time Event Log** with Server-Sent Events
 - **System Overview Metrics** updated every 5 seconds
 
 ### ⚡ Quick Actions Available:
+
 - **Start/Stop Scraping** (Sale/Rent modes)
 - **Train ML Model** with live progress tracking
 - **Generate Price Forecasts** for all districts
@@ -69,6 +71,7 @@ Frontend Layer                 API Layer                    ML Backend (5 Module
 ## 🚀 Quick Start Guide
 
 ### 1. System Setup
+
 ```bash
 # Install Python dependencies
 pip install -r requirements.txt
@@ -81,6 +84,7 @@ playwright install
 ```
 
 ### 2. Start the Unified API Server
+
 ```bash
 # Start FastAPI server (handles all 5 modules)
 python cli/server.py
@@ -91,16 +95,19 @@ python cli/server.py
 ### 3. Access Control Interfaces
 
 🎛️ **Main Admin Panel**: http://localhost:8080/admin/panel/
+
 - Complete system control through buttons
 - Real-time progress monitoring
 - Live event logging
 
 🌐 **Public Property Evaluation**: http://localhost:8501 (after starting Streamlit)
+
 - Mobile-responsive property evaluation
 - Instant price predictions
 - Similar property recommendations
 
 📊 **Business Analytics**: http://localhost:8088 (Superset - requires setup)
+
 - 4 pre-configured dashboards
 - Market overview and trends
 - Model performance metrics
@@ -117,9 +124,10 @@ python cli/server.py
 ## 📊 Module Details
 
 ### Module 1: 🕷️ Botasaurus Anti-Detection Scraper
+
 - **Purpose**: Robust OLX.ua data collection for Ivano-Frankivsk
 - **Features**:
-  - Stealth scraping with user-agent rotation  
+  - Stealth scraping with user-agent rotation
   - Resume capability for interrupted sessions
   - 57+ street-to-district mappings
   - Owner vs agency classification
@@ -127,7 +135,8 @@ python cli/server.py
 - **Performance**: 4-8 second delays (anti-ban optimized)
 - **Control**: Button-based start/stop with progress tracking
 
-### Module 2: 🧠 LightAutoML Price Prediction  
+### Module 2: 🧠 LightAutoML Price Prediction
+
 - **Purpose**: Automated ML for accurate price prediction
 - **Target**: MAPE ≤ 15% accuracy
 - **Features**:
@@ -138,6 +147,7 @@ python cli/server.py
 - **Control**: One-click training with live progress bars
 
 ### Module 3: 📈 Prophet Time Series Forecasting
+
 - **Purpose**: 6-month price trend forecasting by districts
 - **Features**:
   - Facebook Prophet integration
@@ -148,6 +158,7 @@ python cli/server.py
 - **Output**: Interactive charts and forecast reports
 
 ### Module 4: 🌐 Streamlit Public Interface
+
 - **Purpose**: Mobile-responsive public property evaluation
 - **Features**:
   - Property price estimation form
@@ -158,10 +169,11 @@ python cli/server.py
 - **Performance**: ≤1.5 second response time guarantee
 
 ### Module 5: 📊 Apache Superset Business Intelligence
+
 - **Purpose**: Professional analytics dashboards
 - **Dashboards**:
   1. **Market Overview IF** - Overall market health
-  2. **Dynamics & Trends** - Price movements over time  
+  2. **Dynamics & Trends** - Price movements over time
   3. **Model Quality** - ML performance metrics
   4. **Scraper Health** - Data collection monitoring
 - **Setup**: Manual configuration required (see documentation)
@@ -169,6 +181,7 @@ python cli/server.py
 ## 🛠️ Configuration
 
 ### Environment Configuration (`.env`)
+
 ```bash
 # Database
 DB_URL=sqlite:///data/olx_offers.sqlite
@@ -191,30 +204,34 @@ SCRAPER_DELAY_MS=5000
 ```
 
 ### Street Mapping Management
+
 The system includes comprehensive street-to-district mapping for Ivano-Frankivsk:
+
 - **57+ pre-configured streets** across 10 districts
 - **Admin interface** for adding new streets
 - **Automatic district detection** during scraping
 
 ### Districts Coverage:
+
 - Центр, Пасічна, БАМ, Каскад
-- Залізничний (Вокзал), Брати, Софіївка  
+- Залізничний (Вокзал), Брати, Софіївка
 - Будівельни��ів, Набережна, Опришівці
 
 ## 📈 Performance Benchmarks
 
-| Component | Performance Target | Actual Performance |
-|-----------|-------------------|-------------------|
-| **Scraping Speed** | 4-8 sec/request | ✅ Optimized for anti-ban |
-| **ML Training** | MAPE ≤ 15% | ✅ Automated optimization |
-| **Price Prediction** | ≤ 1.5 seconds | ✅ Real-time inference |
-| **Prophet Forecasting** | 6-month horizon | ✅ District-level accuracy |
-| **Web Interface** | Mobile-responsive | ✅ All devices supported |
-| **System Monitoring** | Real-time updates | ✅ SSE live streaming |
+| Component               | Performance Target | Actual Performance         |
+| ----------------------- | ------------------ | -------------------------- |
+| **Scraping Speed**      | 4-8 sec/request    | ✅ Optimized for anti-ban  |
+| **ML Training**         | MAPE ≤ 15%         | ✅ Automated optimization  |
+| **Price Prediction**    | ≤ 1.5 seconds      | ✅ Real-time inference     |
+| **Prophet Forecasting** | 6-month horizon    | ✅ District-level accuracy |
+| **Web Interface**       | Mobile-responsive  | ✅ All devices supported   |
+| **System Monitoring**   | Real-time updates  | ✅ SSE live streaming      |
 
 ## 🔄 Real-Time Monitoring
 
 ### Live System Features:
+
 - **Real-time progress bars** for all operations
 - **Server-Sent Events (SSE)** for instant updates
 - **Live event logging** with color-coded entries
@@ -222,6 +239,7 @@ The system includes comprehensive street-to-district mapping for Ivano-Frankivsk
 - **Module status indicators** (idle/running/completed/error)
 
 ### Event Types Tracked:
+
 - Scraping progress and results
 - ML training stages and completion
 - Prophet forecasting status
@@ -238,13 +256,14 @@ The system includes comprehensive street-to-district mapping for Ivano-Frankivsk
 ✅ **Performance Targets**: Sub-1.5s predictions, MAPE ≤15%  
 ✅ **Event Logging**: Comprehensive activity tracking  
 ✅ **Street Management**: Preserved and enhanced  
-✅ **Production Ready**: Error handling, logging, monitoring  
+✅ **Production Ready**: Error handling, logging, monitoring
 
 ## 🔧 Troubleshooting
 
 ### Common Issues & Solutions:
 
 **1. API Server Won't Start**
+
 ```bash
 # Check port availability
 netstat -an | grep 8080
@@ -254,21 +273,25 @@ python cli/server.py --port 8081
 ```
 
 **2. Botasaurus Scraping Fails**
+
 - Install Playwright browsers: `playwright install`
 - Check anti-virus interference
 - Verify OLX.ua accessibility
 
 **3. ML Model Training Errors**
+
 - Ensure sufficient data (≥100 properties)
 - Check disk space for model files
 - Monitor memory usage during training
 
 **4. Streamlit Won't Launch**
+
 - Verify port 8501 availability
 - Check Streamlit installation: `pip install streamlit>=1.28.0`
 - Try manual start: `streamlit run app/streamlit_app.py`
 
 ### Debug Commands:
+
 ```bash
 # Check system status
 curl http://localhost:8080/system/status
@@ -285,50 +308,60 @@ curl -X POST http://localhost:8080/ml/predict -H "Content-Type: application/json
 ### Core Endpoints:
 
 **System Management:**
+
 - `GET /health` - API health check
 - `GET /system/status` - Comprehensive system status
 
 **Module 1 - Scraper:**
+
 - `POST /scraper/start` - Start Botasaurus scraping
 - `POST /scraper/stop` - Stop active scraping
 - `GET /scraper/status` - Get scraping progress
 
 **Module 2 - ML:**
+
 - `POST /ml/train` - Train LightAutoML model
 - `GET /ml/progress/stream` - SSE progress stream
 - `POST /ml/predict` - Property price prediction
 
 **Module 3 - Prophet:**
+
 - `POST /prophet/forecast` - Generate forecasts
 - `GET /prophet/forecasts` - Get forecast results
 
 **Module 4 - Streamlit:**
+
 - `POST /streamlit/control` - Start/stop Streamlit
 - `GET /streamlit/status` - Interface status
 
 **Module 5 - Superset:**
+
 - `GET /superset/status` - Dashboard availability
 
 **Street Management:**
+
 - `GET /streets/mapping` - Get street mappings
 - `POST /streets/add` - Add new street mapping
 
 **Events & Logging:**
+
 - `GET /events/stream` - SSE event stream
 - `GET /events/recent` - Recent events
 
 ## 🤝 Support & Documentation
 
 ### Getting Help:
+
 - **Technical Issues**: Check troubleshooting section above
 - **API Reference**: Built-in Swagger UI at `/docs` when server running
 - **Module-Specific Issues**: Each module has detailed logging
 
 ### File Structure Overview:
+
 ```
 📁 Project Root
 ├── 🕷️ scraper/         # Module 1: Botasaurus scraper
-├── 🧠 ml/laml/         # Module 2: LightAutoML  
+├── 🧠 ml/laml/         # Module 2: LightAutoML
 ├── 📈 analytics/prophet/ # Module 3: Prophet forecasting
 ├── 🌐 app/             # Module 4: Streamlit interface
 ├── 📊 superset/        # Module 5: Apache Superset
