@@ -215,7 +215,7 @@ export async function handlePipelineStatus(req: Request, res: Response) {
     if (process.env.NODE_ENV !== 'production') {
       res.json({
         botasaurus_ready: false,
-        lightautoml_trained: false,
+        lightautoml_trained: modelTrained, // Use the actual trained state
         prophet_ready: false,
         streamlit_running: false,
         superset_running: false,
