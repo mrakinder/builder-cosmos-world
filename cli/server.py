@@ -121,35 +121,58 @@ async def health_check():
 # Module 1: Botasaurus Scraper Endpoints
 @app.post("/scraper/start")
 async def start_scraping(request: ScrapingRequest, background_tasks: BackgroundTasks):
-    """Start Botasaurus OLX scraping"""
+    """Start Botasaurus OLX scraping - returns JSON-only response"""
     try:
+        # Check if scraper is already running
+        current_status = await task_manager.get_scraping_status()
+        if current_status.get('status') == 'running':
+            return JSONResponse(
+                {"ok": False, "error": "Scraper already running"},
+                status_code=409,
+                headers={"Content-Type": "application/json"}
+            )
+
         logger.info(f"🕷️ Starting scraper: {request.listing_type}, {request.max_pages} pages")
-        
+
         # Start scraping task in background
         task_id = await task_manager.start_scraping_task(
             listing_type=request.listing_type,
             max_pages=request.max_pages,
             delay_ms=request.delay_ms
         )
-        
+
         event_logger.log_event(
-            "scraper", 
-            "start_scraping", 
+            "scraper",
+            "start_scraping",
             f"Started scraping {request.listing_type} listings",
             "INFO"
         )
-        
-        return {
-            "success": True,
-            "message": f"Scraping started for {request.listing_type} listings",
-            "task_id": task_id,
-            "estimated_time": f"{request.max_pages * 10} seconds",
-            "parameters": request.dict()
-        }
-        
+
+        # Return consistent JSON structure
+        return JSONResponse(
+            {
+                "ok": True,
+                "task": task_id,
+                "message": f"Scraping started for {request.listing_type} listings",
+                "estimated_time": f"{request.max_pages * 10} seconds",
+                "parameters": {
+                    "listing_type": request.listing_type,
+                    "max_pages": request.max_pages,
+                    "delay_ms": request.delay_ms
+                }
+            },
+            status_code=202,
+            headers={"Content-Type": "application/json"}
+        )
+
     except Exception as e:
         logger.error(f"❌ Error starting scraper: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        # Always return JSON, never raise HTTPException which can return HTML
+        return JSONResponse(
+            {"ok": False, "error": f"{type(e).__name__}: {str(e)}"},
+            status_code=500,
+            headers={"Content-Type": "application/json"}
+        )
 
 
 @app.post("/scraper/stop")
