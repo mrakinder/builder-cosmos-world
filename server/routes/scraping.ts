@@ -89,16 +89,6 @@ const addActivity = (message: string, type: string = 'info') => {
 export const handleStartScraping: RequestHandler = async (req, res) => {
   ensureDatabase();
 
-  // Import Botasaurus integration
-  const { botasaurusIntegration } = await import('../integrations/botasaurus-integration');
-
-  if (botasaurusIntegration.isRunning()) {
-    return res.status(400).json({
-      error: 'Botasaurus парсинг вже запущено',
-      status: 'running'
-    });
-  }
-
   try {
     const { listing_type = 'sale', max_pages = 10 } = req.body;
 
@@ -110,76 +100,76 @@ export const handleStartScraping: RequestHandler = async (req, res) => {
       });
     }
 
+    addActivity(`🔧 FIX: Redirecting to Python FastAPI backend instead of Node spawn`);
     addActivity(`🤖 ПОЧАТОК: Реальний Botasaurus парсинг OLX (${max_pages} сторінок, тип: ${listing_type})`);
     addActivity(`🛡️ Використання: AntiDetectionDriver + Stealth режим`);
     addActivity(`🎯 Цільовий регіон: Івано-Франківськ, валюта: USD`);
 
-    // Setup progress and log callbacks
-    const progressCallback = (progress: any) => {
-      // Update global scraping status for API compatibility
-      scrapingStatus = {
-        status: progress.status,
-        startTime: scrapingStatus.startTime || new Date(),
-        totalPages: progress.totalPages,
-        currentPage: progress.currentPage,
-        totalItems: progress.totalItems,
-        currentItems: progress.currentItems,
-        progressPercent: progress.progressPercent,
-        lastUpdate: progress.lastUpdate,
-        estimatedTimeLeft: progress.estimatedTimeLeft,
-        lastStoppedPage: progress.currentPage,
-        scrapingPosition: {
-          lastUrl: `https://www.olx.ua/page/${progress.currentPage}`,
-          lastProcessedId: `botasaurus_${Date.now()}`,
-          totalProcessed: progress.totalItems
-        }
-      };
+    // Call Python FastAPI backend instead of Node spawn
+    const pythonBackendUrl = process.env.PYTHON_API_URL || 'http://localhost:8080';
 
-      // Broadcast progress via SSE
-      if ((global as any).broadcastSSE) {
-        (global as any).broadcastSSE({
-          type: 'progress',
-          module: 'scraper',
-          progress: progress.progressPercent,
-          status: progress.status,
-          message: progress.message,
-          currentPage: progress.currentPage,
-          totalPages: progress.totalPages,
-          currentItems: progress.currentItems,
-          totalItems: progress.totalItems
-        });
+    const response = await fetch(`${pythonBackendUrl}/scraper/start`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        listing_type,
+        max_pages,
+        delay_ms: 5000
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Python backend error');
+    }
+
+    const pythonResult = await response.json();
+
+    // Update local status for compatibility
+    scrapingStatus = {
+      status: 'running',
+      startTime: new Date(),
+      totalPages: max_pages,
+      currentPage: 0,
+      totalItems: 0,
+      currentItems: 0,
+      progressPercent: 0,
+      lastUpdate: new Date(),
+      estimatedTimeLeft: max_pages * 30,
+      lastStoppedPage: 0,
+      scrapingPosition: {
+        lastUrl: '',
+        lastProcessedId: `python_backend_${Date.now()}`,
+        totalProcessed: 0
       }
     };
 
-    const logCallback = (message: string) => {
-      addActivity(message);
-    };
-
-    // Start real Botasaurus scraping
-    await botasaurusIntegration.startScraping(
-      listing_type,
-      max_pages,
-      progressCallback,
-      logCallback
-    );
+    addActivity(`✅ Python backend response: ${pythonResult.message}`);
+    addActivity(`📊 Task ID: ${pythonResult.task_id}`);
+    addActivity(`🕐 Estimated time: ${pythonResult.estimated_time}`);
 
     res.json({
       success: true,
-      message: 'Реальний Botasaurus парсинг запущено успішно',
+      message: 'Реальний Botasaurus парсинг запущено через Python backend',
       status: 'running',
       estimatedTime: `${Math.round(max_pages * 30 / 60)} хвилин`,
       progress: 0,
-      framework: 'Botasaurus v4.0.10+ (Real)',
-      features: ['AntiDetectionDriver', 'Stealth Mode', 'Resume Capability', 'Real-time Progress']
+      framework: 'Botasaurus v4.0.10+ (Python Backend)',
+      features: ['AntiDetectionDriver', 'Stealth Mode', 'Resume Capability', 'Real-time Progress'],
+      python_backend: true,
+      task_id: pythonResult.task_id,
+      backend_url: pythonBackendUrl
     });
 
   } catch (error) {
-    console.error('Error starting Botasaurus scraping:', error);
-    addActivity(`❌ ПОМИЛКА запуску Botasaurus: ${error.message}`);
+    console.error('Error starting scraping via Python backend:', error);
+    addActivity(`❌ ПОМИЛКА запуску через Python backend: ${error.message}`);
 
     res.status(500).json({
       success: false,
-      error: `Помилка запуску Botasaurus: ${error.message}`,
+      error: `Помилка запуску через Python backend: ${error.message}`,
       status: 'error'
     });
   }
@@ -302,20 +292,24 @@ export const handleActivityLog: RequestHandler = (req, res) => {
 
 export const handleStopScraping: RequestHandler = async (req, res) => {
   try {
-    // Import Botasaurus integration
-    const { botasaurusIntegration } = await import('../integrations/botasaurus-integration');
+    // Call Python FastAPI backend to stop scraping
+    const pythonBackendUrl = process.env.PYTHON_API_URL || 'http://localhost:8080';
 
-    if (!botasaurusIntegration.isRunning()) {
-      return res.status(400).json({
-        error: 'Botasaurus парсинг не запущено',
-        status: scrapingStatus.status
-      });
+    const response = await fetch(`${pythonBackendUrl}/scraper/stop`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Python backend error');
     }
 
-    // Stop real Botasaurus scraping
-    botasaurusIntegration.stopScraping();
+    const pythonResult = await response.json();
 
-    // Save current position before stopping
+    // Update local status
     scrapingStatus.lastStoppedPage = scrapingStatus.currentPage;
     scrapingStatus.status = 'idle';
 
@@ -332,22 +326,24 @@ export const handleStopScraping: RequestHandler = async (req, res) => {
       console.error('Failed to update scraping state on stop:', error);
     }
 
-    addActivity(`⏹️ Botasaurus парсинг зупинено на сторінці ${scrapingStatus.currentPage}. Позицію збережено.`);
+    addActivity(`⏹️ Парсинг зупинено через Python backend на сторінці ${scrapingStatus.currentPage}`);
+    addActivity(`✅ Python backend response: ${pythonResult.message}`);
 
     res.json({
       success: true,
-      message: 'Botasaurus парсинг зупинено',
+      message: 'Парсинг зупинено через Python backend',
       status: 'idle',
-      stoppedAt: scrapingStatus.lastStoppedPage
+      stoppedAt: scrapingStatus.lastStoppedPage,
+      python_backend: true
     });
 
   } catch (error) {
-    console.error('Error stopping Botasaurus scraping:', error);
-    addActivity(`❌ Помилка зупинки Botasaurus: ${error.message}`);
+    console.error('Error stopping scraping via Python backend:', error);
+    addActivity(`❌ Помилка зупинки через Python backend: ${error.message}`);
 
     res.status(500).json({
       success: false,
-      error: `Помилка зупинки: ${error.message}`,
+      error: `Помилка зупинки через Python backend: ${error.message}`,
       status: 'error'
     });
   }
