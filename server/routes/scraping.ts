@@ -313,6 +313,8 @@ export const handleStopScraping: RequestHandler = (req, res) => {
 
 // Get all properties
 export const handleGetProperties: RequestHandler = (req, res) => {
+  ensureDatabase();
+
   try {
     const properties = dbOperations.getAllProperties.all();
     
