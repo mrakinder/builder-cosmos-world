@@ -302,7 +302,7 @@ export default function Admin() {
         const sampleLogs = [
           `[${currentTime}] Система запущена`,
           `[${currentTime}] База даних ініціалізована`,
-          `[${currentTime}] API гото��е до роботи`,
+          `[${currentTime}] API готове до роботи`,
           `[${currentTime}] Нова система з 5 модулями активована`,
           `[${currentTime}] Botasaurus v4.0.10+ готовий до парсингу`
         ];
@@ -378,7 +378,7 @@ export default function Admin() {
 
   const handleAddStreet = async () => {
     if (!newStreet.trim() || !selectedDistrict) {
-      alert('Будь ласка, введіть назву вулиц�� та оберіть район');
+      alert('Будь ласка, введіть назву вулиці та оберіть район');
       return;
     }
 
@@ -666,7 +666,7 @@ export default function Admin() {
                   </Button>
                 </div>
                 <div className="bg-slate-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-slate-900 mb-3">��оточні вулиці:</h4>
+                  <h4 className="font-medium text-slate-900 mb-3">Поточні вулиці:</h4>
                   <div className="max-h-64 overflow-y-auto space-y-2">
                     {Object.entries(streetToDistrictMap).map(([street, district]) => (
                       <div key={street} className="flex justify-between items-center p-2 bg-white rounded border text-sm">
@@ -692,7 +692,7 @@ export default function Admin() {
                   Комплексна ML Система (5 модулів)
                 </CardTitle>
                 <CardDescription>
-                  Повнофункціональна система машинного навчання для аналізу ��ерухомості
+                  Повнофункц��ональна система машинного навчання для аналізу нерухомості
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -761,7 +761,7 @@ export default function Admin() {
 
                   <div className="p-3 bg-blue-50 rounded-lg text-sm">
                     <p><strong>Ціль:</strong> MAPE ≤ 15%</p>
-                    <p><strong>Фічі:</strong> пл��ща, район, кімнати, поверх, тип, ремонт</p>
+                    <p><strong>Фічі:</strong> площа, район, кімнати, поверх, тип, ремонт</p>
                     <p><strong>Статус:</strong> {mlModuleStatus.lightautoml_trained ? '✅ Готово' : '⏳ Не т��енована'}</p>
                   </div>
                 </CardContent>
@@ -786,7 +786,7 @@ export default function Admin() {
                         try {
                           const response = await fetch('/api/ml/forecast');
                           const data = await response.json();
-                          alert(`✅ Прогноз го��овий!\nРайонів: ${data.districts?.length || 0}\nПеріод: 6 місяців`);
+                          alert(`✅ Прогноз готовий!\nРайонів: ${data.districts?.length || 0}\nПеріод: 6 місяців`);
                         } catch (error) {
                           alert('❌ Помилка створе��ня прогнозу');
                         }
@@ -830,7 +830,7 @@ export default function Admin() {
                     Streamlit Веб-Інтерфейс
                   </CardTitle>
                   <CardDescription>
-                    Публічний інтерфейс для оцінки нерухомості
+                    Публічний і��терфейс для оцінки нерухомості
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -884,7 +884,7 @@ export default function Admin() {
                     Apache Superset
                   </CardTitle>
                   <CardDescription>
-                    Бізнес-аналітика з 4 готовими дашбордами
+                    Бізнес-аналітика з 4 готовими дашб��рдами
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -1026,7 +1026,7 @@ export default function Admin() {
             <CardHeader>
               <CardTitle className="flex items-center text-xl">
                 <Settings className="w-6 h-6 mr-3 text-indigo-600" />
-                Швидке керування новими модулями
+                Швидке к��рування новими модулями
               </CardTitle>
               <CardDescription>
                 Оновлена система з 5 модулями: Botasaurus → LightAutoML → Prophet → Streamlit → Superset
@@ -1057,6 +1057,47 @@ export default function Admin() {
                         console.log('Scraper API response:', response.ok, data);
 
                         if (response.ok && data.success) {
+                          if (data.python_backend) {
+                            addLogEntry('🔧 FIX: Using Python FastAPI backend instead of Node spawn');
+                            addLogEntry(`🐍 Backend URL: ${data.backend_url}`);
+                            addLogEntry(`📊 Task ID: ${data.task_id}`);
+                            addLogEntry('📞 Connecting to Python backend SSE stream...');
+
+                            // Connect to Python backend SSE for real-time progress
+                            const pythonBackendUrl = data.backend_url || 'http://localhost:8080';
+                            const pythonScraperSSE = new EventSource(`${pythonBackendUrl}/scraper/progress/stream`);
+
+                            pythonScraperSSE.onmessage = (event) => {
+                              try {
+                                const sseData = JSON.parse(event.data);
+                                if (sseData.type === 'progress' && sseData.module === 'scraper') {
+                                  setScraperProgress(sseData.progress || 0);
+                                  setScraperStatus(sseData.status || 'running');
+
+                                  if (sseData.current_page && sseData.total_pages) {
+                                    addLogEntry(`📄 Прогрес: ${sseData.current_page}/${sseData.total_pages} (знайдено ${sseData.current_items || 0})`);
+                                  }
+
+                                  if (sseData.status === 'completed') {
+                                    addLogEntry('✅ Botasaurus парсинг завершено через Python backend!');
+                                    pythonScraperSSE.close();
+                                    loadStats();
+                                  } else if (sseData.status === 'error') {
+                                    addLogEntry('❌ Помилка Python backend scraper');
+                                    pythonScraperSSE.close();
+                                  }
+                                }
+                              } catch (error) {
+                                console.error('Error parsing Python SSE:', error);
+                              }
+                            };
+
+                            pythonScraperSSE.onerror = (error) => {
+                              console.error('Python SSE error:', error);
+                              addLogEntry('⚠️ Python SSE connection error');
+                            };
+                          }
+
                           addLogEntry('✅ Botasaurus успішно запущено з антидетекційним захистом');
                           addLogEntry('🛡️ AntiDetectionDriver активовано');
                           addLogEntry('🔄 Stealth режим увімкнено');
@@ -1128,7 +1169,7 @@ export default function Admin() {
                           addLogEntry('✅ LightAutoML навчання успішно запущено');
                           addLogEntry(`🎯 Ціль: MAPE ≤ 15%`);
                           addLogEntry('📊 Завантаження даних з бази...');
-                          alert('✅ LightAutoML навча��ня запущено!');
+                          alert('✅ LightAutoML навчання запущено!');
                           console.log('Starting progress monitoring...');
                           startMLProgressMonitoring();
                           loadMLModuleStatus();
