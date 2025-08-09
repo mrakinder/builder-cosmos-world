@@ -86,115 +86,103 @@ const addActivity = (message: string, type: string = 'info') => {
   }
 };
 
-export const handleStartScraping: RequestHandler = (req, res) => {
+export const handleStartScraping: RequestHandler = async (req, res) => {
   ensureDatabase();
 
-  if (scrapingStatus.status === 'running') {
+  // Import Botasaurus integration
+  const { botasaurusIntegration } = await import('../integrations/botasaurus-integration');
+
+  if (botasaurusIntegration.isRunning()) {
     return res.status(400).json({
-      error: 'Парсинг вже запущено',
-      status: scrapingStatus.status
+      error: 'Botasaurus парсинг вже запущено',
+      status: 'running'
     });
   }
 
-  const targetPages = Math.floor(Math.random() * 8) + 3; // 3-10 pages
-  
-  // Load existing scraping state from database
-  const savedState = dbOperations.getScrapingState.get() as any;
-  const resumeFromPage = savedState?.last_page || 0;
-  
-  // Start scraping with progress tracking
-  scrapingStatus = {
-    ...scrapingStatus,
-    status: 'running',
-    startTime: new Date(),
-    totalPages: targetPages,
-    currentPage: resumeFromPage,
-    totalItems: savedState?.total_processed || 0,
-    currentItems: 0,
-    progressPercent: 0,
-    lastUpdate: new Date(),
-    estimatedTimeLeft: (targetPages - resumeFromPage) * 30,
-    lastStoppedPage: resumeFromPage
-  };
+  try {
+    const { listing_type = 'sale', max_pages = 10 } = req.body;
 
-  addActivity(`🤖 Розпочато Botasaurus парсинг OLX (${targetPages} сторінок)`);
+    // Validate parameters
+    if (max_pages < 1 || max_pages > 50) {
+      return res.status(400).json({
+        error: 'max_pages має бути між 1 та 50',
+        status: 'error'
+      });
+    }
 
-  // Simulate progressive scraping
-  const scrapePage = (pageNum: number) => {
-    if (pageNum > targetPages) {
-      // Complete scraping
-      scrapingStatus.status = 'completed';
-      scrapingStatus.progressPercent = 100;
-      scrapingStatus.estimatedTimeLeft = 0;
-      scrapingStatus.lastStoppedPage = pageNum;
-      
-      // Update final scraping state in database
-      try {
-        dbOperations.updateScrapingState.run(
-          pageNum,
-          `https://olx.ua/completed`,
-          `completed_${Date.now()}`,
-          scrapingStatus.totalItems,
-          'completed'
-        );
-      } catch (error) {
-        console.error('Failed to update final scraping state:', error);
+    addActivity(`🤖 ПОЧАТОК: Реальний Botasaurus парсинг OLX (${max_pages} сторінок, тип: ${listing_type})`);
+    addActivity(`🛡️ Використання: AntiDetectionDriver + Stealth режим`);
+    addActivity(`🎯 Цільовий регіон: Івано-Франківськ, валюта: USD`);
+
+    // Setup progress and log callbacks
+    const progressCallback = (progress: any) => {
+      // Update global scraping status for API compatibility
+      scrapingStatus = {
+        status: progress.status,
+        startTime: scrapingStatus.startTime || new Date(),
+        totalPages: progress.totalPages,
+        currentPage: progress.currentPage,
+        totalItems: progress.totalItems,
+        currentItems: progress.currentItems,
+        progressPercent: progress.progressPercent,
+        lastUpdate: progress.lastUpdate,
+        estimatedTimeLeft: progress.estimatedTimeLeft,
+        lastStoppedPage: progress.currentPage,
+        scrapingPosition: {
+          lastUrl: `https://www.olx.ua/page/${progress.currentPage}`,
+          lastProcessedId: `botasaurus_${Date.now()}`,
+          totalProcessed: progress.totalItems
+        }
+      };
+
+      // Broadcast progress via SSE
+      if ((global as any).broadcastSSE) {
+        (global as any).broadcastSSE({
+          type: 'progress',
+          module: 'scraper',
+          progress: progress.progressPercent,
+          status: progress.status,
+          message: progress.message,
+          currentPage: progress.currentPage,
+          totalPages: progress.totalPages,
+          currentItems: progress.currentItems,
+          totalItems: progress.totalItems
+        });
       }
-
-      addActivity(`Парсинг завершено! Зібрано ${scrapingStatus.totalItems} ог��лошень з ${targetPages} сторінок`);
-      return;
-    }
-
-    // Simulate page scraping
-    const pageItems = Math.floor(Math.random() * 15) + 5; // 5-20 items per page
-
-    scrapingStatus.currentPage = pageNum;
-    scrapingStatus.currentItems += pageItems;
-    scrapingStatus.totalItems = scrapingStatus.currentItems;
-    scrapingStatus.progressPercent = Math.round((pageNum / targetPages) * 100);
-    scrapingStatus.estimatedTimeLeft = (targetPages - pageNum) * 30;
-    scrapingStatus.lastUpdate = new Date();
-
-    addActivity(`Сторінка ${pageNum}/${targetPages}: знайдено ${pageItems} оголошень`);
-
-    // Add properties to database
-    for (let i = 0; i < pageItems; i++) {
-      addRandomProperty();
-    }
-
-    // Update scraping position in database
-    try {
-      dbOperations.updateScrapingState.run(
-        pageNum,
-        `https://olx.ua/page/${pageNum}`,
-        `olx_${Date.now()}_${pageNum}`,
-        scrapingStatus.totalItems,
-        'running'
-      );
-    } catch (error) {
-      console.error('Failed to update scraping state:', error);
-    }
-    
-    scrapingStatus.scrapingPosition = {
-      lastUrl: `https://olx.ua/page/${pageNum}`,
-      lastProcessedId: `olx_${Date.now()}_${pageNum}`,
-      totalProcessed: scrapingStatus.totalItems
     };
 
-    // Continue to next page
-    setTimeout(() => scrapePage(pageNum + 1), 2000); // 2 seconds per page
-  };
+    const logCallback = (message: string) => {
+      addActivity(message);
+    };
 
-  // Start scraping from saved position or page 1
-  setTimeout(() => scrapePage(resumeFromPage + 1), 1000);
+    // Start real Botasaurus scraping
+    await botasaurusIntegration.startScraping(
+      listing_type,
+      max_pages,
+      progressCallback,
+      logCallback
+    );
 
-  res.json({
-    success: true,
-    message: 'Botasaurus парсинг розпочато успішно з антидетекційним захистом',
-    status: 'running',
-    estimatedTime: `${Math.round(targetPages * 30 / 60)} хвилин`,
-    progress: 0
-  });
+    res.json({
+      success: true,
+      message: 'Реальний Botasaurus парсинг запущено успішно',
+      status: 'running',
+      estimatedTime: `${Math.round(max_pages * 30 / 60)} хвилин`,
+      progress: 0,
+      framework: 'Botasaurus v4.0.10+ (Real)',
+      features: ['AntiDetectionDriver', 'Stealth Mode', 'Resume Capability', 'Real-time Progress']
+    });
+
+  } catch (error) {
+    console.error('Error starting Botasaurus scraping:', error);
+    addActivity(`❌ ПОМИЛКА запуску Botasaurus: ${error.message}`);
+
+    res.status(500).json({
+      success: false,
+      error: `Помилка запуску Botasaurus: ${error.message}`,
+      status: 'error'
+    });
+  }
 };
 
 // Add random property to database with realistic data
