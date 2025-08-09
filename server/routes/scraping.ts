@@ -208,7 +208,7 @@ const addRandomProperty = () => {
     // Insert property into database
     const result = dbOperations.insertProperty.run(
       olxId,
-      `${rooms}-кімн. кв��ртира на вул. ${randomStreet.street}, ${area}м²`,
+      `${rooms}-кімн. квартира на вул. ${randomStreet.street}, ${area}м²`,
       finalPrice,
       area,
       rooms,
@@ -368,6 +368,8 @@ export const handleGetStreetMap: RequestHandler = (req, res) => {
 
 // Add new street to district mapping
 export const handleAddStreet: RequestHandler = (req, res) => {
+  ensureDatabase();
+
   const { street, district } = req.body;
   
   if (!street || !district) {
