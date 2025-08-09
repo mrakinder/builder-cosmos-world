@@ -35,7 +35,8 @@ import {
   handleStartStreamlit,
   handleStopStreamlit,
   handleSupersetStatus,
-  handlePipelineStatus
+  handlePipelineStatus,
+  handleMLProgress
 } from "./routes/ml-integration";
 
 export function createServer() {
