@@ -477,14 +477,14 @@ export default function Admin() {
               <CardContent>
                 <div className="grid md:grid-cols-5 gap-4">
                   <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg">
-                    <div className={`w-4 h-4 rounded-full mx-auto mb-2 ${mlModuleStatus.ml_trained ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                    <div className={`w-4 h-4 rounded-full mx-auto mb-2 ${mlModuleStatus.botasaurus_ready ? 'bg-green-500' : 'bg-gray-400'}`}></div>
                     <h4 className="font-medium text-sm">Botasaurus</h4>
-                    <p className="text-xs text-slate-600">Збір даних</p>
+                    <p className="text-xs text-slate-600">Антибан парсинг</p>
                   </div>
                   <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
-                    <div className={`w-4 h-4 rounded-full mx-auto mb-2 ${mlModuleStatus.ml_trained ? 'bg-blue-500' : 'bg-gray-400'}`}></div>
+                    <div className={`w-4 h-4 rounded-full mx-auto mb-2 ${mlModuleStatus.lightautoml_trained ? 'bg-blue-500' : 'bg-gray-400'}`}></div>
                     <h4 className="font-medium text-sm">LightAutoML</h4>
-                    <p className="text-xs text-slate-600">Прогноз цін</p>
+                    <p className="text-xs text-slate-600">AutoML прогноз</p>
                   </div>
                   <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg">
                     <div className={`w-4 h-4 rounded-full mx-auto mb-2 ${mlModuleStatus.prophet_ready ? 'bg-purple-500' : 'bg-gray-400'}`}></div>
@@ -494,12 +494,12 @@ export default function Admin() {
                   <div className="text-center p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg">
                     <div className={`w-4 h-4 rounded-full mx-auto mb-2 ${mlModuleStatus.streamlit_running ? 'bg-orange-500' : 'bg-gray-400'}`}></div>
                     <h4 className="font-medium text-sm">Streamlit</h4>
-                    <p className="text-xs text-slate-600">Веб-інтерфейс</p>
+                    <p className="text-xs text-slate-600">Веб-додаток</p>
                   </div>
                   <div className="text-center p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-lg">
                     <div className={`w-4 h-4 rounded-full mx-auto mb-2 ${mlModuleStatus.superset_running ? 'bg-red-500' : 'bg-gray-400'}`}></div>
                     <h4 className="font-medium text-sm">Superset</h4>
-                    <p className="text-xs text-slate-600">Аналітика</p>
+                    <p className="text-xs text-slate-600">BI аналітика</p>
                   </div>
                 </div>
               </CardContent>
@@ -714,7 +714,7 @@ export default function Admin() {
               </CardHeader>
               <CardContent>
                 <div className="bg-slate-900 text-green-400 p-4 rounded-lg font-mono text-sm">
-                  <div className="mb-2 text-slate-300"># Досту��ні команди:</div>
+                  <div className="mb-2 text-slate-300"># Доступні команди:</div>
                   <div className="space-y-1 text-xs">
                     <div><span className="text-blue-400">python property_monitor_cli.py</span> <span className="text-yellow-400">scraper</span> start</div>
                     <div><span className="text-blue-400">python property_monitor_cli.py</span> <span className="text-yellow-400">ml</span> train</div>
