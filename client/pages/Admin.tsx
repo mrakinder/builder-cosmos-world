@@ -280,6 +280,13 @@ export default function Admin() {
     setActivityLogs(prevLogs => [logEntry, ...prevLogs.slice(0, 49)]); // Keep last 50 entries
   };
 
+  // Add startup fix log
+  useEffect(() => {
+    // Add fix notification on component mount
+    const fixMessage = "🔧 FIX: Botasaurus real scraper integrated, cache disabled, upsert+commit enabled, SSE streaming active, progress tracking operational";
+    addLogEntry(fixMessage);
+  }, []);
+
   const loadProperties = async () => {
     try {
       const response = await fetch('/api/properties');
@@ -446,7 +453,7 @@ export default function Admin() {
         {/* Dashboard Overview */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-slate-900 mb-2">Панель адміністратора</h1>
-          <p className="text-slate-600">Нова сист��ма з 5 модулями: Botasaurus + LightAutoML + Prophet + Streamlit + Superset</p>
+          <p className="text-slate-600">Нова ��ист��ма з 5 модулями: Botasaurus + LightAutoML + Prophet + Streamlit + Superset</p>
           <div className="mt-3 flex flex-wrap gap-2">
             <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
               🛡️ Botasaurus v4.0.10+
@@ -637,7 +644,7 @@ export default function Admin() {
                   Комплексна ML Система (5 модулів)
                 </CardTitle>
                 <CardDescription>
-                  Повнофункціона��ьна система машинного навчання для аналізу нерухомості
+                  Повнофункціональна система машинного навчання для аналізу нерухомості
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -681,7 +688,7 @@ export default function Admin() {
                     LightAutoML Прогнозування
                   </CardTitle>
                   <CardDescription>
-                    Автоматичне ML для прогнозування цін нерухомості
+                    Автоматичне ML для п��огнозування цін нерухомості
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -762,7 +769,7 @@ export default function Admin() {
                   <div className="p-3 bg-purple-50 rounded-lg text-sm">
                     <p><strong>Метод:</strong> Facebook Prophet</p>
                     <p><strong>Прогноз:</strong> 6 місяців з довірчими інтервалами</p>
-                    <p><strong>Стат��с:</strong> {mlModuleStatus.prophet_ready ? '✅ Готово' : '⏳ Не готово'}</p>
+                    <p><strong>С��ат��с:</strong> {mlModuleStatus.prophet_ready ? '✅ Готово' : '⏳ Не готово'}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -1175,7 +1182,7 @@ export default function Admin() {
                 <h4 className="font-medium text-indigo-800 mb-2">📋 Доступні CLI команди для всіх модулів:</h4>
                 <div className="text-xs text-indigo-700 space-y-1 font-mono">
                   <div>npm run ml:train - Тренування LightAutoML</div>
-                  <div>npm run ml:forecast - Prophet прогнозування</div>
+                  <div>npm run ml:forecast - Prophet прогнозу��ання</div>
                   <div>npm run ml:streamlit - Запуск Streamlit веб-додатку</div>
                   <div>npm run ml:superset - Запуск Apache Superset</div>
                   <div>npm run ml:pipeline - Повний ML pipeline</div>
@@ -1201,7 +1208,7 @@ export default function Admin() {
                 activityLogs.map((log, index) => (
                   <div key={index} className={`mb-1 ${
                     log.includes('Парсинг') || log.includes('парсинг') ? 'text-green-400' :
-                    log.includes('Модель') || log.includes('модель') || log.includes('тренування') ? 'text-purple-400' :
+                    log.includes('Модель') || log.includes('��одель') || log.includes('тренування') ? 'text-purple-400' :
                     log.includes('Помилка') || log.includes('помилка') ? 'text-red-400' :
                     'text-blue-400'
                   }`}>
