@@ -49,7 +49,7 @@ const loadRecentActivities = () => {
     console.error('Failed to load activities:', error);
     activityLog = [
       `[${new Date().toLocaleTimeString()}] Система запущена`,
-      `[${new Date().toLocaleTimeString()}] База даних ініціалізована`,
+      `[${new Date().toLocaleTimeString()}] База даних ініціалізован��`,
       `[${new Date().toLocaleTimeString()}] API готове до роботи`
     ];
   }
@@ -208,7 +208,7 @@ const addRandomProperty = () => {
     // Insert property into database
     const result = dbOperations.insertProperty.run(
       olxId,
-      `${rooms}-кімн. квартира на вул. ${randomStreet.street}, ${area}м²`,
+      `${rooms}-кі��н. квартира на вул. ${randomStreet.street}, ${area}м²`,
       finalPrice,
       area,
       rooms,
@@ -246,6 +246,8 @@ export const handleScrapingStatus: RequestHandler = (req, res) => {
 };
 
 export const handlePropertyStats: RequestHandler = (req, res) => {
+  ensureDatabase();
+
   try {
     const stats = dbOperations.getPropertyStats.get() as any;
     
