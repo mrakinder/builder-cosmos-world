@@ -1,345 +1,439 @@
 """
-Prophet forecasting module
-=========================
-
-Creates price forecasts for districts using Facebook Prophet.
+Prophet Forecasting Module - Module 3
+6-month price trend forecasting by districts using Facebook Prophet
 """
 
 import pandas as pd
-import logging
-import argparse
-import json
-from pathlib import Path
-from datetime import datetime
-from typing import Dict, List, Any
+import numpy as np
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Tuple, Any
+import warnings
+warnings.filterwarnings('ignore')
 
 # Prophet imports
-try:
-    from prophet import Prophet
-    from prophet.plot import plot_plotly, plot_components_plotly
-except ImportError:
-    print("Prophet not installed. Installing...")
-    import os
-    os.system("pip install prophet")
-    from prophet import Prophet
-    from prophet.plot import plot_plotly, plot_components_plotly
+from prophet import Prophet
+from prophet.plot import plot_plotly, plot_components_plotly
+import plotly.graph_objects as go
+import plotly.express as px
 
-from .prepare_series import prepare_prophet_data
+from .prepare_series import TimeSeriesPreparator
+from .utils import Logger, ForecastEvaluator
 
-logger = logging.getLogger(__name__)
 
-class DistrictForecaster:
-    """Handles Prophet forecasting for real estate districts"""
+class ProphetForecaster:
+    """
+    Prophet-based forecasting for real estate price trends
+    """
     
-    def __init__(self, forecast_horizon: int = 6):
-        self.forecast_horizon = forecast_horizon
+    def __init__(self, forecast_periods: int = 6):
+        self.forecast_periods = forecast_periods  # months
+        self.logger = Logger("analytics/reports/prophet_forecast.log")
+        self.preparator = TimeSeriesPreparator()
+        self.evaluator = ForecastEvaluator()
+        
+        # Prophet models by district
         self.models = {}
         self.forecasts = {}
-        self.model_metrics = {}
-    
-    def create_prophet_model(self, series_name: str, seasonal_patterns: bool = True) -> Prophet:
+        
+    def forecast_all_districts(self, 
+                              districts: List[str] = None,
+                              confidence_interval: float = 0.8) -> Dict[str, Dict[str, Any]]:
         """
-        Create and configure Prophet model for a time series
+        Generate forecasts for all districts
         
         Args:
-            series_name: Name of the time series (district_segment)
-            seasonal_patterns: Whether to include seasonal components
+            districts: List of districts to forecast (None for all)
+            confidence_interval: Confidence interval for forecasts
             
         Returns:
-            Configured Prophet model
+            Dict[str, Dict[str, Any]]: Forecasts by district
         """
-        # Configure Prophet model
-        model_params = {
-            'interval_width': 0.8,  # 80% confidence intervals
-            'growth': 'linear',     # Linear growth assumption
-            'daily_seasonality': False,
-            'weekly_seasonality': False,
-            'yearly_seasonality': seasonal_patterns,
-            'seasonality_mode': 'additive',
-            'changepoint_prior_scale': 0.05,  # Flexibility of trend changes
-            'seasonality_prior_scale': 10.0,  # Strength of seasonality
-            'uncertainty_samples': 1000
-        }
-        
-        model = Prophet(**model_params)
-        
-        # Add custom seasonalities if needed
-        if seasonal_patterns:
-            # Quarterly seasonality (real estate cycles)
+        try:
+            self.logger.info(f"🔮 Starting Prophet forecasting for {self.forecast_periods} months...")
+            
+            # Prepare time series data
+            district_series = self.preparator.prepare_district_series(districts)
+            
+            if not district_series:
+                self.logger.warning("⚠️ No time series data available for forecasting")
+                return {}
+            
+            forecasts_result = {}
+            
+            for district, ts_data in district_series.items():
+                try:
+                    self.logger.info(f"🏘️ Forecasting for {district}...")
+                    
+                    forecast_result = self._forecast_single_district(
+                        district, ts_data, confidence_interval
+                    )
+                    
+                    if forecast_result:
+                        forecasts_result[district] = forecast_result
+                        self.logger.info(f"✅ {district}: forecast completed")
+                    else:
+                        self.logger.warning(f"⚠️ {district}: forecast failed")
+                        
+                except Exception as e:
+                    self.logger.error(f"❌ Error forecasting {district}: {str(e)}")
+                    continue
+            
+            # Generate summary forecast
+            if forecasts_result:
+                summary = self._generate_forecast_summary(forecasts_result)
+                forecasts_result['_summary'] = summary
+            
+            self.logger.info(f"✅ Forecasting completed for {len(forecasts_result)} districts")
+            return forecasts_result
+            
+        except Exception as e:
+            self.logger.error(f"❌ Error in forecast_all_districts: {str(e)}")
+            return {}
+    
+    def _forecast_single_district(self, 
+                                 district: str, 
+                                 ts_data: pd.DataFrame,
+                                 confidence_interval: float) -> Optional[Dict[str, Any]]:
+        """Forecast for a single district"""
+        try:
+            # Prepare data for Prophet
+            prophet_data = ts_data[['ds', 'y']].copy()
+            prophet_data = prophet_data.dropna()
+            
+            if len(prophet_data) < 3:
+                self.logger.warning(f"⚠️ {district}: insufficient data points ({len(prophet_data)})")
+                return None
+            
+            # Initialize Prophet model
+            model = Prophet(
+                interval_width=confidence_interval,
+                changepoint_prior_scale=0.1,
+                seasonality_prior_scale=0.1,
+                holidays_prior_scale=0.1,
+                daily_seasonality=False,
+                weekly_seasonality=False,
+                yearly_seasonality=True
+            )
+            
+            # Add custom seasonalities for real estate market
             model.add_seasonality(
                 name='quarterly',
                 period=365.25/4,
                 fourier_order=2
             )
-        
-        logger.debug(f"Created Prophet model for {series_name}")
-        return model
-    
-    def fit_and_forecast(
-        self, 
-        series_name: str, 
-        data: pd.DataFrame,
-        include_history: bool = True
-    ) -> pd.DataFrame:
-        """
-        Fit Prophet model and generate forecast
-        
-        Args:
-            series_name: Name of the time series
-            data: Prophet format DataFrame (ds, y)
-            include_history: Whether to include historical period in forecast
             
-        Returns:
-            DataFrame with forecast results
-        """
-        try:
-            # Create and fit model
-            model = self.create_prophet_model(series_name)
-            
-            # Suppress Prophet's verbose output
-            with_logging = logging.getLogger('prophet').level <= logging.INFO
-            if not with_logging:
-                logging.getLogger('prophet').setLevel(logging.WARNING)
-            
-            model.fit(data)
+            # Fit model
+            model.fit(prophet_data)
             
             # Create future dataframe
             future = model.make_future_dataframe(
-                periods=self.forecast_horizon, 
+                periods=self.forecast_periods,
                 freq='M'
             )
             
             # Generate forecast
             forecast = model.predict(future)
             
-            # Store model and forecast
-            self.models[series_name] = model
+            # Store model
+            self.models[district] = model
+            self.forecasts[district] = forecast
             
-            # Add metadata to forecast
-            forecast['series_name'] = series_name
-            forecast['district'] = series_name.split('_')[0]
-            forecast['segment'] = '_'.join(series_name.split('_')[1:]) if '_' in series_name else 'all'
+            # Extract forecast results
+            forecast_result = self._extract_forecast_results(
+                district, prophet_data, forecast, ts_data
+            )
             
-            # Mark historical vs future periods
-            last_historical_date = data['ds'].max()
-            forecast['is_forecast'] = forecast['ds'] > last_historical_date
-            
-            # Calculate simple model metrics on historical data
-            historical_forecast = forecast[forecast['ds'] <= last_historical_date].copy()
-            if len(historical_forecast) > 0 and len(data) > 0:
-                # Merge with actual data for metrics
-                eval_data = historical_forecast.merge(data, on='ds', how='inner')
-                if len(eval_data) > 0:
-                    mae = abs(eval_data['yhat'] - eval_data['y']).mean()
-                    mape = (abs(eval_data['yhat'] - eval_data['y']) / eval_data['y']).mean() * 100
-                    
-                    self.model_metrics[series_name] = {
-                        'mae': mae,
-                        'mape': mape,
-                        'data_points': len(data),
-                        'forecast_points': self.forecast_horizon
-                    }
-            
-            logger.info(f"Forecast completed for {series_name}: {len(forecast)} total periods")
-            return forecast
+            return forecast_result
             
         except Exception as e:
-            logger.error(f"Forecasting failed for {series_name}: {str(e)}")
-            raise
+            self.logger.error(f"❌ Error forecasting {district}: {str(e)}")
+            return None
     
-    def forecast_all_districts(self, prophet_data: Dict[str, pd.DataFrame]) -> pd.DataFrame:
-        """
-        Generate forecasts for all districts
-        
-        Args:
-            prophet_data: Dictionary of Prophet-formatted DataFrames
+    def _extract_forecast_results(self, 
+                                 district: str, 
+                                 historical_data: pd.DataFrame,
+                                 forecast: pd.DataFrame,
+                                 original_data: pd.DataFrame) -> Dict[str, Any]:
+        """Extract and format forecast results"""
+        try:
+            # Split historical and future
+            n_historical = len(historical_data)
+            historical_forecast = forecast.iloc[:n_historical]
+            future_forecast = forecast.iloc[n_historical:]
             
-        Returns:
-            Combined DataFrame with all forecasts
-        """
-        all_forecasts = []
-        successful_forecasts = 0
+            # Calculate historical performance metrics
+            if len(historical_data) > 1:
+                historical_performance = self.evaluator.evaluate_forecast(
+                    historical_data['y'].values,
+                    historical_forecast['yhat'].values
+                )
+            else:
+                historical_performance = {}
+            
+            # Format future predictions
+            future_predictions = []
+            for _, row in future_forecast.iterrows():
+                prediction = {
+                    'date': row['ds'].strftime('%Y-%m-%d'),
+                    'predicted_price': round(float(row['yhat']), 2),
+                    'lower_bound': round(float(row['yhat_lower']), 2),
+                    'upper_bound': round(float(row['yhat_upper']), 2),
+                    'trend': round(float(row['trend']), 2),
+                    'seasonal': round(float(row.get('seasonal', 0)), 2)
+                }
+                future_predictions.append(prediction)
+            
+            # Calculate trend analysis
+            trend_analysis = self._analyze_trend(forecast)
+            
+            # Market insights
+            insights = self._generate_insights(district, historical_data, future_forecast, original_data)
+            
+            result = {
+                'district': district,
+                'forecast_horizon_months': self.forecast_periods,
+                'historical_periods': len(historical_data),
+                'future_predictions': future_predictions,
+                'trend_analysis': trend_analysis,
+                'historical_performance': historical_performance,
+                'insights': insights,
+                'forecast_date': datetime.now().isoformat(),
+                'current_price': round(float(historical_data['y'].iloc[-1]), 2) if len(historical_data) > 0 else None,
+                'price_change_6m': self._calculate_price_change(historical_data, future_forecast),
+                'confidence_interval': 0.8
+            }
+            
+            return result
+            
+        except Exception as e:
+            self.logger.error(f"❌ Error extracting forecast results for {district}: {str(e)}")
+            return {}
+    
+    def _analyze_trend(self, forecast: pd.DataFrame) -> Dict[str, Any]:
+        """Analyze price trend from forecast"""
+        try:
+            trends = forecast['trend'].values
+            
+            # Overall trend direction
+            if len(trends) < 2:
+                return {'direction': 'unknown', 'strength': 0}
+            
+            trend_change = trends[-1] - trends[0]
+            trend_pct = (trend_change / trends[0]) * 100
+            
+            # Determine trend direction
+            if trend_pct > 2:
+                direction = 'increasing'
+            elif trend_pct < -2:
+                direction = 'decreasing'
+            else:
+                direction = 'stable'
+            
+            # Trend strength (volatility)
+            trend_volatility = np.std(np.diff(trends))
+            
+            return {
+                'direction': direction,
+                'change_percent': round(trend_pct, 2),
+                'strength': round(trend_volatility, 2),
+                'trend_start': round(float(trends[0]), 2),
+                'trend_end': round(float(trends[-1]), 2)
+            }
+            
+        except Exception as e:
+            self.logger.error(f"❌ Error analyzing trend: {str(e)}")
+            return {'direction': 'unknown', 'strength': 0}
+    
+    def _generate_insights(self, 
+                          district: str, 
+                          historical_data: pd.DataFrame,
+                          future_forecast: pd.DataFrame,
+                          original_data: pd.DataFrame) -> List[str]:
+        """Generate market insights from forecast"""
+        insights = []
         
-        logger.info(f"Starting forecasting for {len(prophet_data)} district-segments")
-        
-        for series_name, data in prophet_data.items():
-            try:
-                if len(data) < 3:
-                    logger.warning(f"Insufficient data for {series_name}: {len(data)} points")
+        try:
+            if len(historical_data) == 0 or len(future_forecast) == 0:
+                return ["Insufficient data for insights generation"]
+            
+            current_price = historical_data['y'].iloc[-1]
+            future_price = future_forecast['yhat'].iloc[-1]
+            price_change = ((future_price - current_price) / current_price) * 100
+            
+            # Price trend insights
+            if price_change > 10:
+                insights.append(f"Очікується значне зростання цін у районі {district} на {price_change:.1f}% протягом 6 місяців")
+            elif price_change > 5:
+                insights.append(f"Прогнозується помірне зростання цін у районі {district} на {price_change:.1f}%")
+            elif price_change < -10:
+                insights.append(f"Очікується суттєве зниження цін у районі {district} на {abs(price_change):.1f}%")
+            elif price_change < -5:
+                insights.append(f"Прогнозується помірне зниження цін у районі {district} на {abs(price_change):.1f}%")
+            else:
+                insights.append(f"Ціни у районі {district} залишаться стабільними (зміна {price_change:.1f}%)")
+            
+            # Market activity insights
+            if 'volume' in original_data.columns:
+                avg_volume = original_data['volume'].mean()
+                recent_volume = original_data['volume'].iloc[-3:].mean() if len(original_data) >= 3 else avg_volume
+                
+                if recent_volume > avg_volume * 1.2:
+                    insights.append(f"Висока активність на ринку {district} - кількість пропозицій зросла")
+                elif recent_volume < avg_volume * 0.8:
+                    insights.append(f"Знижена активність на ринку {district} - мало нових пропозицій")
+            
+            # Seasonality insights
+            future_months = future_forecast['ds'].dt.month
+            if any(month in [5, 6, 7, 8] for month in future_months):
+                insights.append("Літні місяці традиційно активні для ринку нерухомості")
+            if any(month in [11, 12, 1, 2] for month in future_months):
+                insights.append("Зимовий період може характеризуватися нижчою активністю")
+            
+            # Price range insights
+            price_range = (future_forecast['yhat_upper'].iloc[-1] - future_forecast['yhat_lower'].iloc[-1])
+            uncertainty_pct = (price_range / future_price) * 100
+            
+            if uncertainty_pct > 30:
+                insights.append(f"Висока невизначеність прогнозу для {district} - широкий діапазон можливих цін")
+            elif uncertainty_pct < 15:
+                insights.append(f"Стабільний прогноз для {district} - низька волатильність очікується")
+            
+            return insights
+            
+        except Exception as e:
+            self.logger.error(f"❌ Error generating insights: {str(e)}")
+            return ["Помилка при генерації аналітичних висновків"]
+    
+    def _calculate_price_change(self, 
+                               historical_data: pd.DataFrame,
+                               future_forecast: pd.DataFrame) -> Dict[str, float]:
+        """Calculate price changes over forecast period"""
+        try:
+            if len(historical_data) == 0 or len(future_forecast) == 0:
+                return {}
+            
+            current_price = historical_data['y'].iloc[-1]
+            future_price = future_forecast['yhat'].iloc[-1]
+            
+            absolute_change = future_price - current_price
+            percentage_change = (absolute_change / current_price) * 100
+            
+            return {
+                'absolute_change': round(float(absolute_change), 2),
+                'percentage_change': round(float(percentage_change), 2),
+                'current_price': round(float(current_price), 2),
+                'predicted_price': round(float(future_price), 2)
+            }
+            
+        except Exception as e:
+            self.logger.error(f"❌ Error calculating price change: {str(e)}")
+            return {}
+    
+    def _generate_forecast_summary(self, forecasts: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
+        """Generate summary across all district forecasts"""
+        try:
+            if not forecasts:
+                return {}
+            
+            # Aggregate statistics
+            all_changes = []
+            district_summaries = []
+            
+            for district, forecast_data in forecasts.items():
+                if district.startswith('_'):  # Skip meta entries
                     continue
                 
-                forecast = self.fit_and_forecast(series_name, data)
-                all_forecasts.append(forecast)
-                successful_forecasts += 1
+                price_change = forecast_data.get('price_change_6m', {})
+                if 'percentage_change' in price_change:
+                    all_changes.append(price_change['percentage_change'])
                 
-                logger.debug(f"✅ {series_name}: forecast completed")
-                
-            except Exception as e:
-                logger.error(f"❌ {series_name}: forecast failed - {str(e)}")
-                continue
-        
-        if not all_forecasts:
-            raise RuntimeError("No successful forecasts generated")
-        
-        # Combine all forecasts
-        combined_forecast = pd.concat(all_forecasts, ignore_index=True)
-        
-        logger.info(f"Forecasting completed: {successful_forecasts}/{len(prophet_data)} successful")
-        
-        return combined_forecast
-    
-    def get_forecast_summary(self, forecast_df: pd.DataFrame) -> Dict[str, Any]:
-        """Generate summary statistics for forecasts"""
-        
-        # Overall summary
-        total_districts = forecast_df['district'].nunique()
-        total_segments = forecast_df['series_name'].nunique()
-        
-        # Future forecasts only
-        future_forecasts = forecast_df[forecast_df['is_forecast'] == True].copy()
-        
-        # Price change analysis
-        summary_stats = {}
-        
-        for series_name in forecast_df['series_name'].unique():
-            series_data = forecast_df[forecast_df['series_name'] == series_name].copy()
+                district_summaries.append({
+                    'district': district,
+                    'current_price': forecast_data.get('current_price'),
+                    'predicted_change': price_change.get('percentage_change', 0),
+                    'trend_direction': forecast_data.get('trend_analysis', {}).get('direction', 'unknown')
+                })
             
-            if len(series_data) > 0:
-                # Last historical vs last forecast
-                historical = series_data[series_data['is_forecast'] == False]
-                future = series_data[series_data['is_forecast'] == True]
-                
-                if len(historical) > 0 and len(future) > 0:
-                    last_historical_price = historical['yhat'].iloc[-1]
-                    last_forecast_price = future['yhat'].iloc[-1]
-                    
-                    price_change_pct = ((last_forecast_price - last_historical_price) / last_historical_price) * 100
-                    
-                    summary_stats[series_name] = {
-                        'district': series_data['district'].iloc[0],
-                        'segment': series_data['segment'].iloc[0],
-                        'current_price': round(last_historical_price, 0),
-                        'forecast_price': round(last_forecast_price, 0),
-                        'price_change_pct': round(price_change_pct, 1),
-                        'trend': 'growing' if price_change_pct > 2 else 'declining' if price_change_pct < -2 else 'stable'
-                    }
-        
-        return {
-            'total_districts': total_districts,
-            'total_segments': total_segments,
-            'successful_forecasts': len(summary_stats),
-            'forecast_horizon_months': self.forecast_horizon,
-            'series_summary': summary_stats,
-            'model_metrics': self.model_metrics
-        }
+            # Market overview
+            if all_changes:
+                market_summary = {
+                    'total_districts': len(forecasts),
+                    'average_price_change': round(np.mean(all_changes), 2),
+                    'price_change_range': {
+                        'min': round(min(all_changes), 2),
+                        'max': round(max(all_changes), 2)
+                    },
+                    'districts_growing': len([x for x in all_changes if x > 2]),
+                    'districts_declining': len([x for x in all_changes if x < -2]),
+                    'districts_stable': len([x for x in all_changes if -2 <= x <= 2]),
+                    'forecast_date': datetime.now().isoformat(),
+                    'forecast_horizon': f"{self.forecast_periods} months"
+                }
+            else:
+                market_summary = {
+                    'total_districts': 0,
+                    'error': 'No valid forecasts generated'
+                }
+            
+            return market_summary
+            
+        except Exception as e:
+            self.logger.error(f"❌ Error generating forecast summary: {str(e)}")
+            return {'error': str(e)}
+    
+    def export_forecasts(self, forecasts: Dict[str, Dict[str, Any]], 
+                        output_path: str = "analytics/reports/district_forecasts.json"):
+        """Export forecasts to file"""
+        try:
+            import json
+            
+            # Ensure directory exists
+            import os
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+            
+            with open(output_path, 'w', encoding='utf-8') as f:
+                json.dump(forecasts, f, indent=2, ensure_ascii=False)
+            
+            self.logger.info(f"📊 Forecasts exported to {output_path}")
+            
+        except Exception as e:
+            self.logger.error(f"❌ Error exporting forecasts: {str(e)}")
 
-def forecast_districts(
-    time_series_path: str = 'analytics/time_series_data.csv',
-    output_path: str = 'analytics/district_forecasts.csv',
-    summary_path: str = 'analytics/forecast_summary.json',
-    horizon: int = 6
-) -> str:
+
+def generate_district_forecasts(districts: List[str] = None, 
+                               forecast_months: int = 6,
+                               export: bool = True) -> Dict[str, Dict[str, Any]]:
     """
-    Main forecasting function
+    Main entry point for generating district forecasts
     
     Args:
-        time_series_path: Path to prepared time series data
-        output_path: Where to save forecasts
-        summary_path: Where to save forecast summary
-        horizon: Forecast horizon in months
+        districts: List of districts to forecast
+        forecast_months: Number of months to forecast
+        export: Whether to export results to file
         
     Returns:
-        Path to saved forecasts
+        Dict[str, Dict[str, Any]]: Forecast results by district
     """
-    logger.info(f"Starting Prophet forecasting with {horizon}-month horizon")
+    forecaster = ProphetForecaster(forecast_periods=forecast_months)
+    forecasts = forecaster.forecast_all_districts(districts)
     
-    try:
-        # Load time series data
-        logger.info(f"Loading time series data from {time_series_path}")
-        monthly_df = pd.read_csv(time_series_path)
-        monthly_df['ds'] = pd.to_datetime(monthly_df['ds'])
-        
-        if len(monthly_df) == 0:
-            raise ValueError("No time series data found")
-        
-        # Prepare Prophet format data
-        prophet_data = prepare_prophet_data(monthly_df, target_column='avg_price')
-        
-        if not prophet_data:
-            raise ValueError("No valid time series found for forecasting")
-        
-        # Create forecaster and generate forecasts
-        forecaster = DistrictForecaster(forecast_horizon=horizon)
-        combined_forecast = forecaster.forecast_all_districts(prophet_data)
-        
-        # Generate summary
-        summary = forecaster.get_forecast_summary(combined_forecast)
-        
-        # Save forecasts
-        output_path = Path(output_path)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        
-        # Select relevant columns for output
-        output_columns = [
-            'ds', 'yhat', 'yhat_lower', 'yhat_upper', 
-            'series_name', 'district', 'segment', 'is_forecast'
-        ]
-        
-        forecast_output = combined_forecast[output_columns].copy()
-        forecast_output.to_csv(output_path, index=False, encoding='utf-8')
-        
-        # Save summary
-        summary_path = Path(summary_path)
-        with open(summary_path, 'w', encoding='utf-8') as f:
-            json.dump(summary, f, indent=2, ensure_ascii=False)
-        
-        # Print results
-        logger.info(f"Forecasting completed successfully:")
-        logger.info(f"  - Districts forecasted: {summary['total_districts']}")
-        logger.info(f"  - Segments forecasted: {summary['successful_forecasts']}")
-        logger.info(f"  - Forecast horizon: {horizon} months")
-        logger.info(f"  - Forecasts saved to: {output_path}")
-        logger.info(f"  - Summary saved to: {summary_path}")
-        
-        return str(output_path)
-        
-    except Exception as e:
-        logger.error(f"Forecasting failed: {str(e)}")
-        raise
+    if export and forecasts:
+        forecaster.export_forecasts(forecasts)
+    
+    return forecasts
 
-def main():
-    """CLI interface for Prophet forecasting"""
-    parser = argparse.ArgumentParser(description='Generate Prophet forecasts for districts')
-    parser.add_argument('--input', default='analytics/time_series_data.csv',
-                       help='Input time series CSV file')
-    parser.add_argument('--output', default='analytics/district_forecasts.csv',
-                       help='Output forecasts CSV file')
-    parser.add_argument('--summary', default='analytics/forecast_summary.json',
-                       help='Output summary JSON file')
-    parser.add_argument('--horizon', type=int, default=6,
-                       help='Forecast horizon in months')
-    
-    args = parser.parse_args()
-    
-    # Setup logging
-    logging.basicConfig(level=logging.INFO)
-    
-    try:
-        output_path = forecast_districts(
-            time_series_path=args.input,
-            output_path=args.output,
-            summary_path=args.summary,
-            horizon=args.horizon
-        )
-        
-        print(f"\n✅ Forecasting completed!")
-        print(f"Forecasts saved to: {output_path}")
-        
-    except Exception as e:
-        print(f"\n❌ Forecasting failed: {str(e)}")
-        return 1
-    
-    return 0
 
 if __name__ == "__main__":
-    exit(main())
+    # Test forecasting
+    forecaster = ProphetForecaster(forecast_periods=6)
+    
+    # Generate forecasts for all districts
+    forecasts = forecaster.forecast_all_districts()
+    
+    print(f"Generated forecasts for {len(forecasts)} districts")
+    
+    for district, forecast_data in forecasts.items():
+        if not district.startswith('_'):
+            price_change = forecast_data.get('price_change_6m', {})
+            change_pct = price_change.get('percentage_change', 0)
+            print(f"{district}: {change_pct:+.1f}% expected change")
