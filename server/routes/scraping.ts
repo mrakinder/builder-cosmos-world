@@ -64,16 +64,25 @@ const loadRecentActivities = () => {
 const addActivity = (message: string, type: string = 'info') => {
   const timestamp = new Date().toLocaleTimeString();
   const logEntry = `[${timestamp}] ${message}`;
-  
+
   // Add to memory log for quick access
   activityLog.unshift(logEntry);
   if (activityLog.length > 50) activityLog.pop(); // Keep last 50 entries
-  
+
   // Add to database for persistence
   try {
     dbOperations.insertActivity.run(message, type);
   } catch (error) {
     console.error('Failed to insert activity:', error);
+  }
+
+  // Broadcast to SSE connections (будемо викликати з server/index.ts)
+  if ((global as any).broadcastSSE) {
+    (global as any).broadcastSSE({
+      type: 'log',
+      message: logEntry,
+      timestamp: Date.now()
+    });
   }
 };
 
@@ -409,7 +418,7 @@ export const handleAddStreet: RequestHandler = (req, res) => {
     const existing = dbOperations.getDistrictByStreet.get(street) as any;
     if (existing) {
       return res.status(400).json({
-        error: `Вули��я "${street}" вже існує в районі "${existing.district}"`
+        error: `Вулиця "${street}" вже існує в районі "${existing.district}"`
       });
     }
 
