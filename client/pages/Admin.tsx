@@ -69,6 +69,7 @@ export default function Admin() {
       loadScrapingStatus();
       loadModelStatus();
       loadActivityLogs();
+      loadMLModuleStatus();
     }, 2000); // Update every 2 seconds
 
     return () => clearInterval(interval);
@@ -259,7 +260,7 @@ export default function Admin() {
       <div className="container mx-auto px-4 py-8">
         {/* Dashboard Overview */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Панель адміністратора</h1>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">Панель адмін��стратора</h1>
           <p className="text-slate-600">Управління парсингом, моделями та базою даних</p>
         </div>
 
@@ -381,7 +382,7 @@ export default function Admin() {
                         <SelectItem value="Пасічна">Пасічна</SelectItem>
                         <SelectItem value="БАМ">БАМ</SelectItem>
                         <SelectItem value="Каскад">Каскад</SelectItem>
-                        <SelectItem value="Зал��зничний (Вокзал)">Залізничний (Вокзал)</SelectItem>
+                        <SelectItem value="Залізничний (Вокзал)">Залізничний (Вокзал)</SelectItem>
                         <SelectItem value="Брати">Брати</SelectItem>
                         <SelectItem value="Софіївка">Софіївка</SelectItem>
                         <SelectItem value="Будівельників">Будівельників</SelectItem>
@@ -597,7 +598,7 @@ export default function Admin() {
                     onClick={handleExportData}
                   >
                     <Download className="w-4 h-4 mr-1" />
-                    Е��спорт
+                    Експорт
                   </Button>
                   <Button 
                     variant="destructive"
@@ -658,7 +659,7 @@ export default function Admin() {
             <CardHeader>
               <CardTitle className="flex items-center text-xl">
                 <Activity className="w-6 h-6 mr-3 text-purple-600" />
-                Навчання моделей
+                Навча��ня моделей
               </CardTitle>
               <CardDescription>
                 Перетренування ML-моделей на нових даних
@@ -740,7 +741,7 @@ export default function Admin() {
                       try {
                         const response = await fetch('/api/model-comparison');
                         const data = await response.json();
-                        alert(`Порівняння моделей:\nНайкраща: ${data.bestModel}\nДата: ${new Date(data.comparisonDate).toLocaleDateString('uk-UA')}`);
+                        alert(`Порівнян��я моделей:\nНайкраща: ${data.bestModel}\nДата: ${new Date(data.comparisonDate).toLocaleDateString('uk-UA')}`);
                       } catch (error) {
                         console.error('Comparison error:', error);
                         alert('❌ Помилка порівняння моделей');
