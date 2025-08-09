@@ -1,0 +1,3 @@
+# Data directory for scraped data
+# - olx_offers.sqlite - main database
+# - exports/ - CSV exports
