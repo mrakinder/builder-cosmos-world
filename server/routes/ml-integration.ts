@@ -152,7 +152,8 @@ export async function handlePipelineStatus(req: Request, res: Response) {
     console.error("Pipeline Status error:", error);
     // Fallback to mock data on error
     res.json({
-      ml_trained: false,
+      botasaurus_ready: false,
+      lightautoml_trained: false,
       prophet_ready: false,
       streamlit_running: false,
       superset_running: false,
