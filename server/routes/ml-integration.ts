@@ -143,6 +143,7 @@ export async function handleStopStreamlit(req: Request, res: Response) {
 
 // Store training start time globally
 let trainingStartTime: number | null = null;
+let modelTrained: boolean = false;
 
 // ML Training Progress endpoint
 export async function handleMLProgress(req: Request, res: Response) {
