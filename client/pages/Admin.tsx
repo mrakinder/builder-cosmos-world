@@ -161,7 +161,7 @@ export default function Admin() {
           `[${currentTime}] База даних ініціалізована`,
           `[${currentTime}] API готове до роботи`,
           `[${currentTime}] Нова система з 5 модулями активована`,
-          `[${currentTime}] Botasaurus v4.0.10+ готовий до парсингу`
+          `[${currentTime}] Botasaurus v4.0.10+ готовий д�� парсингу`
         ];
         setActivityLogs(sampleLogs);
       } else {
@@ -492,7 +492,7 @@ export default function Admin() {
                         <SelectValue placeholder="Оберіть район" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Ц��нтр">Центр</SelectItem>
+                        <SelectItem value="Центр">Центр</SelectItem>
                         <SelectItem value="Пасічна">Пасічна</SelectItem>
                         <SelectItem value="БАМ">БАМ</SelectItem>
                         <SelectItem value="Каскад">Каскад</SelectItem>
@@ -501,7 +501,7 @@ export default function Admin() {
                         <SelectItem value="Софіївка">Софі��вка</SelectItem>
                         <SelectItem value="Будівельників">Будівельників</SelectItem>
                         <SelectItem value="Набережна">Набережна</SelectItem>
-                        <SelectItem value="Опришівці">Опришівці</SelectItem>
+                        <SelectItem value="Опришівці">Оп��ишівці</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -651,7 +651,7 @@ export default function Admin() {
                         try {
                           const response = await fetch(`/api/ml/forecast?district=${encodeURIComponent(district)}`);
                           const data = await response.json();
-                          alert(`✅ Прог��оз для "${district}" готовий!`);
+                          alert(`✅ Прогноз для "${district}" готовий!`);
                         } catch (error) {
                           alert('❌ Помилка прогнозування району');
                         }
@@ -678,7 +678,7 @@ export default function Admin() {
                     Streamlit Веб-Інтерфейс
                   </CardTitle>
                   <CardDescription>
-                    Публ��чний інтерфейс для оцінки нерухомості
+                    Публічний інтерфейс для оцінки нерухомості
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -992,12 +992,21 @@ export default function Admin() {
                       className="bg-orange-600 hover:bg-orange-700 text-xs"
                       onClick={async () => {
                         try {
+                          addLogEntry('🌐 Запуск Streamlit веб-додатку...');
                           const response = await fetch('/api/streamlit/start', { method: 'POST' });
+                          const data = await response.json();
+
                           if (response.ok) {
+                            addLogEntry('✅ Streamlit успішно запущено на порту 8501');
+                            addLogEntry('🚀 Веб-інтерфейс доступний для оцінки нерухомості');
                             alert('✅ Streamlit запущено!');
                             loadMLModuleStatus();
+                          } else {
+                            addLogEntry(`❌ Помилка запуску Streamlit: ${data.error || 'невідома помилка'}`);
+                            alert('❌ Помилка запуску');
                           }
                         } catch (error) {
+                          addLogEntry('❌ Критична помилка запуску Streamlit');
                           alert('❌ Помилка запуску');
                         }
                       }}
