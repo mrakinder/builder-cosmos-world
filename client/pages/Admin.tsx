@@ -308,7 +308,7 @@ export default function Admin() {
         const currentTime = new Date().toLocaleTimeString('uk-UA');
         const sampleLogs = [
           `[${currentTime}] Система запущена`,
-          `[${currentTime}] База даних ініціалізована`,
+          `[${currentTime}] База даних ініціалізов��на`,
           `[${currentTime}] API готове до роботи`,
           `[${currentTime}] Нова система з 5 модулями активована`,
           `[${currentTime}] Botasaurus v4.0.10+ готовий до парсингу`
@@ -822,7 +822,7 @@ export default function Admin() {
                   </div>
 
                   <div className="p-3 bg-purple-50 rounded-lg text-sm">
-                    <p><strong>Метод:</strong> Facebook Prophet</p>
+                    <p><strong>��етод:</strong> Facebook Prophet</p>
                     <p><strong>Прогноз:</strong> 6 місяців з довірчими інтервалами</p>
                     <p><strong>С��ат��с:</strong> {mlModuleStatus.prophet_ready ? '✅ Готово' : '⏳ Не готово'}</p>
                   </div>
@@ -1059,20 +1059,33 @@ export default function Admin() {
                         setScraperProgress(0);
 
                         const response = await fetch('/api/scraper/start', { method: 'POST' });
-                        const data = await response.json();
+
+                        // Safe JSON parsing to prevent "Unexpected end of JSON input"
+                        let data;
+                        try {
+                          const text = await response.text();
+                          if (!text || text.trim() === '') {
+                            throw new Error('Empty response from server');
+                          }
+                          data = JSON.parse(text);
+                        } catch (parseError) {
+                          console.error('JSON parse error:', parseError);
+                          addLogEntry(`❌ JSON parse error: ${parseError.message}`);
+                          setScraperStatus("failed");
+                          alert('❌ Помилка парсингу відповіді сервера');
+                          return;
+                        }
 
                         console.log('Scraper API response:', response.ok, data);
 
                         if (response.ok && data.success) {
-                          if (data.python_backend) {
-                            addLogEntry('🔧 FIX: Using Python FastAPI backend instead of Node spawn');
-                            addLogEntry(`🐍 Backend URL: ${data.backend_url}`);
-                            addLogEntry(`📊 Task ID: ${data.task_id}`);
-                            addLogEntry('📞 Connecting to Python backend SSE stream...');
+                          // Always connect to Python backend SSE (new architecture)
+                          addLogEntry('🔧 FIX: JSON parsing secured, using Python FastAPI backend');
+                          addLogEntry('📞 Connecting to Python backend SSE stream...');
 
-                            // Connect to Python backend SSE for real-time progress
-                            const pythonBackendUrl = data.backend_url || 'http://localhost:8080';
-                            const pythonScraperSSE = new EventSource(`${pythonBackendUrl}/scraper/progress/stream`);
+                          // Connect to Python backend SSE for real-time progress
+                          const pythonBackendUrl = 'http://localhost:8080';
+                          const pythonScraperSSE = new EventSource(`${pythonBackendUrl}/scraper/progress/stream`);
 
                             pythonScraperSSE.onmessage = (event) => {
                               try {
@@ -1099,11 +1112,10 @@ export default function Admin() {
                               }
                             };
 
-                            pythonScraperSSE.onerror = (error) => {
-                              console.error('Python SSE error:', error);
-                              addLogEntry('⚠️ Python SSE connection error');
-                            };
-                          }
+                          pythonScraperSSE.onerror = (error) => {
+                            console.error('Python SSE error:', error);
+                            addLogEntry('⚠️ Python SSE connection error');
+                          };
 
                           addLogEntry('✅ Botasaurus успішно запущено з антидетекційним захистом');
                           addLogEntry('🛡️ AntiDetectionDriver активовано');
