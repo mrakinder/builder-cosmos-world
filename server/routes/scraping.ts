@@ -136,19 +136,24 @@ export const handleStartScraping: RequestHandler = async (req, res) => {
     const pythonBackendUrl = process.env.PYTHON_API_URL || 'http://localhost:8080';
     const requestUrl = `${pythonBackendUrl}/scraper/start`;
 
+    // Prepare request body with validation
+    const requestBody = {
+      listing_type,
+      max_pages: Number(max_pages), // ensure integer
+      delay_ms: 5000,
+      headful: false
+    };
+
     addActivity(`🚪 Node → Python: POST ${requestUrl}`);
-    addActivity(`📦 Request body: {listing_type: ${listing_type}, max_pages: ${max_pages}, delay_ms: 5000}`);
+    addActivity(`📦 Request body: ${JSON.stringify(requestBody)}`);
+    addActivity(`🏷️ Content-Type: application/json`);
 
     const response = await fetch(requestUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        listing_type,
-        max_pages,
-        delay_ms: 5000
-      })
+      body: JSON.stringify(requestBody)
     });
 
     addActivity(`📨 Python response: ${response.status} ${response.statusText}`);
@@ -398,7 +403,7 @@ export const handleStopScraping: RequestHandler = async (req, res) => {
 
   } catch (error) {
     console.error('Error stopping scraping via Python backend:', error);
-    addActivity(`❌ Помилка зупинки через Python backend: ${error.message}`);
+    addActivity(`❌ Помилка зупинки ��ерез Python backend: ${error.message}`);
 
     res.status(500).json({
       success: false,
