@@ -56,6 +56,8 @@ export default function Admin() {
     superset_running: false
   });
   const [showMLControls, setShowMLControls] = useState(false);
+  const [mlTrainingProgress, setMLTrainingProgress] = useState(0);
+  const [mlTrainingStatus, setMLTrainingStatus] = useState("idle");
 
   useEffect(() => {
     loadStats();
@@ -378,7 +380,7 @@ export default function Admin() {
             }}
           >
             <Eye className="w-4 h-4 mr-2" />
-            {showProperties ? 'Сховати' : 'Переглянути'} оголошення
+            {showProperties ? 'Сховати' : 'Перегляну��и'} оголошення
           </Button>
           <Button
             variant={showStreetManager ? "default" : "outline"}
@@ -552,7 +554,7 @@ export default function Admin() {
 
                   <div className="p-3 bg-blue-50 rounded-lg text-sm">
                     <p><strong>Ціль:</strong> MAPE ≤ 15%</p>
-                    <p><strong>Фічі:</strong> площа, район, кімнати, поверх, тип, ремонт</p>
+                    <p><strong>Фічі:</strong> площа, рай��н, кімнати, поверх, тип, ремонт</p>
                     <p><strong>Статус:</strong> {mlModuleStatus.lightautoml_trained ? '✅ Готово' : '⏳ Не т��енована'}</p>
                   </div>
                 </CardContent>
@@ -577,7 +579,7 @@ export default function Admin() {
                         try {
                           const response = await fetch('/api/ml/forecast');
                           const data = await response.json();
-                          alert(`✅ Прогноз готовий!\nРайонів: ${data.districts?.length || 0}\nПеріод: 6 місяців`);
+                          alert(`✅ Прогноз готовий!\n��айонів: ${data.districts?.length || 0}\nПеріод: 6 місяців`);
                         } catch (error) {
                           alert('❌ Помилка створе��ня прогнозу');
                         }
@@ -707,7 +709,7 @@ export default function Admin() {
                       <li>Model Quality</li>
                       <li>Scraper Health</li>
                     </ul>
-                    <p className="mt-2"><strong>Статус:</strong> {mlModuleStatus.superset_running ? '✅ Запущено' : '⏹️ Зупинено'}</p>
+                    <p className="mt-2"><strong>Статус:</strong> {mlModuleStatus.superset_running ? '�� Запущено' : '⏹️ Зупинено'}</p>
                   </div>
                 </CardContent>
               </Card>
