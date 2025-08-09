@@ -79,11 +79,24 @@ export default function Admin() {
 
   const loadStats = async () => {
     try {
+      console.log('Loading stats...');
       const response = await fetch('/api/property-stats');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
+      console.log('Stats loaded:', data);
       setStats(data);
     } catch (error) {
       console.error('Failed to load stats:', error);
+      // Set default stats on error
+      setStats({
+        totalProperties: 0,
+        fromOwners: 0,
+        fromAgencies: 0,
+        manualEntries: 0,
+        lastScraping: null
+      });
     }
   };
 
@@ -220,7 +233,7 @@ export default function Admin() {
       }
     } catch (error) {
       console.error('Failed to delete manual properties:', error);
-      alert('Помилка видалення');
+      alert('Помилка вида��ення');
     }
   };
 
@@ -409,7 +422,7 @@ export default function Admin() {
                         <SelectItem value="Каскад">Каскад</SelectItem>
                         <SelectItem value="Залізничний (Вокзал)">Залізничний (Вокзал)</SelectItem>
                         <SelectItem value="Брати">Брати</SelectItem>
-                        <SelectItem value="Софіївка">Софіївка</SelectItem>
+                        <SelectItem value="Софіївка">��офіївка</SelectItem>
                         <SelectItem value="Будівельників">Будівельників</SelectItem>
                         <SelectItem value="Набережна">Набережна</SelectItem>
                         <SelectItem value="Опришівці">Опришівці</SelectItem>
@@ -1008,7 +1021,7 @@ export default function Admin() {
                       const response = await fetch('/api/retrain-model', { method: 'POST' });
                       const data = await response.json();
                       if (response.ok) {
-                        alert(`✅ ${data.message}\nОчікуваний час: ${data.estimatedTime}`);
+                        alert(`✅ ${data.message}\nОч��куваний час: ${data.estimatedTime}`);
                         setModelProgress(0); // Reset progress
                       }
                     } catch (error) {
@@ -1086,7 +1099,7 @@ export default function Admin() {
               {activityLogs.length > 0 ? (
                 activityLogs.map((log, index) => (
                   <div key={index} className={`mb-1 ${
-                    log.includes('Парсинг') || log.includes('парсинг') ? 'text-green-400' :
+                    log.includes('Парсинг') || log.includes('па��синг') ? 'text-green-400' :
                     log.includes('Модель') || log.includes('модель') || log.includes('тренування') ? 'text-purple-400' :
                     log.includes('Помилка') || log.includes('помилка') ? 'text-red-400' :
                     'text-blue-400'
