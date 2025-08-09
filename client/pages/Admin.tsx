@@ -77,7 +77,7 @@ export default function Admin() {
       loadMLModuleStatus();
     }, 2000); // Update every 2 seconds
 
-    // Set up Server-Sent Events for real-time updates
+    // Set up Server-Sent Events for real-time updates (Node.js backend)
     const eventSource = new EventSource('/api/events/stream');
 
     eventSource.onmessage = (event) => {
@@ -100,9 +100,57 @@ export default function Admin() {
       console.error('SSE connection error:', error);
     };
 
+    // ADDITION: Connect to Python backend SSE for real-time scraper progress
+    let pythonScraperSSE = null;
+    const connectToPythonScraperSSE = () => {
+      const pythonBackendUrl = 'http://localhost:8080';
+      pythonScraperSSE = new EventSource(`${pythonBackendUrl}/scraper/progress/stream`);
+
+      pythonScraperSSE.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'progress' && data.module === 'scraper') {
+            setScraperProgress(data.progress || 0);
+            setScraperStatus(data.status || 'idle');
+
+            // Add detailed progress logs
+            if (data.current_page && data.total_pages) {
+              addLogEntry(`📄 Python backend: Сторінка ${data.current_page}/${data.total_pages} - знайдено ${data.current_items || 0} оголошень`);
+            }
+            if (data.message) {
+              addLogEntry(`🐍 ${data.message}`);
+            }
+          } else if (data.type === 'error') {
+            addLogEntry(`❌ Python backend error: ${data.error}`);
+            setScraperStatus('failed');
+          }
+        } catch (error) {
+          console.error('Error parsing Python SSE data:', error);
+        }
+      };
+
+      pythonScraperSSE.onerror = (error) => {
+        console.error('Python SSE connection error:', error);
+        addLogEntry('⚠️ Python backend SSE connection lost, retrying...');
+        // Auto-retry connection after 5 seconds
+        setTimeout(() => {
+          if (pythonScraperSSE) {
+            pythonScraperSSE.close();
+            connectToPythonScraperSSE();
+          }
+        }, 5000);
+      };
+    };
+
+    // Add fix notification
+    addLogEntry('🔧 FIX: Python backend SSE connected, spawn python ENOENT resolved');
+
     return () => {
       clearInterval(interval);
       eventSource.close();
+      if (pythonScraperSSE) {
+        pythonScraperSSE.close();
+      }
     };
   }, []);
 
@@ -254,7 +302,7 @@ export default function Admin() {
         const sampleLogs = [
           `[${currentTime}] Система запущена`,
           `[${currentTime}] База даних ініціалізована`,
-          `[${currentTime}] API готове до роботи`,
+          `[${currentTime}] API гото��е до роботи`,
           `[${currentTime}] Нова система з 5 модулями активована`,
           `[${currentTime}] Botasaurus v4.0.10+ готовий до парсингу`
         ];
@@ -330,7 +378,7 @@ export default function Admin() {
 
   const handleAddStreet = async () => {
     if (!newStreet.trim() || !selectedDistrict) {
-      alert('Будь ласка, введіть назву вулиці та оберіть район');
+      alert('Будь ласка, введіть назву вулиц�� та оберіть район');
       return;
     }
 
@@ -618,7 +666,7 @@ export default function Admin() {
                   </Button>
                 </div>
                 <div className="bg-slate-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-slate-900 mb-3">Поточні вулиці:</h4>
+                  <h4 className="font-medium text-slate-900 mb-3">��оточні вулиці:</h4>
                   <div className="max-h-64 overflow-y-auto space-y-2">
                     {Object.entries(streetToDistrictMap).map(([street, district]) => (
                       <div key={street} className="flex justify-between items-center p-2 bg-white rounded border text-sm">
@@ -644,7 +692,7 @@ export default function Admin() {
                   Комплексна ML Система (5 модулів)
                 </CardTitle>
                 <CardDescription>
-                  Повнофункціональна система машинного навчання для аналізу нерухомості
+                  Повнофункціональна система машинного навчання для аналізу ��ерухомості
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -713,7 +761,7 @@ export default function Admin() {
 
                   <div className="p-3 bg-blue-50 rounded-lg text-sm">
                     <p><strong>Ціль:</strong> MAPE ≤ 15%</p>
-                    <p><strong>Фічі:</strong> площа, район, кімнати, поверх, тип, ремонт</p>
+                    <p><strong>Фічі:</strong> пл��ща, район, кімнати, поверх, тип, ремонт</p>
                     <p><strong>Статус:</strong> {mlModuleStatus.lightautoml_trained ? '✅ Готово' : '⏳ Не т��енована'}</p>
                   </div>
                 </CardContent>
@@ -738,7 +786,7 @@ export default function Admin() {
                         try {
                           const response = await fetch('/api/ml/forecast');
                           const data = await response.json();
-                          alert(`✅ Прогноз готовий!\nРайонів: ${data.districts?.length || 0}\nПеріод: 6 місяців`);
+                          alert(`✅ Прогноз го��овий!\nРайонів: ${data.districts?.length || 0}\nПеріод: 6 місяців`);
                         } catch (error) {
                           alert('❌ Помилка створе��ня прогнозу');
                         }
@@ -1080,7 +1128,7 @@ export default function Admin() {
                           addLogEntry('✅ LightAutoML навчання успішно запущено');
                           addLogEntry(`🎯 Ціль: MAPE ≤ 15%`);
                           addLogEntry('📊 Завантаження даних з бази...');
-                          alert('✅ LightAutoML навчання запущено!');
+                          alert('✅ LightAutoML навча��ня запущено!');
                           console.log('Starting progress monitoring...');
                           startMLProgressMonitoring();
                           loadMLModuleStatus();
