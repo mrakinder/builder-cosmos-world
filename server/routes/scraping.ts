@@ -76,6 +76,8 @@ const addActivity = (message: string, type: string = 'info') => {
 };
 
 export const handleStartScraping: RequestHandler = (req, res) => {
+  ensureDatabase();
+
   if (scrapingStatus.status === 'running') {
     return res.status(400).json({
       error: 'Парсинг вже запущено',
