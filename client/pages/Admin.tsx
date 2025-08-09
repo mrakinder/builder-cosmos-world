@@ -200,7 +200,7 @@ export default function Admin() {
       }
     } catch (error) {
       console.error('Failed to add manual property:', error);
-      alert('Помилка додавання');
+      alert('��омилка додавання');
     }
   };
 
@@ -438,6 +438,289 @@ export default function Admin() {
           </Card>
         )}
 
+        {/* ML Controls Section */}
+        {showMLControls && (
+          <div className="space-y-6 mb-8">
+            {/* ML System Overview */}
+            <Card className="border-0 shadow-xl">
+              <CardHeader>
+                <CardTitle className="flex items-center text-xl">
+                  <Brain className="w-6 h-6 mr-3 text-indigo-600" />
+                  Комплексна ML Система (5 модулів)
+                </CardTitle>
+                <CardDescription>
+                  Повнофункціональна система машинного навчання для аналізу нерухомості
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-5 gap-4">
+                  <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg">
+                    <div className={`w-4 h-4 rounded-full mx-auto mb-2 ${mlModuleStatus.ml_trained ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                    <h4 className="font-medium text-sm">Botasaurus</h4>
+                    <p className="text-xs text-slate-600">Збір даних</p>
+                  </div>
+                  <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
+                    <div className={`w-4 h-4 rounded-full mx-auto mb-2 ${mlModuleStatus.ml_trained ? 'bg-blue-500' : 'bg-gray-400'}`}></div>
+                    <h4 className="font-medium text-sm">LightAutoML</h4>
+                    <p className="text-xs text-slate-600">Прогноз цін</p>
+                  </div>
+                  <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg">
+                    <div className={`w-4 h-4 rounded-full mx-auto mb-2 ${mlModuleStatus.prophet_ready ? 'bg-purple-500' : 'bg-gray-400'}`}></div>
+                    <h4 className="font-medium text-sm">Prophet</h4>
+                    <p className="text-xs text-slate-600">Часові ряди</p>
+                  </div>
+                  <div className="text-center p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg">
+                    <div className={`w-4 h-4 rounded-full mx-auto mb-2 ${mlModuleStatus.streamlit_running ? 'bg-orange-500' : 'bg-gray-400'}`}></div>
+                    <h4 className="font-medium text-sm">Streamlit</h4>
+                    <p className="text-xs text-slate-600">Веб-інтерфейс</p>
+                  </div>
+                  <div className="text-center p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-lg">
+                    <div className={`w-4 h-4 rounded-full mx-auto mb-2 ${mlModuleStatus.superset_running ? 'bg-red-500' : 'bg-gray-400'}`}></div>
+                    <h4 className="font-medium text-sm">Superset</h4>
+                    <p className="text-xs text-slate-600">Аналітика</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* ML Module Controls */}
+            <div className="grid lg:grid-cols-2 gap-6">
+              {/* LightAutoML Controls */}
+              <Card className="border-0 shadow-xl">
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Brain className="w-5 h-5 mr-2 text-blue-600" />
+                    LightAutoML Прогнозування
+                  </CardTitle>
+                  <CardDescription>
+                    Автоматичне ML для прогнозування цін нерухомості
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Button
+                    className="w-full bg-blue-600 hover:bg-blue-700"
+                    onClick={async () => {
+                      try {
+                        const response = await fetch('/api/ml/train', { method: 'POST' });
+                        const data = await response.json();
+                        if (response.ok) {
+                          alert(`✅ ${data.message}\nMAPE: ${data.mape}%`);
+                          loadMLModuleStatus();
+                        }
+                      } catch (error) {
+                        alert('❌ Помилка навчання ML моделі');
+                      }
+                    }}
+                  >
+                    <Zap className="w-4 h-4 mr-2" />
+                    Тренувати LightAutoML модель
+                  </Button>
+
+                  <div className="p-3 bg-blue-50 rounded-lg text-sm">
+                    <p><strong>Ціль:</strong> MAPE ≤ 15%</p>
+                    <p><strong>Фічі:</strong> площа, район, кімнати, поверх, тип, ремонт</p>
+                    <p><strong>Статус:</strong> {mlModuleStatus.ml_trained ? '✅ Готово' : '⏳ Не тренована'}</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Prophet Forecasting */}
+              <Card className="border-0 shadow-xl">
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <TrendingUp className="w-5 h-5 mr-2 text-purple-600" />
+                    Prophet Прогнозування
+                  </CardTitle>
+                  <CardDescription>
+                    Прогноз цінових трендів на 6 місяців по районах
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={async () => {
+                        try {
+                          const response = await fetch('/api/ml/forecast');
+                          const data = await response.json();
+                          alert(`✅ Прогноз готовий!\nРайонів: ${data.districts?.length || 0}\nПеріод: 6 місяців`);
+                        } catch (error) {
+                          alert('❌ Помилка створення прогнозу');
+                        }
+                      }}
+                    >
+                      <TrendingUp className="w-4 h-4 mr-1" />
+                      Всі райони
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={async () => {
+                        const district = prompt('Введіть назву району:');
+                        if (!district) return;
+                        try {
+                          const response = await fetch(`/api/ml/forecast?district=${encodeURIComponent(district)}`);
+                          const data = await response.json();
+                          alert(`✅ Прогноз для "${district}" готовий!`);
+                        } catch (error) {
+                          alert('❌ Помилка прогнозування району');
+                        }
+                      }}
+                    >
+                      <BarChart3 className="w-4 h-4 mr-1" />
+                      Один район
+                    </Button>
+                  </div>
+
+                  <div className="p-3 bg-purple-50 rounded-lg text-sm">
+                    <p><strong>Метод:</strong> Facebook Prophet</p>
+                    <p><strong>Прогноз:</strong> 6 місяців з довірчими інтервалами</p>
+                    <p><strong>Статус:</strong> {mlModuleStatus.prophet_ready ? '✅ Готово' : '⏳ Не готово'}</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Streamlit Web Interface */}
+              <Card className="border-0 shadow-xl">
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Globe className="w-5 h-5 mr-2 text-orange-600" />
+                    Streamlit Веб-Інтерфейс
+                  </CardTitle>
+                  <CardDescription>
+                    Публічний інтерфейс для оцінки нерухомості
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      className="bg-orange-600 hover:bg-orange-700"
+                      onClick={async () => {
+                        try {
+                          const response = await fetch('/api/streamlit/start', { method: 'POST' });
+                          const data = await response.json();
+                          if (response.ok) {
+                            alert(`✅ Streamlit запущено!\nURL: ${data.url}`);
+                            loadMLModuleStatus();
+                          }
+                        } catch (error) {
+                          alert('❌ Помилка запуску Streamlit');
+                        }
+                      }}
+                    >
+                      Запустити
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={async () => {
+                        try {
+                          await fetch('/api/streamlit/stop', { method: 'POST' });
+                          alert('✅ Streamlit зупинено');
+                          loadMLModuleStatus();
+                        } catch (error) {
+                          alert('❌ Помилка зупинки');
+                        }
+                      }}
+                    >
+                      Зупинити
+                    </Button>
+                  </div>
+
+                  <div className="p-3 bg-orange-50 rounded-lg text-sm">
+                    <p><strong>Функції:</strong> ML прогноз, схожі об'єкти, аналіз</p>
+                    <p><strong>Відгук:</strong> ≤1.5 сек на запит</p>
+                    <p><strong>Статус:</strong> {mlModuleStatus.streamlit_running ? '✅ Запущено' : '⏹️ Зупинено'}</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Apache Superset Analytics */}
+              <Card className="border-0 shadow-xl">
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <BarChart3 className="w-5 h-5 mr-2 text-red-600" />
+                    Apache Superset
+                  </CardTitle>
+                  <CardDescription>
+                    Бізнес-аналітика з 4 готовими дашбордами
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Button
+                    className="w-full bg-red-600 hover:bg-red-700"
+                    onClick={async () => {
+                      try {
+                        const response = await fetch('/api/superset/status');
+                        const data = await response.json();
+                        if (data.running) {
+                          alert(`✅ Superset активний!\nURL: ${data.url}\nДашборди: 4`);
+                        } else {
+                          alert('⏳ Superset не запущений\nЗапустіть через CLI: python property_monitor_cli.py superset start');
+                        }
+                      } catch (error) {
+                        alert('❌ Помилка перевірки Superset');
+                      }
+                    }}
+                  >
+                    <BarChart3 className="w-4 h-4 mr-2" />
+                    Перевірити статус Superset
+                  </Button>
+
+                  <div className="p-3 bg-red-50 rounded-lg text-sm">
+                    <p><strong>Дашборди:</strong></p>
+                    <ul className="list-disc list-inside text-xs mt-1 space-y-1">
+                      <li>Market Overview IF</li>
+                      <li>Dynamics & Trends</li>
+                      <li>Model Quality</li>
+                      <li>Scraper Health</li>
+                    </ul>
+                    <p className="mt-2"><strong>Статус:</strong> {mlModuleStatus.superset_running ? '✅ Запущено' : '⏹️ Зупинено'}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Unified CLI Access */}
+            <Card className="border-0 shadow-xl">
+              <CardHeader>
+                <CardTitle className="flex items-center text-xl">
+                  <Settings className="w-6 h-6 mr-3 text-slate-600" />
+                  Уніфікований CLI Інтерфейс
+                </CardTitle>
+                <CardDescription>
+                  Командний рядок для управління всіма 5 модулями системи
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-slate-900 text-green-400 p-4 rounded-lg font-mono text-sm">
+                  <div className="mb-2 text-slate-300"># Доступні команди:</div>
+                  <div className="space-y-1 text-xs">
+                    <div><span className="text-blue-400">python property_monitor_cli.py</span> <span className="text-yellow-400">scraper</span> start</div>
+                    <div><span className="text-blue-400">python property_monitor_cli.py</span> <span className="text-yellow-400">ml</span> train</div>
+                    <div><span className="text-blue-400">python property_monitor_cli.py</span> <span className="text-yellow-400">forecasting</span> predict --all</div>
+                    <div><span className="text-blue-400">python property_monitor_cli.py</span> <span className="text-yellow-400">web</span> start</div>
+                    <div><span className="text-blue-400">python property_monitor_cli.py</span> <span className="text-yellow-400">pipeline</span> status</div>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid md:grid-cols-3 gap-4 text-sm">
+                  <div className="p-3 bg-green-50 rounded-lg">
+                    <h4 className="font-medium text-green-800 mb-1">Модуль 1: Botasaurus</h4>
+                    <p className="text-green-600 text-xs">Антибан парсинг OLX з resume функцією</p>
+                  </div>
+                  <div className="p-3 bg-blue-50 rounded-lg">
+                    <h4 className="font-medium text-blue-800 mb-1">Модуль 2: LightAutoML</h4>
+                    <p className="text-blue-600 text-xs">AutoML для прогнозування цін</p>
+                  </div>
+                  <div className="p-3 bg-purple-50 rounded-lg">
+                    <h4 className="font-medium text-purple-800 mb-1">Модуль 3: Prophet</h4>
+                    <p className="text-purple-600 text-xs">Часові ряди та тренди</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {/* Properties Viewer */}
         {showProperties && (
           <Card className="border-0 shadow-xl mb-8">
@@ -586,7 +869,7 @@ export default function Admin() {
                 <h4 className="text-sm font-medium text-slate-900 mb-1">Налаштування:</h4>
                 <ul className="text-xs text-slate-600 space-y-1">
                   <li>• Максимум 10 сторінок за запуск</li>
-                  <li>• Затримка 4-8 секунд між запитами</li>
+                  <li>• Затримка 4-8 секунд м��ж запитами</li>
                   <li>• Лише USD валюта</li>
                   <li>• Антибан захист активний</li>
                 </ul>
@@ -650,7 +933,7 @@ export default function Admin() {
                     className="w-full justify-start"
                     onClick={loadStats}
                   >
-                    Оновити д��ні
+                    Оновити дані
                   </Button>
                   <Button
                     size="sm"
