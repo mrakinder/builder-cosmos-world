@@ -55,8 +55,7 @@ const loadRecentActivities = () => {
   }
 };
 
-// Initialize activities
-loadRecentActivities();
+// Activities will be loaded when first needed
 
 // Add activity to log (both memory and database)
 const addActivity = (message: string, type: string = 'info') => {
@@ -208,7 +207,7 @@ const addRandomProperty = () => {
     // Insert property into database
     const result = dbOperations.insertProperty.run(
       olxId,
-      `${rooms}-кімн. к��артира на вул. ${randomStreet.street}, ${area}м²`,
+      `${rooms}-кімн. квартира на вул. ${randomStreet.street}, ${area}м²`,
       finalPrice,
       area,
       rooms,
