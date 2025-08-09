@@ -365,7 +365,7 @@ export default function Admin() {
           </Card>
         </div>
 
-        {/* Navigation Buttons */}
+        {/* Navigation Buttons для додаткових функцій */}
         <div className="flex flex-wrap gap-4 mb-8">
           <Button
             variant={showProperties ? "default" : "outline"}
@@ -390,20 +390,14 @@ export default function Admin() {
             }}
           >
             <MapPin className="w-4 h-4 mr-2" />
-            {showStreetManager ? 'Сховати' : 'Управління'} вулицями
+            {showStreetManager ? 'С��овати' : 'Управління'} вулицями
           </Button>
           <Button
-            variant={showMLControls ? "default" : "outline"}
-            onClick={() => {
-              setShowMLControls(!showMLControls);
-              if (!showMLControls) {
-                setShowProperties(false);
-                setShowStreetManager(false);
-              }
-            }}
+            variant="outline"
+            onClick={() => window.open('/statistics', '_blank')}
           >
-            <Brain className="w-4 h-4 mr-2" />
-            {showMLControls ? 'Сховати' : 'ML Модулі'} (5 систем)
+            <BarChart3 className="w-4 h-4 mr-2" />
+            Статистика
           </Button>
         </div>
 
@@ -427,7 +421,7 @@ export default function Admin() {
                       Назва вулиці
                     </label>
                     <Input
-                      placeholder="Введіть назву вулиці..."
+                      placeholder="Введіть ��азву вулиці..."
                       value={newStreet}
                       onChange={(e) => setNewStreet(e.target.value)}
                     />
@@ -489,7 +483,7 @@ export default function Admin() {
                   Комплексна ML Система (5 модулів)
                 </CardTitle>
                 <CardDescription>
-                  Повнофункціональна с��стема машинного навчання для аналізу нерухомості
+                  Повнофункціональна система машинного навчання для аналізу нерухомості
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -627,7 +621,7 @@ export default function Admin() {
                     Streamlit Веб-Інтерфейс
                   </CardTitle>
                   <CardDescription>
-                    Публічний інтерфейс для оцінки ��ерухомості
+                    Публічний інтерфейс для оцінки нерухомості
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -667,7 +661,7 @@ export default function Admin() {
 
                   <div className="p-3 bg-orange-50 rounded-lg text-sm">
                     <p><strong>Функції:</strong> ML прогноз, схожі об'єкти, аналіз</p>
-                    <p><strong>Відгук:</strong> ≤1.5 сек на запит</p>
+                    <p><strong>Відгук:</strong> ≤1.5 с��к на запит</p>
                     <p><strong>Статус:</strong> {mlModuleStatus.streamlit_running ? '✅ Запущено' : '⏹️ Зупинено'}</p>
                   </div>
                 </CardContent>
@@ -724,7 +718,7 @@ export default function Admin() {
               <CardHeader>
                 <CardTitle className="flex items-center text-xl">
                   <Settings className="w-6 h-6 mr-3 text-slate-600" />
-                  Уніфікований CLI Інтерфейс
+                  Уніфіко��аний CLI Інтерфейс
                 </CardTitle>
                 <CardDescription>
                   Командний рядок для управління всіма 5 модулями системи
@@ -935,7 +929,7 @@ export default function Admin() {
               </div>
 
               <div className="mt-4 p-3 bg-indigo-50 rounded-lg">
-                <h4 className="font-medium text-indigo-800 mb-2">📋 Доступні CLI к��манди для всіх модулів:</h4>
+                <h4 className="font-medium text-indigo-800 mb-2">📋 Доступні CLI команди для всіх модулів:</h4>
                 <div className="text-xs text-indigo-700 space-y-1 font-mono">
                   <div>npm run ml:train - Тренування LightAutoML</div>
                   <div>npm run ml:forecast - Prophet прогнозування</div>
