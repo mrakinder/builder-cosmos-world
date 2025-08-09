@@ -79,9 +79,9 @@ class TaskManager:
     
     # Scraper tasks (Module 1)
     async def start_scraping_task(self, listing_type: str, max_pages: int, delay_ms: int) -> str:
-        """Start scraping task in background"""
+        """Start real Botasaurus scraping task in background"""
         task_id = f"scraper_{int(time.time())}"
-        
+
         async def scraping_task():
             try:
                 self.task_status['scraper'] = {
@@ -89,37 +89,89 @@ class TaskManager:
                     'progress': 0,
                     'start_time': time.time(),
                     'listing_type': listing_type,
-                    'max_pages': max_pages
+                    'max_pages': max_pages,
+                    'current_page': 0,
+                    'total_items': 0,
+                    'current_items': 0,
+                    'message': 'Ініціалізація Botasaurus scraper...'
                 }
-                
-                # Import and run scraper
-                from scraper import run_scraper
-                
-                # Simulate progress updates
-                for page in range(1, max_pages + 1):
-                    # Update progress
-                    progress = (page / max_pages) * 100
-                    self.task_status['scraper']['progress'] = progress
-                    
-                    # Run one page of scraping (simplified)
-                    if page == 1:
-                        result = run_scraper(listing_type=listing_type, max_pages=max_pages)
-                        self.task_status['scraper']['result'] = result
-                    
-                    await asyncio.sleep(delay_ms / 1000)  # Convert to seconds
-                
-                self.task_status['scraper']['status'] = 'completed'
-                self.task_status['scraper']['progress'] = 100
-                
+
+                self.event_logger.log_event(
+                    "scraper",
+                    "start_real_scraping",
+                    f"🤖 Запуск реального Botasaurus скрапера: {listing_type}, {max_pages} сторінок",
+                    "INFO"
+                )
+
+                # Import and run real Botasaurus scraper
+                from scraper.olx_scraper import run_scraper_with_progress
+
+                # Define progress callback
+                def progress_callback(progress_data):
+                    if progress_data.get('type') == 'progress':
+                        self.task_status['scraper'].update({
+                            'progress': progress_data.get('progress_percent', 0),
+                            'current_page': progress_data.get('current_page', 0),
+                            'total_pages': progress_data.get('total_pages', max_pages),
+                            'current_items': progress_data.get('current_items', 0),
+                            'total_items': progress_data.get('total_items', 0),
+                            'message': progress_data.get('message', ''),
+                            'last_update': time.time()
+                        })
+
+                        # Log progress to event logger
+                        if progress_data.get('page_completed'):
+                            self.event_logger.log_event(
+                                "scraper",
+                                "page_completed",
+                                f"📄 Сторінка {progress_data.get('current_page')}/{progress_data.get('total_pages')}: знайдено {progress_data.get('page_items', 0)} оголошень",
+                                "INFO"
+                            )
+
+                # Run real Botasaurus scraper with progress
+                result = run_scraper_with_progress(
+                    listing_type=listing_type,
+                    max_pages=max_pages,
+                    progress_callback=progress_callback,
+                    debug_html=True
+                )
+
+                # Final status update
+                self.task_status['scraper'].update({
+                    'status': 'completed',
+                    'progress': 100,
+                    'result': result,
+                    'end_time': time.time(),
+                    'message': 'Парсинг завершено успішно'
+                })
+
+                # Log completion
+                self.event_logger.log_event(
+                    "scraper",
+                    "scraping_completed",
+                    f"✅ Botasaurus парсинг завершено! Оброблено {result.get('total_processed', 0)} оголошень",
+                    "INFO"
+                )
+
             except Exception as e:
                 self.logger.error(f"❌ Scraping task error: {str(e)}")
-                self.task_status['scraper']['status'] = 'error'
-                self.task_status['scraper']['error'] = str(e)
-        
+                self.task_status['scraper'].update({
+                    'status': 'error',
+                    'error': str(e),
+                    'message': f'Помилка: {str(e)}'
+                })
+
+                self.event_logger.log_event(
+                    "scraper",
+                    "scraping_error",
+                    f"❌ Помилка Botasaurus парсингу: {str(e)}",
+                    "ERROR"
+                )
+
         # Start task
         task = asyncio.create_task(scraping_task())
         self.active_tasks[task_id] = task
-        
+
         return task_id
     
     async def stop_scraping_task(self) -> bool:
