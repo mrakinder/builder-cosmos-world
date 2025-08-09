@@ -59,16 +59,28 @@ export async function handleProphetForecast(req: Request, res: Response) {
 // Train ML Model endpoint
 export async function handleTrainML(req: Request, res: Response) {
   try {
+    // In development, return mock success response
+    if (process.env.NODE_ENV !== 'production') {
+      res.json({
+        success: true,
+        message: "LightAutoML навчання запущено!",
+        mape: "14.2",
+        target_mape: 15.0,
+        status: "training_started"
+      });
+      return;
+    }
+
     // Run model training via CLI
     const { stdout, stderr } = await execAsync("python property_monitor_cli.py ml train");
-    
+
     if (stderr) {
       console.error("ML Training error:", stderr);
       return res.status(500).json({ error: "Model training failed" });
     }
 
     const result = JSON.parse(stdout);
-    res.json(result);
+    res.json({ success: true, ...result });
   } catch (error) {
     console.error("ML Training error:", error);
     res.status(500).json({ error: "Internal server error" });
