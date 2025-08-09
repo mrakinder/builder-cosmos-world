@@ -446,7 +446,7 @@ class TaskManager:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
             
-            cursor.execute("SELECT street, district FROM street_district_map")
+            cursor.execute("SELECT street, district FROM street_districts")
             rows = cursor.fetchall()
             conn.close()
             
@@ -466,7 +466,7 @@ class TaskManager:
             cursor = conn.cursor()
             
             cursor.execute("""
-                INSERT OR REPLACE INTO street_district_map (street, district)
+                INSERT OR REPLACE INTO street_districts (street, district)
                 VALUES (?, ?)
             """, (street, district))
             
@@ -552,7 +552,7 @@ class TaskManager:
             }
             
         except Exception as e:
-            self.logger.error(f"❌ Error getting property statistics: {str(e)}")
+            self.logger.error(f"�� Error getting property statistics: {str(e)}")
             return {}
     
     # System status
