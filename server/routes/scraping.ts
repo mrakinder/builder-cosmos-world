@@ -133,7 +133,8 @@ export const handleStartScraping: RequestHandler = async (req, res) => {
     addActivity(`🎯 Цільовий регіон: Івано-Франківськ, валюта: USD`);
 
     // Call Python FastAPI backend instead of Node spawn
-    const pythonBackendUrl = process.env.PYTHON_API_URL || 'http://localhost:8080';
+    // Production API URL will be https://glow-nest-api.fly.dev
+    const pythonBackendUrl = process.env.PYTHON_API_URL || 'https://glow-nest-api.fly.dev';
     const requestUrl = `${pythonBackendUrl}/scraper/start`;
 
     // Prepare request body with validation
@@ -348,7 +349,8 @@ export const handleActivityLog: RequestHandler = (req, res) => {
 export const handleStopScraping: RequestHandler = async (req, res) => {
   try {
     // Call Python FastAPI backend to stop scraping
-    const pythonBackendUrl = process.env.PYTHON_API_URL || 'http://localhost:8080';
+    // Production API URL will be https://glow-nest-api.fly.dev
+    const pythonBackendUrl = process.env.PYTHON_API_URL || 'https://glow-nest-api.fly.dev';
 
     const response = await fetch(`${pythonBackendUrl}/scraper/stop`, {
       method: 'POST',
