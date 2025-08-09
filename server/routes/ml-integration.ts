@@ -139,23 +139,42 @@ export async function handleStopStreamlit(req: Request, res: Response) {
   }
 }
 
+// Store training start time globally
+let trainingStartTime: number | null = null;
+
 // ML Training Progress endpoint
 export async function handleMLProgress(req: Request, res: Response) {
   try {
     // In development, simulate progressive training
     if (process.env.NODE_ENV !== 'production') {
-      // Create a simple progress simulation
-      const startTime = Date.now();
-      const elapsed = (Date.now() - startTime) / 1000; // seconds
-      const progress = Math.min(Math.floor((elapsed / 60) * 100), 100); // 60 seconds = 100%
+      if (!trainingStartTime) {
+        // No training in progress
+        res.json({ status: "idle", progress: 0, message: "No training in progress" });
+        return;
+      }
+
+      const elapsed = (Date.now() - trainingStartTime) / 1000; // seconds
+      const progress = Math.min(Math.floor((elapsed / 30) * 100), 100); // 30 seconds = 100%
+
+      if (progress >= 100) {
+        // Training completed, reset start time
+        trainingStartTime = null;
+        res.json({
+          status: "completed",
+          progress: 100,
+          stage: "completed",
+          message: "Training completed successfully"
+        });
+        return;
+      }
 
       res.json({
-        status: progress >= 100 ? "completed" : "training",
+        status: "training",
         progress: progress,
         stage: progress < 25 ? "loading_data" :
                progress < 50 ? "feature_engineering" :
                progress < 75 ? "model_training" : "evaluation",
-        message: progress >= 100 ? "Training completed" : `Training in progress: ${progress}%`
+        message: `Training in progress: ${progress}%`
       });
       return;
     }
@@ -167,6 +186,11 @@ export async function handleMLProgress(req: Request, res: Response) {
   } catch (error) {
     res.json({ status: "idle", progress: 0, message: "No training in progress" });
   }
+}
+
+// Function to start training progress tracking
+export function startTrainingProgress() {
+  trainingStartTime = Date.now();
 }
 
 // Get Superset status
