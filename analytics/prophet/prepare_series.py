@@ -1,290 +1,347 @@
 """
-Time series preparation for Prophet forecasting
-==============================================
-
-Prepares monthly price time series data for forecasting.
+Prophet Time Series Preparation Module - Module 3
+Prepares time series data for Prophet forecasting by districts
 """
 
 import pandas as pd
-import sqlite3
-import logging
-import argparse
-from pathlib import Path
+import numpy as np
 from datetime import datetime, timedelta
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
+import sqlite3
+import os
 
-logger = logging.getLogger(__name__)
+from .utils import Logger
 
-def load_price_data(db_path: str = 'data/olx_offers.sqlite') -> pd.DataFrame:
-    """
-    Load price data from SQLite database
-    
-    Args:
-        db_path: Path to SQLite database
-        
-    Returns:
-        DataFrame with price data
-    """
-    query = """
-    SELECT 
-        ad_id,
-        price_value as price_usd,
-        price_currency,
-        area_total,
-        rooms,
-        district,
-        street,
-        building_type,
-        seller_type,
-        scraped_at,
-        first_seen_at,
-        is_active
-    FROM offers 
-    WHERE is_active = 1 
-      AND price_value IS NOT NULL 
-      AND price_currency = 'USD'
-      AND area_total IS NOT NULL
-      AND area_total > 0
-      AND district IS NOT NULL
-      AND scraped_at IS NOT NULL
-    ORDER BY scraped_at ASC
-    """
-    
-    with sqlite3.connect(db_path) as conn:
-        df = pd.read_sql_query(query, conn)
-    
-    # Convert dates
-    df['scraped_at'] = pd.to_datetime(df['scraped_at'])
-    df['first_seen_at'] = pd.to_datetime(df['first_seen_at'])
-    
-    logger.info(f"Loaded {len(df)} price records")
-    return df
 
-def create_monthly_series(df: pd.DataFrame, group_by: List[str] = None) -> pd.DataFrame:
+class TimeSeriesPreparator:
     """
-    Create monthly time series aggregated by district and optionally other dimensions
-    
-    Args:
-        df: Input DataFrame with price data
-        group_by: Additional grouping columns (e.g., ['rooms'])
-        
-    Returns:
-        DataFrame with monthly time series
+    Prepares time series data for Prophet forecasting
+    Aggregates property data by district and time period
     """
-    if group_by is None:
-        group_by = []
     
-    # Add month-year column
-    df = df.copy()
-    df['month_year'] = df['scraped_at'].dt.to_period('M')
-    
-    # Group by district and additional dimensions
-    grouping_cols = ['district', 'month_year'] + group_by
-    
-    # Calculate monthly aggregations
-    monthly_data = df.groupby(grouping_cols).agg({
-        'price_usd': ['mean', 'median', 'count', 'std'],
-        'area_total': 'mean',
-        'ad_id': 'count'
-    }).reset_index()
-    
-    # Flatten column names
-    monthly_data.columns = [
-        '_'.join(col).strip('_') if col[1] else col[0] 
-        for col in monthly_data.columns
-    ]
-    
-    # Rename columns for clarity
-    monthly_data = monthly_data.rename(columns={
-        'price_usd_mean': 'avg_price',
-        'price_usd_median': 'median_price',
-        'price_usd_count': 'price_count',
-        'price_usd_std': 'price_std',
-        'area_total_mean': 'avg_area',
-        'ad_id_count': 'total_ads'
-    })
-    
-    # Convert month_year to datetime for Prophet
-    monthly_data['ds'] = monthly_data['month_year'].dt.to_timestamp()
-    
-    # Create segment identifier
-    if group_by:
-        monthly_data['segment'] = monthly_data[group_by].apply(
-            lambda x: '_'.join([f"{col}_{val}" for col, val in zip(group_by, x)]), 
-            axis=1
-        )
-    else:
-        monthly_data['segment'] = 'all'
-    
-    logger.info(f"Created monthly series with {len(monthly_data)} data points")
-    return monthly_data
-
-def filter_districts_with_sufficient_data(
-    df: pd.DataFrame, 
-    min_months: int = 6,
-    min_ads_per_month: int = 3
-) -> pd.DataFrame:
-    """
-    Filter districts that have sufficient historical data for forecasting
-    
-    Args:
-        df: Monthly time series DataFrame
-        min_months: Minimum number of months required
-        min_ads_per_month: Minimum ads per month on average
+    def __init__(self, db_path: str = "data/olx_offers.sqlite"):
+        self.db_path = db_path
+        self.logger = Logger("analytics/reports/prophet_prep.log")
         
-    Returns:
-        Filtered DataFrame
-    """
-    # Calculate statistics per district-segment
-    district_stats = df.groupby(['district', 'segment']).agg({
-        'ds': 'count',
-        'total_ads': 'mean',
-        'avg_price': 'mean'
-    }).reset_index()
-    
-    district_stats.columns = ['district', 'segment', 'months_count', 'avg_ads_per_month', 'avg_price_overall']
-    
-    # Filter districts with sufficient data
-    valid_districts = district_stats[
-        (district_stats['months_count'] >= min_months) &
-        (district_stats['avg_ads_per_month'] >= min_ads_per_month)
-    ][['district', 'segment']].copy()
-    
-    # Merge back to get filtered data
-    filtered_df = df.merge(valid_districts, on=['district', 'segment'], how='inner')
-    
-    districts_kept = valid_districts['district'].nunique()
-    segments_kept = len(valid_districts)
-    
-    logger.info(f"Filtered to {districts_kept} districts with {segments_kept} segments having sufficient data")
-    logger.info(f"Criteria: ≥{min_months} months, ≥{min_ads_per_month} ads/month")
-    
-    return filtered_df
-
-def prepare_prophet_data(
-    monthly_df: pd.DataFrame,
-    target_column: str = 'avg_price'
-) -> Dict[str, pd.DataFrame]:
-    """
-    Prepare data in Prophet format (ds, y columns) grouped by district-segment
-    
-    Args:
-        monthly_df: Monthly aggregated data
-        target_column: Column to forecast
+    def prepare_district_series(self, 
+                               districts: List[str] = None,
+                               min_samples_per_period: int = 5,
+                               period: str = "monthly") -> Dict[str, pd.DataFrame]:
+        """
+        Prepare time series data for each district
         
-    Returns:
-        Dictionary with district-segment as key and Prophet DataFrame as value
-    """
-    prophet_data = {}
-    
-    for (district, segment), group in monthly_df.groupby(['district', 'segment']):
-        # Prepare Prophet format
-        prophet_df = group[['ds', target_column]].copy()
-        prophet_df.columns = ['ds', 'y']
-        
-        # Sort by date
-        prophet_df = prophet_df.sort_values('ds').reset_index(drop=True)
-        
-        # Remove any missing values
-        prophet_df = prophet_df.dropna()
-        
-        if len(prophet_df) >= 6:  # Minimum data points for Prophet
-            key = f"{district}_{segment}" if segment != 'all' else district
-            prophet_data[key] = prophet_df
+        Args:
+            districts: List of districts to process (None for all)
+            min_samples_per_period: Minimum samples required per time period
+            period: Aggregation period ('daily', 'weekly', 'monthly')
             
-            logger.debug(f"Prepared {len(prophet_df)} data points for {key}")
+        Returns:
+            Dict[str, pd.DataFrame]: Time series data by district
+        """
+        try:
+            self.logger.info(f"🔄 Preparing {period} time series data for districts...")
+            
+            # Load property data
+            df = self._load_property_data()
+            
+            if df is None or len(df) == 0:
+                self.logger.warning("⚠️ No property data available")
+                return {}
+            
+            # Filter districts if specified
+            if districts:
+                df = df[df['district'].isin(districts)]
+            
+            # Get unique districts
+            available_districts = df['district'].unique()
+            self.logger.info(f"📊 Processing {len(available_districts)} districts")
+            
+            district_series = {}
+            
+            for district in available_districts:
+                try:
+                    district_data = df[df['district'] == district].copy()
+                    
+                    if len(district_data) < min_samples_per_period:
+                        self.logger.warning(f"⚠️ Skipping {district}: insufficient data ({len(district_data)} samples)")
+                        continue
+                    
+                    # Prepare time series for this district
+                    ts_data = self._create_time_series(district_data, period)
+                    
+                    if ts_data is not None and len(ts_data) >= 3:  # Minimum periods for Prophet
+                        district_series[district] = ts_data
+                        self.logger.info(f"✅ {district}: {len(ts_data)} time periods")
+                    else:
+                        self.logger.warning(f"⚠️ Skipping {district}: insufficient time periods")
+                        
+                except Exception as e:
+                    self.logger.error(f"❌ Error processing {district}: {str(e)}")
+                    continue
+            
+            self.logger.info(f"✅ Prepared time series for {len(district_series)} districts")
+            return district_series
+            
+        except Exception as e:
+            self.logger.error(f"❌ Error preparing district series: {str(e)}")
+            return {}
     
-    logger.info(f"Prepared Prophet data for {len(prophet_data)} district-segments")
-    return prophet_data
+    def _load_property_data(self) -> Optional[pd.DataFrame]:
+        """Load property data from database"""
+        try:
+            if not os.path.exists(self.db_path):
+                self.logger.error(f"❌ Database not found: {self.db_path}")
+                return None
+            
+            conn = sqlite3.connect(self.db_path)
+            
+            query = """
+            SELECT 
+                district,
+                price_usd,
+                area,
+                rooms,
+                floor,
+                total_floors,
+                seller_type,
+                listing_type,
+                scraped_at,
+                building_type,
+                renovation_status
+            FROM properties 
+            WHERE is_active = 1 
+            AND price_usd IS NOT NULL 
+            AND price_usd > 0 
+            AND district IS NOT NULL
+            AND currency = 'USD'
+            ORDER BY scraped_at ASC
+            """
+            
+            df = pd.read_sql_query(query, conn)
+            conn.close()
+            
+            # Convert scraped_at to datetime
+            df['scraped_at'] = pd.to_datetime(df['scraped_at'])
+            
+            # Filter reasonable price range
+            df = df[
+                (df['price_usd'] >= 10000) & 
+                (df['price_usd'] <= 500000)
+            ]
+            
+            self.logger.info(f"📊 Loaded {len(df)} property records")
+            return df
+            
+        except Exception as e:
+            self.logger.error(f"❌ Error loading property data: {str(e)}")
+            return None
+    
+    def _create_time_series(self, district_data: pd.DataFrame, period: str) -> Optional[pd.DataFrame]:
+        """Create time series for a specific district"""
+        try:
+            # Set date as index
+            df = district_data.copy()
+            df = df.set_index('scraped_at').sort_index()
+            
+            # Determine aggregation frequency
+            freq_map = {
+                'daily': 'D',
+                'weekly': 'W',
+                'monthly': 'M'
+            }
+            freq = freq_map.get(period, 'M')
+            
+            # Aggregate by time period
+            agg_funcs = {
+                'price_usd': ['mean', 'median', 'count', 'std'],
+                'area': ['mean', 'median'],
+                'rooms': ['mean'],
+                'floor': ['mean']
+            }
+            
+            ts_data = df.resample(freq).agg(agg_funcs).round(2)
+            
+            # Flatten column names
+            ts_data.columns = ['_'.join(col).strip() for col in ts_data.columns]
+            
+            # Filter periods with sufficient data
+            min_count = 3 if period == 'monthly' else 5
+            ts_data = ts_data[ts_data['price_usd_count'] >= min_count]
+            
+            if len(ts_data) == 0:
+                return None
+            
+            # Reset index and rename for Prophet
+            ts_data = ts_data.reset_index()
+            ts_data = ts_data.rename(columns={'scraped_at': 'ds'})
+            
+            # Create main target variable (y) - median price
+            ts_data['y'] = ts_data['price_usd_median']
+            
+            # Add additional metrics
+            ts_data['price_per_sqm'] = ts_data['price_usd_median'] / ts_data['area_median']
+            ts_data['volume'] = ts_data['price_usd_count']  # Number of listings
+            
+            # Remove rows with NaN in target
+            ts_data = ts_data.dropna(subset=['y'])
+            
+            return ts_data
+            
+        except Exception as e:
+            self.logger.error(f"❌ Error creating time series: {str(e)}")
+            return None
+    
+    def prepare_market_overview_series(self) -> Optional[pd.DataFrame]:
+        """Prepare overall market time series (all districts combined)"""
+        try:
+            self.logger.info("🔄 Preparing market overview time series...")
+            
+            df = self._load_property_data()
+            
+            if df is None or len(df) == 0:
+                return None
+            
+            # Create overall market time series
+            market_ts = self._create_time_series(df, 'monthly')
+            
+            if market_ts is not None:
+                self.logger.info(f"✅ Market overview series: {len(market_ts)} periods")
+            
+            return market_ts
+            
+        except Exception as e:
+            self.logger.error(f"❌ Error preparing market overview: {str(e)}")
+            return None
+    
+    def prepare_segment_series(self, 
+                              segment_by: str = "rooms",
+                              districts: List[str] = None) -> Dict[str, Dict[str, pd.DataFrame]]:
+        """
+        Prepare time series segmented by property characteristics
+        
+        Args:
+            segment_by: Segmentation variable ('rooms', 'building_type', 'seller_type')
+            districts: Districts to include
+            
+        Returns:
+            Dict[str, Dict[str, pd.DataFrame]]: Nested dict {district: {segment: time_series}}
+        """
+        try:
+            self.logger.info(f"🔄 Preparing segmented time series by {segment_by}...")
+            
+            df = self._load_property_data()
+            
+            if df is None or len(df) == 0:
+                return {}
+            
+            # Filter districts if specified
+            if districts:
+                df = df[df['district'].isin(districts)]
+            
+            # Clean segment variable
+            if segment_by == 'rooms':
+                df['rooms'] = df['rooms'].fillna(2).astype(int)
+                df['segment'] = df['rooms'].apply(lambda x: f"{x}_rooms" if x <= 4 else "5+_rooms")
+            elif segment_by == 'building_type':
+                df['segment'] = df['building_type'].fillna('квартира')
+            elif segment_by == 'seller_type':
+                df['segment'] = df['seller_type'].fillna('agency')
+            else:
+                self.logger.error(f"❌ Unknown segment_by: {segment_by}")
+                return {}
+            
+            result = {}
+            
+            for district in df['district'].unique():
+                district_data = df[df['district'] == district]
+                district_result = {}
+                
+                for segment in district_data['segment'].unique():
+                    segment_data = district_data[district_data['segment'] == segment]
+                    
+                    if len(segment_data) >= 10:  # Minimum for segmentation
+                        ts_data = self._create_time_series(segment_data, 'monthly')
+                        if ts_data is not None and len(ts_data) >= 3:
+                            district_result[str(segment)] = ts_data
+                
+                if district_result:
+                    result[district] = district_result
+            
+            self.logger.info(f"✅ Prepared segmented series for {len(result)} districts")
+            return result
+            
+        except Exception as e:
+            self.logger.error(f"❌ Error preparing segment series: {str(e)}")
+            return {}
+    
+    def get_data_summary(self) -> Dict[str, any]:
+        """Get summary statistics of available data"""
+        try:
+            df = self._load_property_data()
+            
+            if df is None or len(df) == 0:
+                return {}
+            
+            summary = {
+                'total_properties': len(df),
+                'date_range': {
+                    'start': df['scraped_at'].min().isoformat(),
+                    'end': df['scraped_at'].max().isoformat(),
+                    'days': (df['scraped_at'].max() - df['scraped_at'].min()).days
+                },
+                'districts': {
+                    'count': df['district'].nunique(),
+                    'list': df['district'].unique().tolist(),
+                    'properties_per_district': df['district'].value_counts().to_dict()
+                },
+                'price_stats': {
+                    'mean': round(df['price_usd'].mean(), 2),
+                    'median': round(df['price_usd'].median(), 2),
+                    'min': round(df['price_usd'].min(), 2),
+                    'max': round(df['price_usd'].max(), 2),
+                    'std': round(df['price_usd'].std(), 2)
+                },
+                'data_quality': {
+                    'missing_prices': int(df['price_usd'].isna().sum()),
+                    'missing_districts': int(df['district'].isna().sum()),
+                    'missing_areas': int(df['area'].isna().sum())
+                }
+            }
+            
+            return summary
+            
+        except Exception as e:
+            self.logger.error(f"❌ Error generating data summary: {str(e)}")
+            return {}
 
-def prepare_time_series(
-    db_path: str = 'data/olx_offers.sqlite',
-    output_path: str = 'analytics/time_series_data.csv',
-    include_rooms_segment: bool = True,
-    min_months: int = 6
-) -> str:
+
+def prepare_prophet_data(districts: List[str] = None, 
+                        period: str = "monthly") -> Dict[str, pd.DataFrame]:
     """
-    Complete time series preparation pipeline
+    Main entry point for preparing Prophet time series data
     
     Args:
-        db_path: Path to SQLite database
-        output_path: Where to save prepared time series
-        include_rooms_segment: Whether to create room-based segments
-        min_months: Minimum months of data required
+        districts: List of districts to process
+        period: Time aggregation period
         
     Returns:
-        Path to saved time series data
+        Dict[str, pd.DataFrame]: Time series data by district
     """
-    logger.info("Starting time series preparation")
-    
-    # Load data
-    df = load_price_data(db_path)
-    
-    if len(df) == 0:
-        raise ValueError("No price data found in database")
-    
-    # Create monthly series
-    group_by = ['rooms'] if include_rooms_segment else []
-    monthly_df = create_monthly_series(df, group_by)
-    
-    # Filter districts with sufficient data
-    filtered_df = filter_districts_with_sufficient_data(monthly_df, min_months)
-    
-    if len(filtered_df) == 0:
-        raise ValueError(f"No districts have sufficient data (≥{min_months} months)")
-    
-    # Save prepared data
-    output_path = Path(output_path)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    
-    filtered_df.to_csv(output_path, index=False, encoding='utf-8')
-    
-    # Print summary
-    districts_count = filtered_df['district'].nunique()
-    segments_count = filtered_df.groupby(['district', 'segment']).ngroups
-    date_range = f"{filtered_df['ds'].min().strftime('%Y-%m')} to {filtered_df['ds'].max().strftime('%Y-%m')}"
-    
-    logger.info(f"Time series preparation completed:")
-    logger.info(f"  - Districts: {districts_count}")
-    logger.info(f"  - Segments: {segments_count}")
-    logger.info(f"  - Date range: {date_range}")
-    logger.info(f"  - Saved to: {output_path}")
-    
-    return str(output_path)
+    preparator = TimeSeriesPreparator()
+    return preparator.prepare_district_series(districts, period=period)
 
-def main():
-    """CLI interface for time series preparation"""
-    parser = argparse.ArgumentParser(description='Prepare time series data for Prophet forecasting')
-    parser.add_argument('--db-path', default='data/olx_offers.sqlite',
-                       help='Path to SQLite database')
-    parser.add_argument('--output', default='analytics/time_series_data.csv',
-                       help='Output CSV file path')
-    parser.add_argument('--min-months', type=int, default=6,
-                       help='Minimum months of data required per district')
-    parser.add_argument('--include-rooms', action='store_true', default=True,
-                       help='Include room-based segments')
-    
-    args = parser.parse_args()
-    
-    # Setup logging
-    logging.basicConfig(level=logging.INFO)
-    
-    try:
-        output_path = prepare_time_series(
-            db_path=args.db_path,
-            output_path=args.output,
-            include_rooms_segment=args.include_rooms,
-            min_months=args.min_months
-        )
-        
-        print(f"\n✅ Time series preparation completed!")
-        print(f"Data saved to: {output_path}")
-        
-    except Exception as e:
-        print(f"\n❌ Time series preparation failed: {str(e)}")
-        return 1
-    
-    return 0
 
 if __name__ == "__main__":
-    exit(main())
+    # Test data preparation
+    preparator = TimeSeriesPreparator()
+    
+    # Get data summary
+    summary = preparator.get_data_summary()
+    print(f"Data summary: {summary}")
+    
+    # Prepare district series
+    district_series = preparator.prepare_district_series()
+    print(f"Prepared series for {len(district_series)} districts")
+    
+    for district, data in district_series.items():
+        print(f"{district}: {len(data)} periods")
