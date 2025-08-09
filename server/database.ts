@@ -1,12 +1,18 @@
 import Database from 'better-sqlite3';
 import { join } from 'path';
 
-// Initialize SQLite database
-const dbPath = join(process.cwd(), 'glow_nest.db');
-const db = new Database(dbPath);
+// Initialize SQLite database lazily
+let db: Database | null = null;
 
-// Enable WAL mode for better performance
-db.pragma('journal_mode = WAL');
+const getDatabase = () => {
+  if (!db) {
+    const dbPath = join(process.cwd(), 'glow_nest.db');
+    db = new Database(dbPath);
+    // Enable WAL mode for better performance
+    db.pragma('journal_mode = WAL');
+  }
+  return db;
+};
 
 // Create tables if they don't exist
 export const initializeDatabase = () => {
