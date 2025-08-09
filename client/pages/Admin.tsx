@@ -29,8 +29,6 @@ import {
 } from "lucide-react";
 
 export default function Admin() {
-  console.log('Admin component is rendering...');
-
   const [stats, setStats] = useState({
     totalProperties: 0,
     fromOwners: 0,
@@ -208,7 +206,7 @@ export default function Admin() {
       area: 60,
       floor: 3,
       district: "Центр",
-      description: "Тестовий опи�� для налагодження",
+      description: "Тестовий опис для налагодження",
       isOwner: true,
       url: "manual_entry",
       olx_id: `manual_${Date.now()}`
@@ -429,7 +427,7 @@ export default function Admin() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Центр">Центр</SelectItem>
-                        <SelectItem value="Пасічна">Пасічна</SelectItem>
+                        <SelectItem value="Пасічна">Пасічн��</SelectItem>
                         <SelectItem value="БАМ">БАМ</SelectItem>
                         <SelectItem value="Каскад">Каскад</SelectItem>
                         <SelectItem value="Залізничний (Вокзал)">Залізничний (Вокзал)</SelectItem>
@@ -655,7 +653,7 @@ export default function Admin() {
                   <div className="p-3 bg-orange-50 rounded-lg text-sm">
                     <p><strong>Функції:</strong> ML прогноз, схожі об'єкти, аналіз</p>
                     <p><strong>Відгук:</strong> ≤1.5 сек на запит</p>
-                    <p><strong>Статус:</strong> {mlModuleStatus.streamlit_running ? '✅ З��пущено' : '⏹️ Зупинено'}</p>
+                    <p><strong>Статус:</strong> {mlModuleStatus.streamlit_running ? '✅ Запущено' : '⏹️ Зупинено'}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -714,7 +712,7 @@ export default function Admin() {
                   Уніфікований CLI Інтерфейс
                 </CardTitle>
                 <CardDescription>
-                  Командний рядок для управління всіма 5 м��дулями системи
+                  Командний рядок для управління всіма 5 модулями системи
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -796,7 +794,7 @@ export default function Admin() {
                   <div className="text-center py-8 text-slate-500">
                     <Database className="w-12 h-12 mx-auto mb-3 text-slate-300" />
                     <p>Немає оголошень для перегляду</p>
-                    <p className="text-sm">Запустіть парсинг для зб��ру даних</p>
+                    <p className="text-sm">Запустіть парсинг для збору даних</p>
                   </div>
                 )}
               </div>
@@ -898,7 +896,7 @@ export default function Admin() {
                   <li>• Максимум 10 сторінок за запуск</li>
                   <li>• Затримка 4-8 секунд м��ж запитами</li>
                   <li>• Лише USD валюта</li>
-                  <li>• Антибан захист активний</li>
+                  <li>• Антибан захис�� активний</li>
                 </ul>
               </div>
             </CardContent>
