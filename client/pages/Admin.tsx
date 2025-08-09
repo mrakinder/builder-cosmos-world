@@ -149,13 +149,11 @@ export default function Admin() {
 
   const loadMLModuleStatus = async () => {
     try {
-      console.log('Loading ML module status...');
       const response = await fetch('/api/pipeline/status');
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      console.log('ML status loaded:', data);
       setMLModuleStatus(data);
     } catch (error) {
       console.error('Failed to load ML module status:', error);
@@ -918,7 +916,7 @@ export default function Admin() {
                   onClick={handleManualPropertyAdd}
                 >
                   <Upload className="w-4 h-4 mr-2" />
-                  Дода��и тестове оголошення
+                  Додати тестове оголошення
                 </Button>
 
                 <div className="grid grid-cols-2 gap-2">
