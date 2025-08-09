@@ -177,25 +177,34 @@ async def start_scraping(request: ScrapingRequest, background_tasks: BackgroundT
 
 @app.post("/scraper/stop")
 async def stop_scraping():
-    """Stop current scraping task"""
+    """Stop current scraping task - returns JSON-only response"""
     try:
         success = await task_manager.stop_scraping_task()
-        
+
         event_logger.log_event(
             "scraper",
-            "stop_scraping", 
+            "stop_scraping",
             "Scraping stopped by user",
             "WARNING"
         )
-        
-        return {
-            "success": success,
-            "message": "Scraping stopped" if success else "No active scraping task"
-        }
-        
+
+        return JSONResponse(
+            {
+                "ok": success,
+                "message": "Scraping stopped" if success else "No active scraping task"
+            },
+            status_code=200,
+            headers={"Content-Type": "application/json"}
+        )
+
     except Exception as e:
         logger.error(f"❌ Error stopping scraper: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        # Always return JSON, never raise HTTPException
+        return JSONResponse(
+            {"ok": False, "error": f"{type(e).__name__}: {str(e)}"},
+            status_code=500,
+            headers={"Content-Type": "application/json"}
+        )
 
 
 @app.get("/scraper/status")
