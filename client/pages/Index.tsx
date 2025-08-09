@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Building, TrendingUp, Brain, MapPin, ArrowRight, Star, Shield, Zap, BarChart3, Settings } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function Index() {
   const [formData, setFormData] = useState({
@@ -593,7 +594,7 @@ export default function Index() {
                   <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-pink-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <Shield className="w-8 h-8 text-purple-600" />
                   </div>
-                  <CardTitle>Ручні дані</CardTitle>
+                  <CardTitle>Ручні да��і</CardTitle>
                 </CardHeader>
                 <CardContent className="text-center space-y-4">
                   <Button
