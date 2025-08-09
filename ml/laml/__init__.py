@@ -1,20 +1,26 @@
 """
-LightAutoML module for automated price prediction
-================================================
-
-Uses LightAutoML for automatic model training and inference.
+LightAutoML Module - Module 2
+Automated machine learning for property price prediction with real-time progress tracking
+Target: MAPE ≤ 15%
 """
 
-from .train import train_price_model
-from .infer import predict_price
-from .features import prepare_features
-from .utils import load_data, save_model, load_model
+from .train import LightAutoMLTrainer, train_price_model
+from .infer import PricePredictionInference, predict_property_price
+from .features import FeatureEngineer
+from .utils import ProgressTracker, ModelEvaluator, Logger, load_training_progress
 
 __all__ = [
-    "train_price_model",
-    "predict_price", 
-    "prepare_features",
-    "load_data",
-    "save_model",
-    "load_model"
+    'LightAutoMLTrainer',
+    'train_price_model',
+    'PricePredictionInference', 
+    'predict_property_price',
+    'FeatureEngineer',
+    'ProgressTracker',
+    'ModelEvaluator',
+    'Logger',
+    'load_training_progress'
 ]
+
+__version__ = "1.0.0"
+__author__ = "Property Monitor IF Team" 
+__description__ = "LightAutoML for automated property price prediction with real-time progress tracking"
