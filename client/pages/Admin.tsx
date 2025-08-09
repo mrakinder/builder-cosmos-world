@@ -161,7 +161,7 @@ export default function Admin() {
           `[${currentTime}] База даних ініціалізована`,
           `[${currentTime}] API готове до роботи`,
           `[${currentTime}] Нова система з 5 модулями активована`,
-          `[${currentTime}] Botasaurus v4.0.10+ готовий д�� парсингу`
+          `[${currentTime}] Botasaurus v4.0.10+ готовий до парсингу`
         ];
         setActivityLogs(sampleLogs);
       } else {
@@ -501,7 +501,7 @@ export default function Admin() {
                         <SelectItem value="Софіївка">Софі��вка</SelectItem>
                         <SelectItem value="Будівельників">Будівельників</SelectItem>
                         <SelectItem value="Набережна">Набережна</SelectItem>
-                        <SelectItem value="Опришівці">Оп��ишівці</SelectItem>
+                        <SelectItem value="Опришівці">Опришівці</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -998,7 +998,7 @@ export default function Admin() {
 
                           if (response.ok) {
                             addLogEntry('✅ Streamlit успішно запущено на порту 8501');
-                            addLogEntry('🚀 Веб-інтерфейс доступний для оцінки нерухомості');
+                            addLogEntry('🚀 Веб-інтерфейс доступний для оцінки нерух��мості');
                             alert('✅ Streamlit запущено!');
                             loadMLModuleStatus();
                           } else {
@@ -1019,10 +1019,13 @@ export default function Admin() {
                       className="text-xs"
                       onClick={async () => {
                         try {
+                          addLogEntry('⏹️ Зупинка Streamlit веб-додатку...');
                           await fetch('/api/streamlit/stop', { method: 'POST' });
-                          alert('⏹️ Streamlit зупинено');
+                          addLogEntry('✅ Streamlit успішно зупинено');
+                          alert('⏹️ Streamlit зупин��но');
                           loadMLModuleStatus();
                         } catch (error) {
+                          addLogEntry('❌ Помилка зупинки Streamlit');
                           alert('❌ Помилка зупинки');
                         }
                       }}
