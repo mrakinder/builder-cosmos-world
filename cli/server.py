@@ -1,0 +1,556 @@
+"""
+Unified REST API Server for Property Monitor IF
+Button-based control interface for all 5 modules
+Replaces CLI with web-based management
+"""
+
+import asyncio
+import json
+import time
+from datetime import datetime
+from typing import Dict, List, Optional, Any
+import os
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse, JSONResponse
+from pydantic import BaseModel
+import uvicorn
+
+from .routes import router
+from .tasks import TaskManager
+from .utils import Logger, EventLogger
+
+
+# Pydantic models for API
+class ScrapingRequest(BaseModel):
+    listing_type: str = "sale"  # 'rent' or 'sale'
+    max_pages: int = 10
+    delay_ms: int = 5000
+
+class MLTrainingRequest(BaseModel):
+    target_mape: float = 15.0
+    timeout: int = 3600
+
+class ProphetForecastRequest(BaseModel):
+    districts: Optional[List[str]] = None
+    forecast_months: int = 6
+
+class MLPredictionRequest(BaseModel):
+    area: float
+    district: str
+    rooms: int = 2
+    floor: int = 1
+    total_floors: int = 9
+    building_type: str = "квартира"
+    renovation_status: str = "хороший"
+    seller_type: str = "owner"
+
+class StreamlitControlRequest(BaseModel):
+    action: str  # 'start' or 'stop'
+    port: int = 8501
+
+class StreetMappingRequest(BaseModel):
+    street: str
+    district: str
+
+
+# Global task manager
+task_manager = TaskManager()
+logger = Logger("cli/logs/api_server.log")
+event_logger = EventLogger()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan handler"""
+    # Startup
+    logger.info("🚀 Starting Property Monitor IF API Server")
+    event_logger.log_event("api_server", "startup", "API server starting up", "INFO")
+    
+    # Initialize task manager
+    await task_manager.initialize()
+    
+    yield
+    
+    # Shutdown
+    logger.info("🛑 Shutting down Property Monitor IF API Server")
+    event_logger.log_event("api_server", "shutdown", "API server shutting down", "INFO")
+    
+    # Cleanup tasks
+    await task_manager.cleanup()
+
+
+# FastAPI application
+app = FastAPI(
+    title="Property Monitor IF - Unified API",
+    description="REST API for managing 5-module real estate analysis system",
+    version="1.0.0",
+    lifespan=lifespan
+)
+
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Configure appropriately for production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+# Health check endpoint
+@app.get("/health")
+async def health_check():
+    """API health check"""
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat(),
+        "version": "1.0.0",
+        "modules": {
+            "scraper": "ready",
+            "ml": "ready", 
+            "prophet": "ready",
+            "streamlit": "ready",
+            "superset": "ready"
+        }
+    }
+
+
+# Module 1: Botasaurus Scraper Endpoints
+@app.post("/scraper/start")
+async def start_scraping(request: ScrapingRequest, background_tasks: BackgroundTasks):
+    """Start Botasaurus OLX scraping"""
+    try:
+        logger.info(f"🕷️ Starting scraper: {request.listing_type}, {request.max_pages} pages")
+        
+        # Start scraping task in background
+        task_id = await task_manager.start_scraping_task(
+            listing_type=request.listing_type,
+            max_pages=request.max_pages,
+            delay_ms=request.delay_ms
+        )
+        
+        event_logger.log_event(
+            "scraper", 
+            "start_scraping", 
+            f"Started scraping {request.listing_type} listings",
+            "INFO"
+        )
+        
+        return {
+            "success": True,
+            "message": f"Scraping started for {request.listing_type} listings",
+            "task_id": task_id,
+            "estimated_time": f"{request.max_pages * 10} seconds",
+            "parameters": request.dict()
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error starting scraper: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/scraper/stop")
+async def stop_scraping():
+    """Stop current scraping task"""
+    try:
+        success = await task_manager.stop_scraping_task()
+        
+        event_logger.log_event(
+            "scraper",
+            "stop_scraping", 
+            "Scraping stopped by user",
+            "WARNING"
+        )
+        
+        return {
+            "success": success,
+            "message": "Scraping stopped" if success else "No active scraping task"
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error stopping scraper: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/scraper/status")
+async def get_scraping_status():
+    """Get current scraping status"""
+    try:
+        status = await task_manager.get_scraping_status()
+        return status
+        
+    except Exception as e:
+        logger.error(f"❌ Error getting scraper status: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/scraper/logs")
+async def get_scraping_logs(limit: int = 50):
+    """Get recent scraping logs"""
+    try:
+        logs = await task_manager.get_scraping_logs(limit)
+        return {"logs": logs}
+        
+    except Exception as e:
+        logger.error(f"❌ Error getting scraper logs: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Module 2: LightAutoML Endpoints  
+@app.post("/ml/train")
+async def train_ml_model(request: MLTrainingRequest, background_tasks: BackgroundTasks):
+    """Train LightAutoML model with real-time progress"""
+    try:
+        logger.info("🧠 Starting LightAutoML training...")
+        
+        # Start training task
+        task_id = await task_manager.start_ml_training_task(
+            target_mape=request.target_mape,
+            timeout=request.timeout
+        )
+        
+        event_logger.log_event(
+            "ml",
+            "start_training",
+            f"Started ML training with MAPE target {request.target_mape}%",
+            "INFO"
+        )
+        
+        return {
+            "success": True,
+            "message": "ML training started",
+            "task_id": task_id,
+            "estimated_time": f"{request.timeout // 60} minutes",
+            "target_mape": request.target_mape
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error starting ML training: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/ml/progress")
+async def get_ml_training_progress():
+    """Get real-time ML training progress (0-100%)"""
+    try:
+        progress = await task_manager.get_ml_training_progress()
+        return progress
+        
+    except Exception as e:
+        logger.error(f"❌ Error getting ML progress: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/ml/progress/stream")
+async def stream_ml_progress():
+    """Server-Sent Events stream for real-time ML progress"""
+    async def event_stream():
+        try:
+            while True:
+                progress = await task_manager.get_ml_training_progress()
+                
+                # Format as SSE
+                data = json.dumps(progress)
+                yield f"data: {data}\n\n"
+                
+                # Break if training completed
+                if progress.get('status') in ['completed', 'failed']:
+                    break
+                
+                await asyncio.sleep(2)  # Update every 2 seconds
+                
+        except Exception as e:
+            error_data = json.dumps({"error": str(e)})
+            yield f"data: {error_data}\n\n"
+    
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/plain",
+        headers={"Cache-Control": "no-cache", "Connection": "keep-alive"}
+    )
+
+
+@app.post("/ml/predict")
+async def predict_property_price(request: MLPredictionRequest):
+    """Predict property price using trained ML model"""
+    try:
+        logger.info(f"🔮 Predicting price for {request.district} property")
+        
+        prediction = await task_manager.predict_property_price(request.dict())
+        
+        event_logger.log_event(
+            "ml",
+            "price_prediction",
+            f"Price predicted for {request.district}: ${prediction.get('predicted_price', 0)}",
+            "INFO"
+        )
+        
+        return prediction
+        
+    except Exception as e:
+        logger.error(f"❌ Error in price prediction: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/ml/status")
+async def get_ml_status():
+    """Get ML model status and information"""
+    try:
+        status = await task_manager.get_ml_status()
+        return status
+        
+    except Exception as e:
+        logger.error(f"❌ Error getting ML status: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Module 3: Prophet Forecasting Endpoints
+@app.post("/prophet/forecast")
+async def generate_prophet_forecasts(request: ProphetForecastRequest, background_tasks: BackgroundTasks):
+    """Generate Prophet forecasts for districts"""
+    try:
+        logger.info(f"📈 Starting Prophet forecasting for {request.forecast_months} months")
+        
+        task_id = await task_manager.start_prophet_forecasting_task(
+            districts=request.districts,
+            forecast_months=request.forecast_months
+        )
+        
+        event_logger.log_event(
+            "prophet",
+            "start_forecasting",
+            f"Started forecasting for {len(request.districts or [])} districts",
+            "INFO"
+        )
+        
+        return {
+            "success": True,
+            "message": "Prophet forecasting started",
+            "task_id": task_id,
+            "forecast_months": request.forecast_months,
+            "districts": request.districts
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error starting Prophet forecasting: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/prophet/status")
+async def get_prophet_status():
+    """Get Prophet forecasting status"""
+    try:
+        status = await task_manager.get_prophet_status()
+        return status
+        
+    except Exception as e:
+        logger.error(f"❌ Error getting Prophet status: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/prophet/forecasts")
+async def get_prophet_forecasts():
+    """Get latest Prophet forecast results"""
+    try:
+        forecasts = await task_manager.get_prophet_forecasts()
+        return forecasts
+        
+    except Exception as e:
+        logger.error(f"❌ Error getting Prophet forecasts: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Module 4: Streamlit Control Endpoints
+@app.post("/streamlit/control")
+async def control_streamlit(request: StreamlitControlRequest):
+    """Start or stop Streamlit application"""
+    try:
+        if request.action == "start":
+            result = await task_manager.start_streamlit(port=request.port)
+            message = f"Streamlit started on port {request.port}"
+        elif request.action == "stop":
+            result = await task_manager.stop_streamlit()
+            message = "Streamlit stopped"
+        else:
+            raise HTTPException(status_code=400, detail="Invalid action. Use 'start' or 'stop'")
+        
+        event_logger.log_event(
+            "streamlit",
+            request.action,
+            message,
+            "INFO"
+        )
+        
+        return {
+            "success": result,
+            "message": message,
+            "action": request.action
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error controlling Streamlit: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/streamlit/status")
+async def get_streamlit_status():
+    """Get Streamlit application status"""
+    try:
+        status = await task_manager.get_streamlit_status()
+        return status
+        
+    except Exception as e:
+        logger.error(f"❌ Error getting Streamlit status: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Module 5: Apache Superset Endpoints
+@app.get("/superset/status")
+async def get_superset_status():
+    """Get Apache Superset status"""
+    try:
+        status = await task_manager.get_superset_status()
+        return status
+        
+    except Exception as e:
+        logger.error(f"❌ Error getting Superset status: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Street Management Endpoints
+@app.get("/streets/mapping")
+async def get_street_mappings():
+    """Get all street to district mappings"""
+    try:
+        mappings = await task_manager.get_street_mappings()
+        return {"street_mappings": mappings}
+        
+    except Exception as e:
+        logger.error(f"❌ Error getting street mappings: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/streets/add")
+async def add_street_mapping(request: StreetMappingRequest):
+    """Add new street to district mapping"""
+    try:
+        success = await task_manager.add_street_mapping(
+            street=request.street,
+            district=request.district
+        )
+        
+        event_logger.log_event(
+            "streets",
+            "add_mapping",
+            f"Added mapping: {request.street} -> {request.district}",
+            "INFO"
+        )
+        
+        return {
+            "success": success,
+            "message": f"Added mapping: {request.street} -> {request.district}"
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error adding street mapping: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Event Log Endpoints
+@app.get("/events/stream")
+async def stream_events():
+    """Server-Sent Events stream for real-time event log"""
+    async def event_stream():
+        try:
+            last_event_id = 0
+            
+            while True:
+                events = event_logger.get_recent_events(since_id=last_event_id, limit=10)
+                
+                for event in events:
+                    data = json.dumps(event)
+                    yield f"data: {data}\n\n"
+                    last_event_id = max(last_event_id, event.get('id', 0))
+                
+                await asyncio.sleep(1)  # Check for new events every second
+                
+        except Exception as e:
+            error_data = json.dumps({"error": str(e)})
+            yield f"data: {error_data}\n\n"
+    
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/plain",
+        headers={"Cache-Control": "no-cache", "Connection": "keep-alive"}
+    )
+
+
+@app.get("/events/recent")
+async def get_recent_events(limit: int = 50):
+    """Get recent events from event log"""
+    try:
+        events = event_logger.get_recent_events(limit=limit)
+        return {"events": events}
+        
+    except Exception as e:
+        logger.error(f"❌ Error getting recent events: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# System Status Endpoint
+@app.get("/system/status")
+async def get_system_status():
+    """Get comprehensive system status"""
+    try:
+        status = await task_manager.get_system_status()
+        return status
+        
+    except Exception as e:
+        logger.error(f"❌ Error getting system status: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Properties Endpoints  
+@app.get("/properties/recent")
+async def get_recent_properties(limit: int = 20, district: str = None):
+    """Get recent properties from database"""
+    try:
+        properties = await task_manager.get_recent_properties(limit=limit, district=district)
+        return {"properties": properties}
+        
+    except Exception as e:
+        logger.error(f"❌ Error getting recent properties: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/properties/stats")
+async def get_property_statistics():
+    """Get property database statistics"""
+    try:
+        stats = await task_manager.get_property_statistics()
+        return stats
+        
+    except Exception as e:
+        logger.error(f"❌ Error getting property statistics: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Run server
+def run_server(host: str = "0.0.0.0", port: int = 8080, debug: bool = True):
+    """Run the FastAPI server"""
+    logger.info(f"🌐 Starting API server on {host}:{port}")
+    
+    uvicorn.run(
+        "cli.server:app",
+        host=host,
+        port=port,
+        reload=debug,
+        log_level="info"
+    )
+
+
+if __name__ == "__main__":
+    run_server()
