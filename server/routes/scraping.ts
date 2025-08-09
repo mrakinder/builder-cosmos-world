@@ -300,38 +300,57 @@ export const handleActivityLog: RequestHandler = (req, res) => {
   });
 };
 
-export const handleStopScraping: RequestHandler = (req, res) => {
-  if (scrapingStatus.status !== 'running') {
-    return res.status(400).json({ 
-      error: 'Парсинг не запущено', 
-      status: scrapingStatus.status 
+export const handleStopScraping: RequestHandler = async (req, res) => {
+  try {
+    // Import Botasaurus integration
+    const { botasaurusIntegration } = await import('../integrations/botasaurus-integration');
+
+    if (!botasaurusIntegration.isRunning()) {
+      return res.status(400).json({
+        error: 'Botasaurus парсинг не запущено',
+        status: scrapingStatus.status
+      });
+    }
+
+    // Stop real Botasaurus scraping
+    botasaurusIntegration.stopScraping();
+
+    // Save current position before stopping
+    scrapingStatus.lastStoppedPage = scrapingStatus.currentPage;
+    scrapingStatus.status = 'idle';
+
+    // Update database with stopped state
+    try {
+      dbOperations.updateScrapingState.run(
+        scrapingStatus.currentPage,
+        scrapingStatus.scrapingPosition?.lastUrl || '',
+        scrapingStatus.scrapingPosition?.lastProcessedId || '',
+        scrapingStatus.totalItems,
+        'idle'
+      );
+    } catch (error) {
+      console.error('Failed to update scraping state on stop:', error);
+    }
+
+    addActivity(`⏹️ Botasaurus парсинг зупинено на сторінці ${scrapingStatus.currentPage}. Позицію збережено.`);
+
+    res.json({
+      success: true,
+      message: 'Botasaurus парсинг зупинено',
+      status: 'idle',
+      stoppedAt: scrapingStatus.lastStoppedPage
+    });
+
+  } catch (error) {
+    console.error('Error stopping Botasaurus scraping:', error);
+    addActivity(`❌ Помилка зупинки Botasaurus: ${error.message}`);
+
+    res.status(500).json({
+      success: false,
+      error: `Помилка зупинки: ${error.message}`,
+      status: 'error'
     });
   }
-
-  // Save current position before stopping
-  scrapingStatus.lastStoppedPage = scrapingStatus.currentPage;
-  scrapingStatus.status = 'idle';
-  
-  // Update database with stopped state
-  try {
-    dbOperations.updateScrapingState.run(
-      scrapingStatus.currentPage,
-      scrapingStatus.scrapingPosition?.lastUrl || '',
-      scrapingStatus.scrapingPosition?.lastProcessedId || '',
-      scrapingStatus.totalItems,
-      'idle'
-    );
-  } catch (error) {
-    console.error('Failed to update scraping state on stop:', error);
-  }
-  
-  addActivity(`Парсинг зупинено на сторінці ${scrapingStatus.currentPage}. Позицію збережено.`);
-  
-  res.json({ 
-    message: 'Парсинг зупинено', 
-    status: 'idle',
-    stoppedAt: scrapingStatus.lastStoppedPage
-  });
 };
 
 // Get all properties
@@ -397,7 +416,7 @@ export const handleAddStreet: RequestHandler = (req, res) => {
   
   if (!street || !district) {
     return res.status(400).json({
-      error: 'Потрібні назва вулиці та район'
+      error: 'Потрібні назва вулиці та рай��н'
     });
   }
 
