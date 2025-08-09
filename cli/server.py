@@ -120,6 +120,7 @@ async def health_check():
 
 # Module 1: Botasaurus Scraper Endpoints
 @app.post("/scraper/start")
+@app.post("/api/scraper/start")  # alias для проксі з префіксом
 async def start_scraping(request: ScrapingRequest, background_tasks: BackgroundTasks):
     """Start Botasaurus OLX scraping - GUARANTEED JSON-only response, never empty body"""
 
@@ -196,6 +197,7 @@ async def start_scraping(request: ScrapingRequest, background_tasks: BackgroundT
 
 
 @app.post("/scraper/stop")
+@app.post("/api/scraper/stop")  # alias для проксі з префіксом
 async def stop_scraping():
     """Stop current scraping task - returns JSON-only response"""
     try:
@@ -673,6 +675,16 @@ async def events_stream_options():
 def run_server(host: str = "0.0.0.0", port: int = 8080, debug: bool = True):
     """Run the FastAPI server"""
     logger.info(f"🌐 Starting API server on {host}:{port}")
+
+    # LOG ALL ROUTES for debugging 404 issues
+    logger.info("📍 AVAILABLE ROUTES:")
+    for route in app.routes:
+        try:
+            if hasattr(route, 'methods') and hasattr(route, 'path'):
+                methods = ','.join(route.methods) if route.methods else 'N/A'
+                logger.info(f"   {methods} {route.path}")
+        except Exception as e:
+            logger.warning(f"   Could not log route: {e}")
 
     uvicorn.run(
         "cli.server:app",
