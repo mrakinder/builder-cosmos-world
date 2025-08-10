@@ -1,60 +1,47 @@
+[app]
 app = "glow-nest-api"
 primary_region = "fra"
 
 [build]
-  dockerfile = "Dockerfile.api"
+dockerfile = "Dockerfile.api"
 
 [env]
-  PYTHONUNBUFFERED = "1"
-  PYTHONPATH = "/app"
+PYTHONUNBUFFERED = "1"
+PYTHONPATH = "/app"
 
-# HTTP service configuration
+[processes]
+app = "uvicorn cli.server:app --host 0.0.0.0 --port 8080"
+
 [[services]]
-  internal_port = 8080
-  protocol = "tcp"
-  auto_stop_machines = true
-  auto_start_machines = true
-  min_machines_running = 0
+internal_port = 8080
+protocol = "tcp"
+auto_stop_machines = true
+auto_start_machines = true
+min_machines_running = 0
 
   [[services.ports]]
-    handlers = ["http"]
-    port = 80
+  handlers = ["http"]
+  port = 80
 
   [[services.ports]]
-    handlers = ["tls", "http"]
-    port = 443
+  handlers = ["tls", "http"]
+  port = 443
 
   [services.concurrency]
-    hard_limit = 50
-    soft_limit = 25
-    type = "connections"
+hard_limit = 50
+soft_limit = 25
+type = "connections"
 
   # Health check configuration
   [[services.http_checks]]
-    interval = "15s"
-    timeout = "5s"
-    method = "get"
-    path = "/health"
-    protocol = "http"
-    tls_skip_verify = false
-    headers = {}
+  interval = "15s"
+  timeout = "2s"
+  method = "get"
+  path = "/health"
+  protocol = "http"
+  tls_skip_verify = false
+  headers = {}
 
-  # TCP health check backup
-  [[services.tcp_checks]]
-    interval = "15s"
-    timeout = "2s"
-    port = 8080
-
-# Volume for SQLite database persistence
-[[mounts]]
-  source = "glow_nest_data"
-  destination = "/app/data"
-
-# Machine configuration
 [mounts]
-  source = "glow_nest_data"
-  destination = "/app"
-
-# Process configuration
-[processes]
-  web = "uvicorn cli.server:app --host 0.0.0.0 --port 8080"
+source = "glow_nest_data"
+destination = "/data"
