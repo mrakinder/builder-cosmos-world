@@ -24,7 +24,13 @@ interface StatisticsData {
   owner_percentage: number;
   districts: { [key: string]: number };
   price_ranges: { [key: string]: number };
-  monthly_data: Array<{ month: string; count: number; avg_price: number }>;
+  monthly_data: Array<{
+    month: string;
+    count: number;
+    avg_price: number;
+    date?: string;
+    price_per_sqm?: number;
+  }>;
   top_streets: Array<{ street: string; count: number; avg_price: number }>;
 }
 
