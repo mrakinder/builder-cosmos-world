@@ -1,5 +1,6 @@
 import { RequestHandler } from "express";
 import { initializeDatabase, dbOperations } from '../database';
+import { API_CONFIG, safeFetch, getScraperStartUrl, buildApiUrl, logApiRequest, logApiResponse, handleApiError } from '../../shared/config';
 
 // Safe JSON parsing function to prevent "Unexpected end of JSON input" errors
 async function safeJsonParse(response: Response): Promise<{ok: boolean, data?: any, error?: string, status: number}> {
