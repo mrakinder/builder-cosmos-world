@@ -60,7 +60,7 @@ const loadRecentActivities = () => {
 
     if (activityLog.length === 0) {
       addActivity("Система запущена");
-      addActivity("База даних ініціалізована");
+      addActivity("База дан��х ініціалізована");
       addActivity("API готове до роботи");
     }
   } catch (error) {
@@ -140,6 +140,32 @@ export const handleStartScraping: RequestHandler = async (req, res) => {
     addActivity(`📦 Request body: ${JSON.stringify(requestBody)}`);
     addActivity(`🔧 Using centralized API config: ${API_CONFIG.BASE_URL}`);
     addActivity(`⏱️ Timeout: ${API_CONFIG.TIMEOUT}ms`);
+
+    // HEALTH-CHECK GATE: Перед стартом скрапера перевіряємо що API живе
+    addActivity('🏥 Pre-flight health check...');
+    const healthCheck = await safeFetch(`${API_CONFIG.BASE_URL}/health`, {
+      method: 'GET'
+    });
+
+    if (!healthCheck.ok || healthCheck.status !== 200) {
+      const errorMsg = `API не доступний (health check failed): ${healthCheck.error}`;
+      addActivity(`❌ ${errorMsg}`);
+      addActivity('💡 Рішення: Натисніть "Deploy Backend" або перевірте https://glow-nest-api.fly.dev/health');
+
+      return res.status(502).json({
+        success: false,
+        error: 'Python API is not reachable (health check failed)',
+        details: {
+          health_status: healthCheck.status,
+          health_error: healthCheck.error,
+          api_url: API_CONFIG.BASE_URL,
+          suggestion: 'Deploy backend first or check API connectivity'
+        },
+        status: 'error'
+      });
+    }
+
+    addActivity(`✅ Health check passed: ${healthCheck.data?.status || 'healthy'}`);
 
     // Use safeFetch for comprehensive error handling
     const fetchResult = await safeFetch(requestUrl, {
@@ -537,7 +563,7 @@ export const handleAddStreet: RequestHandler = (req, res) => {
 
   if (!street || !district) {
     return res.status(400).json({
-      error: "Потрібні назва вулиці та р��й��н",
+      error: "Потрібні назва вулиці та рай��н",
     });
   }
 
