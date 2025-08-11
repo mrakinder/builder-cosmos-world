@@ -237,6 +237,10 @@ export default function Admin() {
       if (pythonScraperSSE) {
         pythonScraperSSE.close();
       }
+      if (mlProgressSSE) {
+        mlProgressSSE.close();
+      }
+      addLogEntry('🔌 SSE connections closed');
     };
   }, []);
 
@@ -310,7 +314,7 @@ export default function Admin() {
           clearInterval(progressInterval);
           loadStats();
         } else if (data.status === "error") {
-          addLogEntry('❌ Botasaurus парс��нг завершилось з помилкою');
+          addLogEntry('❌ Botasaurus парсинг завершилось з помилкою');
           setScraperStatus("failed");
           clearInterval(progressInterval);
         } else if (data.status === "running") {
@@ -388,7 +392,7 @@ export default function Admin() {
         const sampleLogs = [
           `[${currentTime}] Система запущена`,
           `[${currentTime}] База даних ініціал��зована`,
-          `[${currentTime}] API готове до роботи`,
+          `[${currentTime}] API гот��ве до роботи`,
           `[${currentTime}] Нова система з 5 модулями активована`,
           `[${currentTime}] Botasaurus v4.0.10+ готовий ��о парсингу`
         ];
@@ -511,7 +515,7 @@ export default function Admin() {
       });
       
       if (response.ok) {
-        alert('Тестове оголошен��я додано!');
+        alert('Тестове оголошення додано!');
         loadStats();
       }
     } catch (error) {
@@ -883,7 +887,7 @@ export default function Admin() {
                     Prophet Прогнозування
                   </CardTitle>
                   <CardDescription>
-                    Прогноз цінових трендів на 6 місяців по районах
+                    Прогноз цінов��х трендів на 6 місяців по районах
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -1081,7 +1085,7 @@ export default function Admin() {
                 Спаршені оголошення ({properties.length})
               </CardTitle>
               <CardDescription>
-                ��ерегляд усіх зібраних оголошень �� OLX
+                ��ерегляд усіх зібраних оголошень з OLX
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -1269,7 +1273,7 @@ export default function Admin() {
                         }
                       } catch (error) {
                         console.error('Scraper error:', error);
-                        addLogEntry('❌ Критична помилка запуску Botasaurus');
+                        addLogEntry('�� Критична помилка запуску Botasaurus');
                         setScraperStatus("failed");
                         alert('❌ Поми��ка запуску Botasaurus');
                       }
@@ -1340,7 +1344,7 @@ export default function Admin() {
                         console.error('Training error:', error);
                         addLogEntry('❌ Критична помилка запуску LightAutoML');
                         setMLTrainingStatus("failed");
-                        alert('❌ По��илка запуску навчання');
+                        alert('❌ По��илка запуску нав��ання');
                       }
                     }}
                   >
