@@ -105,11 +105,12 @@ export default function Admin() {
       console.error('SSE connection error:', error);
     };
 
-    // ADDITION: Connect to Python backend SSE for real-time scraper progress
+    // Connect to Python backend SSE for real-time scraper progress
     let pythonScraperSSE = null;
     const connectToPythonScraperSSE = () => {
-      const pythonBackendUrl = 'http://localhost:8080';
-      pythonScraperSSE = new EventSource(`${pythonBackendUrl}/scraper/progress/stream`);
+      const progressUrl = getProgressStreamUrl();
+      addLogEntry(`🔗 Connecting to scraper progress: ${progressUrl}`);
+      pythonScraperSSE = new EventSource(progressUrl);
 
       pythonScraperSSE.onmessage = (event) => {
         try {
@@ -437,7 +438,7 @@ export default function Admin() {
       area: 60,
       floor: 3,
       district: "Центр",
-      description: "Тестовий опис для налагодження",
+      description: "Тестов��й опис для налагодження",
       isOwner: true,
       url: "manual_entry",
       olx_id: `manual_${Date.now()}`
@@ -917,7 +918,7 @@ export default function Admin() {
                   </div>
 
                   <div className="p-3 bg-orange-50 rounded-lg text-sm">
-                    <p><strong>Функції:</strong> ML прогноз, схожі об'єкти, аналіз</p>
+                    <p><strong>Функції:</strong> ML прогноз, схожі об'єкти, ана��із</p>
                     <p><strong>Відгук:</strong> ≤1.5 с��к на запит</p>
                     <p><strong>Статус:</strong> {mlModuleStatus.streamlit_running ? '✅ З��пущено' : '⏹️ Зу��инено'}</p>
                   </div>
@@ -943,7 +944,7 @@ export default function Admin() {
                         const response = await fetch('/api/superset/status');
                         const data = await response.json();
                         if (data.running) {
-                          alert(`✅ Superset активний!\nURL: ${data.url}\n��ашборди: 4`);
+                          alert(`✅ Superset ак��ивний!\nURL: ${data.url}\n��ашборди: 4`);
                         } else {
                           alert('⏳ Superset не запущений\nЗапустіть через CLI: python property_monitor_cli.py superset start');
                         }
@@ -1035,7 +1036,7 @@ export default function Admin() {
                             <h4 className="font-medium text-slate-900 mb-1">{property.title}</h4>
                             <p className="text-sm text-slate-600">{property.district}</p>
                             <p className="text-xs text-slate-500 mt-1">
-                              {property.isOwner ? '👤 ��ласник' : '🏢 Агентство'}
+                              {property.isOwner ? '👤 Власник' : '🏢 Агентство'}
                             </p>
                           </div>
                           <div className="text-sm">
@@ -1178,7 +1179,7 @@ export default function Admin() {
                                   }
 
                                   if (sseData.status === 'completed') {
-                                    addLogEntry('✅ Botasaurus парсинг за��ершено через Python backend!');
+                                    addLogEntry('✅ Botasaurus парсинг за����ершено через Python backend!');
                                     pythonScraperSSE.close();
                                     loadStats();
                                   } else if (sseData.status === 'error') {
@@ -1351,7 +1352,7 @@ export default function Admin() {
                           alert('⏹�� Streamlit зупин��но');
                           loadMLModuleStatus();
                         } catch (error) {
-                          addLogEntry('��� Помилка зупи��ки Streamlit');
+                          addLogEntry('❌ Помилка зупи��ки Streamlit');
                           alert('❌ Помилка зупинки');
                         }
                       }}
