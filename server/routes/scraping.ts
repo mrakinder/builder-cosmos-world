@@ -125,6 +125,7 @@ export const handleStartScraping: RequestHandler = async (req, res) => {
     addActivity(`🎯 Цільовий регіон: Івано-Франківськ, валюта: USD`);
 
     // Use centralized API configuration
+    const pythonBackendUrl = API_CONFIG.BASE_URL;
     const requestUrl = getScraperStartUrl();
 
     // Prepare request body with validation
@@ -536,7 +537,7 @@ export const handleAddStreet: RequestHandler = (req, res) => {
 
   if (!street || !district) {
     return res.status(400).json({
-      error: "Потрібні назва вулиці та рай��н",
+      error: "Потрібні назва вулиці та р��й��н",
     });
   }
 
