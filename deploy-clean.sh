@@ -6,6 +6,8 @@ set -euo pipefail
 export FLY_NO_LAUNCH=1
 export FLY_NO_DEPLOY_LOGS=1
 export FLY_NO_BUILDER_CACHE=1
+export FLY_FORCE_TOML=1
+export FLY_DISABLE_LAUNCH=1
 
 TARGET=${1:-frontend}
 
