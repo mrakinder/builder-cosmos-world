@@ -204,8 +204,8 @@ async function runAcceptanceTest(): Promise<void> {
   }
 }
 
-// Auto-run if called directly
-if (require.main === module) {
+// Auto-run if called directly (ES module compatible)
+if (import.meta.url === `file://${process.argv[1]}`) {
   runAcceptanceTest().catch((error) => {
     console.error("💥 Acceptance test crashed:", error);
     process.exit(1);
