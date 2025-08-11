@@ -325,7 +325,7 @@ export default function Admin() {
         const currentTime = new Date().toLocaleTimeString('uk-UA');
         const sampleLogs = [
           `[${currentTime}] Система запущена`,
-          `[${currentTime}] База даних ініціалізована`,
+          `[${currentTime}] База даних ініціал��зована`,
           `[${currentTime}] API готове до роботи`,
           `[${currentTime}] Нова система з 5 модулями активована`,
           `[${currentTime}] Botasaurus v4.0.10+ готовий ��о парсингу`
@@ -490,7 +490,7 @@ export default function Admin() {
       document.body.removeChild(a);
     } catch (error) {
       console.error('Export failed:', error);
-      alert('Помилка експорту');
+      alert('Помилка експо��ту');
     }
   };
 
@@ -718,6 +718,13 @@ export default function Admin() {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {/* API Diagnostics Section */}
+        {showApiDiagnostics && (
+          <div className="mb-8">
+            <ApiDiagnostics />
+          </div>
         )}
 
         {/* ML Controls Section */}
@@ -969,7 +976,7 @@ export default function Admin() {
                   Уніфіко��аний CLI Інтерфейс
                 </CardTitle>
                 <CardDescription>
-                  Командний рядок для управління всіма 5 модулями системи
+                  Командний рядок для управління всіма 5 модулями систе��и
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -1031,7 +1038,7 @@ export default function Admin() {
                           </div>
                           <div className="text-sm">
                             <p><span className="font-medium">Ціна:</span> ${property.price_usd?.toLocaleString()}</p>
-                            <p><span className="font-medium">Площа:</span> {property.area}м²</p>
+                            <p><span className="font-medium">Площ��:</span> {property.area}м²</p>
                             <p><span className="font-medium">Поверх:</span> {property.floor}</p>
                           </div>
                           <div className="text-xs text-slate-500">
@@ -1271,7 +1278,7 @@ export default function Admin() {
                         console.error('Training error:', error);
                         addLogEntry('❌ Критична помилка запуску LightAutoML');
                         setMLTrainingStatus("failed");
-                        alert('❌ Помилка запуску навчання');
+                        alert('❌ По��илка запуску навчання');
                       }
                     }}
                   >
