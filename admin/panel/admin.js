@@ -180,6 +180,26 @@ function startPeriodicUpdates() {
   }, 5000); // Update every 5 seconds
 }
 
+// Backend deployment
+async function deployBackend() {
+  try {
+    showButtonLoading("deployBackendBtn");
+    const response = await fetch(`${API_BASE_URL}/deploy`, { method: "POST" });
+    const result = await response.json();
+
+    if (result.success) {
+      showAlert("✅ Backend deployment started", "success");
+    } else {
+      showAlert(`❌ ${result.message || "Deployment failed"}`, "error");
+    }
+  } catch (error) {
+    console.error("Error deploying backend:", error);
+    showAlert("❌ Deployment request failed", "error");
+  } finally {
+    hideButtonLoading();
+  }
+}
+
 // Module 1: Scraper functions
 async function startScraping(listingType) {
   try {
