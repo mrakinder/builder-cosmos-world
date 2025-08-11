@@ -179,12 +179,41 @@ export const safeFetch = async (
       };
     }
   } catch (error: any) {
-    const errorInfo = handleApiError(error, `safeFetch ${method} ${url}`);
+    console.error(`🚨 safeFetch failed: ${method} ${url}`, error);
+
+    // Enhanced error details
+    const timeout = (options as any).timeout || API_CONFIG.TIMEOUT;
+    const errorDetails = {
+      name: error.name,
+      message: error.message,
+      code: error.code,
+      errno: error.errno,
+      cause: error.cause,
+      url,
+      method,
+      timeout,
+      timestamp: new Date().toISOString()
+    };
+
+    // User-friendly error messages
+    let userError = error.message || 'Unknown fetch error';
+    if (error.name === 'AbortError' || error.code === 'ABORT_ERR') {
+      userError = `Connection timeout (${timeout}ms) - server не відповідає`;
+    } else if (error.code === 'ENOTFOUND') {
+      userError = 'DNS resolution failed - домен не знайдено';
+    } else if (error.code === 'ECONNREFUSED') {
+      userError = 'Connection refused - сервер не запущений';
+    } else if (error.code === 'ECONNRESET') {
+      userError = 'Connection reset - з\'єднання перервано сервером';
+    } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      userError = 'Network error - перевірте інтернет з\'єднання';
+    }
+
     return {
       ok: false,
       status: 0,
-      error: errorInfo.error,
-      details: errorInfo.details,
+      error: userError,
+      details: errorDetails,
     };
   }
 };
