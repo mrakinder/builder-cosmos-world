@@ -25,6 +25,7 @@
 ## 🚀 Команди деплою
 
 ### Опція 1: Master скрипт
+
 ```bash
 # Тільки фронтенд
 ./deploy.sh frontend
@@ -37,6 +38,7 @@
 ```
 
 ### Опція 2: Окремі скрипти
+
 ```bash
 # Фронтенд
 CONFIG=fly.frontend.toml ./test-build-fly.sh
@@ -46,6 +48,7 @@ CONFIG=fly.api.toml ./deploy-api.sh
 ```
 
 ### Опція 3: Прямі команди
+
 ```bash
 # Фронтенд
 flyctl deploy --config fly.frontend.toml --remote-only
@@ -72,7 +75,7 @@ flyctl deploy --config fly.api.toml --remote-only
 ✅ Файли створюються в `dist/spa/`  
 ✅ Немає помилок з `./server` імпортами  
 ✅ Fly конфігурації валідні  
-✅ Немає `launch plan generate` помилок  
+✅ Немає `launch plan generate` помилок
 
 ---
 
