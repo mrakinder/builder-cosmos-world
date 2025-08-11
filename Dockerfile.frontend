@@ -21,7 +21,7 @@ FROM nginx:alpine
 # SPA nginx конфіг
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Vite зб��рка зазвичай у dist/spa
+# Vite збірка у dist/spa
 COPY --from=build /app/dist/spa /usr/share/nginx/html
 
 EXPOSE 80
