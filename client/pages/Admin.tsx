@@ -68,7 +68,7 @@ export default function Admin() {
   const [showApiDiagnostics, setShowApiDiagnostics] = useState(false);
   const [newStreet, setNewStreet] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
-  const [streetToDistrictMap, setStreetToDistrictMap] = useState({});
+  const [streetToDistrictMap, setStreetToDistrictMap] = useState<Record<string, string>>({});
   const [mlModuleStatus, setMLModuleStatus] = useState({
     botasaurus_ready: false,
     lightautoml_trained: false,

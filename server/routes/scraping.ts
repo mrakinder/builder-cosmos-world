@@ -13,6 +13,8 @@ import { safeJson } from "../../shared/safe-parser";
 
 // Note: Safe JSON parsing is now handled by the centralized safeFetch function from shared/config.ts
 
+const pythonBackendUrl = API_CONFIG.BASE_URL;
+
 // Ensure database is initialized (will be called when first route is accessed)
 const ensureDatabase = () => {
   try {

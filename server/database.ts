@@ -1,8 +1,9 @@
 import Database from 'better-sqlite3';
+import type { Database as BetterSqlite3Database } from 'better-sqlite3';
 import { join } from 'path';
 
 // Initialize SQLite database lazily
-let db: Database | null = null;
+let db: BetterSqlite3Database | null = null;
 
 const getDatabase = () => {
   if (!db) {
