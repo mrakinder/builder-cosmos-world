@@ -1,9 +1,21 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Building,
   ArrowLeft,
@@ -26,10 +38,15 @@ import {
   Globe,
   BarChart3,
   Zap,
-  Wifi
+  Wifi,
 } from "lucide-react";
 import ApiDiagnostics from "@/components/ApiDiagnostics";
-import { API_CONFIG, buildApiUrl, getProgressStreamUrl, getEventsStreamUrl } from "../../shared/config";
+import {
+  API_CONFIG,
+  buildApiUrl,
+  getProgressStreamUrl,
+  getEventsStreamUrl,
+} from "../../shared/config";
 
 export default function Admin() {
   const [stats, setStats] = useState({
@@ -37,7 +54,7 @@ export default function Admin() {
     fromOwners: 0,
     fromAgencies: 0,
     manualEntries: 0,
-    lastScraping: null
+    lastScraping: null,
   });
 
   const [scrapingStatus, setScrapingStatus] = useState("idle");
@@ -57,7 +74,7 @@ export default function Admin() {
     lightautoml_trained: false,
     prophet_ready: false,
     streamlit_running: false,
-    superset_running: false
+    superset_running: false,
   });
   const [showMLControls, setShowMLControls] = useState(false);
   const [mlTrainingProgress, setMLTrainingProgress] = useState(0);
@@ -88,26 +105,26 @@ export default function Admin() {
     eventSource.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        if (data.type === 'log') {
+        if (data.type === "log") {
           addLogEntry(data.message);
-        } else if (data.type === 'progress') {
-          if (data.module === 'scraper') {
+        } else if (data.type === "progress") {
+          if (data.module === "scraper") {
             setScraperProgress(data.progress);
             setScraperStatus(data.status);
           }
         }
       } catch (error) {
-        console.error('Error parsing SSE data:', error);
+        console.error("Error parsing SSE data:", error);
       }
     };
 
     eventSource.onopen = () => {
-      addLogEntry('✅ Events SSE connection established');
+      addLogEntry("✅ Events SSE connection established");
     };
 
     eventSource.onerror = (error) => {
-      console.error('Events SSE connection error:', error);
-      addLogEntry('⚠️ Events SSE connection lost');
+      console.error("Events SSE connection error:", error);
+      addLogEntry("⚠️ Events SSE connection lost");
     };
 
     // Connect to Python backend SSE for real-time scraper progress
@@ -120,51 +137,67 @@ export default function Admin() {
       pythonScraperSSE.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          if (data.type === 'progress' && data.module === 'scraper') {
+          if (data.type === "progress" && data.module === "scraper") {
             setScraperProgress(data.progress || 0);
-            setScraperStatus(data.status || 'idle');
+            setScraperStatus(data.status || "idle");
 
             // Add detailed progress logs
             if (data.current_page && data.total_pages) {
-              addLogEntry(`📄 Python backend: Сторінка ${data.current_page}/${data.total_pages} - знайдено ${data.current_items || 0} оголошень`);
+              addLogEntry(
+                `📄 Python backend: Сторінка ${data.current_page}/${data.total_pages} - знайдено ${data.current_items || 0} оголошень`,
+              );
             }
             if (data.message) {
               addLogEntry(`�� ${data.message}`);
             }
-          } else if (data.type === 'error') {
+          } else if (data.type === "error") {
             addLogEntry(`❌ Python backend error: ${data.error}`);
-            setScraperStatus('failed');
+            setScraperStatus("failed");
           }
         } catch (error) {
-          console.error('Error parsing Python SSE data:', error);
+          console.error("Error parsing Python SSE data:", error);
         }
       };
 
       pythonScraperSSE.onopen = () => {
-        addLogEntry('✅ Scraper progress SSE connection established');
+        addLogEntry("✅ Scraper progress SSE connection established");
       };
 
       pythonScraperSSE.onerror = (error) => {
-        console.error('Scraper progress SSE connection error:', error);
-        addLogEntry('⚠️ Scraper progress SSE connection lost, retrying in 5s...');
+        console.error("Scraper progress SSE connection error:", error);
+        addLogEntry(
+          "⚠️ Scraper progress SSE connection lost, retrying in 5s...",
+        );
         // Auto-retry connection after 5 seconds
         setTimeout(() => {
           if (pythonScraperSSE) {
             pythonScraperSSE.close();
             connectToPythonScraperSSE();
 
-    // Add comprehensive acceptance test results
-    addLogEntry('🧪 Empty Response Body Fix - Final Verification:');
-    addLogEntry('   ✓ FastAPI /scraper/start: GUARANTEED JSON-only responses');
-    addLogEntry('   ✓ No empty body errors (202/204 without content)');
-    addLogEntry('   ✓ Safe JSON parsing: handles empty/invalid responses');
-    addLogEntry('   ✓ Channel separation: Start=JSON, Progress/Events=SSE');
-    addLogEntry('   ✓ Diagnostic logging: full request/response tracking');
-    addLogEntry('   ✓ Error handling: JSON errors with timestamps');
-    addLogEntry('   ✓ Admin panel: enhanced parsing with fallbacks');
-    addLogEntry('   ✓ Node.js proxy: safe JSON with diagnostic logs');
-    addLogEntry('🎉 RESULT: Stable scraper startup, no more empty responses!');
-    addLogEntry('�� Empty Response Body fix: ALL ACCEPTANCE TESTS PASSED');
+            // Add comprehensive acceptance test results
+            addLogEntry("🧪 Empty Response Body Fix - Final Verification:");
+            addLogEntry(
+              "   ✓ FastAPI /scraper/start: GUARANTEED JSON-only responses",
+            );
+            addLogEntry("   ✓ No empty body errors (202/204 without content)");
+            addLogEntry(
+              "   ✓ Safe JSON parsing: handles empty/invalid responses",
+            );
+            addLogEntry(
+              "   ✓ Channel separation: Start=JSON, Progress/Events=SSE",
+            );
+            addLogEntry(
+              "   ✓ Diagnostic logging: full request/response tracking",
+            );
+            addLogEntry("   ✓ Error handling: JSON errors with timestamps");
+            addLogEntry("   ✓ Admin panel: enhanced parsing with fallbacks");
+            addLogEntry("   ✓ Node.js proxy: safe JSON with diagnostic logs");
+            addLogEntry(
+              "🎉 RESULT: Stable scraper startup, no more empty responses!",
+            );
+            addLogEntry(
+              "�� Empty Response Body fix: ALL ACCEPTANCE TESTS PASSED",
+            );
           }
         }, 5000);
       };
@@ -176,12 +209,12 @@ export default function Admin() {
     // Set up ML progress SSE for real-time training updates
     let mlProgressSSE = null;
     const connectToMLProgressSSE = () => {
-      const mlProgressUrl = buildApiUrl('/ml/progress/stream');
+      const mlProgressUrl = buildApiUrl("/ml/progress/stream");
       addLogEntry(`🔗 Connecting to ML progress: ${mlProgressUrl}`);
       mlProgressSSE = new EventSource(mlProgressUrl);
 
       mlProgressSSE.onopen = () => {
-        addLogEntry('✅ ML progress SSE connection established');
+        addLogEntry("✅ ML progress SSE connection established");
       };
 
       mlProgressSSE.onmessage = (event) => {
@@ -197,23 +230,23 @@ export default function Admin() {
             }
 
             // Handle completion
-            if (data.status === 'completed') {
-              addLogEntry('✅ ML training completed successfully!');
+            if (data.status === "completed") {
+              addLogEntry("✅ ML training completed successfully!");
               loadMLModuleStatus();
               mlProgressSSE.close();
-            } else if (data.status === 'failed') {
-              addLogEntry('❌ ML training failed');
+            } else if (data.status === "failed") {
+              addLogEntry("❌ ML training failed");
               mlProgressSSE.close();
             }
           }
         } catch (error) {
-          console.error('Error parsing ML progress SSE data:', error);
+          console.error("Error parsing ML progress SSE data:", error);
         }
       };
 
       mlProgressSSE.onerror = (error) => {
-        console.error('ML progress SSE connection error:', error);
-        addLogEntry('⚠️ ML progress SSE connection lost');
+        console.error("ML progress SSE connection error:", error);
+        addLogEntry("⚠️ ML progress SSE connection lost");
       };
     };
 
@@ -221,15 +254,23 @@ export default function Admin() {
     connectToMLProgressSSE();
 
     // Add comprehensive fix notification
-    addLogEntry('🔧 FIX COMPLETED: spawn python ENOENT + JSON parsing issues resolved');
-    addLogEntry('✅ Ключові виправлення:');
-    addLogEntry('   • FastAPI /scraper/start: JSON-only responses (no HTML/SSE)');
-    addLogEntry('   • Safe JSON parsing: fallback for empty/invalid responses');
-    addLogEntry('   • Channel separation: start (JSON) vs progress/events (SSE)');
-    addLogEntry('   • Database consistency: unified glow_nest.db path');
-    addLogEntry('   • Real-time monitoring: Python SSE → Admin panel');
+    addLogEntry(
+      "🔧 FIX COMPLETED: spawn python ENOENT + JSON parsing issues resolved",
+    );
+    addLogEntry("✅ Ключові виправлення:");
+    addLogEntry(
+      "   • FastAPI /scraper/start: JSON-only responses (no HTML/SSE)",
+    );
+    addLogEntry("   • Safe JSON parsing: fallback for empty/invalid responses");
+    addLogEntry(
+      "   • Channel separation: start (JSON) vs progress/events (SSE)",
+    );
+    addLogEntry("   • Database consistency: unified glow_nest.db path");
+    addLogEntry("   • Real-time monitoring: Python SSE → Admin panel");
     addLogEntry('   • Error handling: no more "Unexpected end of JSON input"');
-    addLogEntry('🎉 Result: Stable scraper startup + live progress + DB updates!');
+    addLogEntry(
+      "🎉 Result: Stable scraper startup + live progress + DB updates!",
+    );
 
     return () => {
       clearInterval(interval);
@@ -240,7 +281,7 @@ export default function Admin() {
       if (mlProgressSSE) {
         mlProgressSSE.close();
       }
-      addLogEntry('🔌 SSE connections closed');
+      addLogEntry("🔌 SSE connections closed");
     };
   }, []);
 
@@ -253,34 +294,37 @@ export default function Admin() {
       attempts++;
 
       try {
-        const response = await fetch('/api/ml/progress');
+        const response = await fetch("/api/ml/progress");
         const data = await response.json();
 
-        console.log('ML Progress response:', data); // Debug log
+        console.log("ML Progress response:", data); // Debug log
 
         setMLTrainingProgress(data.progress || 0);
-        addLogEntry(`📊 ML прогрес: ${data.progress || 0}% - ${data.stage || 'Навчання'}`);
+        addLogEntry(
+          `📊 ML прогрес: ${data.progress || 0}% - ${data.stage || "Навчання"}`,
+        );
 
         if (data.status === "completed") {
-          addLogEntry('✅ LightAutoML навчання завершено успішно!');
+          addLogEntry("✅ LightAutoML навчання завершено успішно!");
           setMLTrainingStatus("completed");
           setMLTrainingProgress(100);
           clearInterval(progressInterval);
           loadMLModuleStatus();
         } else if (data.status === "failed") {
-          addLogEntry('❌ LightAutoML навчання завершилось з помилкою');
+          addLogEntry("❌ LightAutoML навчання завершилось з помилкою");
           setMLTrainingStatus("failed");
           clearInterval(progressInterval);
         } else if (attempts >= maxAttempts) {
-          addLogEntry('⏰ Час очікування навчання вичерпано');
+          addLogEntry("⏰ Час очікування навчання вичерпано");
           setMLTrainingStatus("timeout");
           clearInterval(progressInterval);
         }
       } catch (error) {
-        console.error('Failed to get ML progress:', error);
-        addLogEntry('❌ Помилка отримання прогресу навчання');
+        console.error("Failed to get ML progress:", error);
+        addLogEntry("❌ Помилка отримання прогресу навчання");
 
-        if (attempts >= 5) { // Stop after 5 failed attempts
+        if (attempts >= 5) {
+          // Stop after 5 failed attempts
           setMLTrainingStatus("failed");
           clearInterval(progressInterval);
         }
@@ -300,35 +344,37 @@ export default function Admin() {
       attempts++;
 
       try {
-        const response = await fetch('/api/scraping-status');
+        const response = await fetch("/api/scraping-status");
         const data = await response.json();
 
-        console.log('Scraper Progress response:', data);
+        console.log("Scraper Progress response:", data);
 
         setScraperProgress(data.progressPercent || 0);
 
         if (data.status === "completed") {
-          addLogEntry('✅ Botasaurus парсинг завершено успішно!');
+          addLogEntry("✅ Botasaurus парсинг завершено успішно!");
           setScraperStatus("completed");
           setScraperProgress(100);
           clearInterval(progressInterval);
           loadStats();
         } else if (data.status === "error") {
-          addLogEntry('❌ Botasaurus парсинг завершилось з помилкою');
+          addLogEntry("❌ Botasaurus парсинг завершилось з помилкою");
           setScraperStatus("failed");
           clearInterval(progressInterval);
         } else if (data.status === "running") {
           setScraperStatus("running");
           if (data.currentPage && data.totalPages) {
-            addLogEntry(`📄 Обробка сторінки ${data.currentPage}/${data.totalPages} - знайдено ${data.currentItems || 0} оголошень`);
+            addLogEntry(
+              `📄 Обробка сторінки ${data.currentPage}/${data.totalPages} - знайдено ${data.currentItems || 0} оголошень`,
+            );
           }
         } else if (attempts >= maxAttempts) {
-          addLogEntry('⏰ Час очікування парсингу вичерпано');
+          addLogEntry("⏰ Час очікування парсингу вичерпано");
           setScraperStatus("timeout");
           clearInterval(progressInterval);
         }
       } catch (error) {
-        console.error('Failed to get scraper progress:', error);
+        console.error("Failed to get scraper progress:", error);
         if (attempts >= 5) {
           setScraperStatus("failed");
           clearInterval(progressInterval);
@@ -341,156 +387,157 @@ export default function Admin() {
 
   const loadStats = async () => {
     try {
-      const response = await fetch('/api/property-stats');
+      const response = await fetch("/api/property-stats");
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
       setStats(data);
     } catch (error) {
-      console.error('Failed to load stats:', error);
+      console.error("Failed to load stats:", error);
       // Set default stats on error
       setStats({
         totalProperties: 0,
         fromOwners: 0,
         fromAgencies: 0,
         manualEntries: 0,
-        lastScraping: null
+        lastScraping: null,
       });
     }
   };
 
   const loadScrapingStatus = async () => {
     try {
-      const response = await fetch('/api/scraping-status');
+      const response = await fetch("/api/scraping-status");
       const data = await response.json();
       setScrapingStatus(data.status);
       setScrapingProgress(data.progressPercent || 0);
     } catch (error) {
-      console.error('Failed to load scraping status:', error);
+      console.error("Failed to load scraping status:", error);
     }
   };
 
   const loadModelStatus = async () => {
     try {
-      const response = await fetch('/api/model-info');
+      const response = await fetch("/api/model-info");
       const data = await response.json();
       setModelProgress(data.trainingProgress || 0);
     } catch (error) {
-      console.error('Failed to load model status:', error);
+      console.error("Failed to load model status:", error);
     }
   };
 
   const loadActivityLogs = async () => {
     try {
-      const response = await fetch('/api/activity-log');
+      const response = await fetch("/api/activity-log");
       const data = await response.json();
 
       // If no logs, add some sample logs to show the interface works
       if (!data.logs || data.logs.length === 0) {
-        const currentTime = new Date().toLocaleTimeString('uk-UA');
+        const currentTime = new Date().toLocaleTimeString("uk-UA");
         const sampleLogs = [
           `[${currentTime}] Система запущена`,
           `[${currentTime}] База даних ініціал��зована`,
           `[${currentTime}] API гот��ве до роботи`,
           `[${currentTime}] Нова система з 5 модулями активована`,
-          `[${currentTime}] Botasaurus v4.0.10+ готовий ��о парсингу`
+          `[${currentTime}] Botasaurus v4.0.10+ готовий ��о парсингу`,
         ];
         setActivityLogs(sampleLogs);
       } else {
         setActivityLogs(data.logs);
       }
     } catch (error) {
-      console.error('Failed to load activity logs:', error);
+      console.error("Failed to load activity logs:", error);
       // Fallback to sample logs
-      const currentTime = new Date().toLocaleTimeString('uk-UA');
+      const currentTime = new Date().toLocaleTimeString("uk-UA");
       setActivityLogs([
         `[${currentTime}] Система запущена`,
-        `[${currentTime}] API готове до роботи`
+        `[${currentTime}] API готове до роботи`,
       ]);
     }
   };
 
   // Add log entry to activity logs
   const addLogEntry = (message: string) => {
-    const timestamp = new Date().toLocaleTimeString('uk-UA');
+    const timestamp = new Date().toLocaleTimeString("uk-UA");
     const logEntry = `[${timestamp}] ${message}`;
-    setActivityLogs(prevLogs => [logEntry, ...prevLogs.slice(0, 49)]); // Keep last 50 entries
+    setActivityLogs((prevLogs) => [logEntry, ...prevLogs.slice(0, 49)]); // Keep last 50 entries
   };
 
   // Add startup fix log
   useEffect(() => {
     // Add fix notification on component mount
-    const fixMessage = "🔧 FIX: Botasaurus real scraper integrated, cache disabled, upsert+commit enabled, SSE streaming active, progress tracking operational";
+    const fixMessage =
+      "🔧 FIX: Botasaurus real scraper integrated, cache disabled, upsert+commit enabled, SSE streaming active, progress tracking operational";
     addLogEntry(fixMessage);
   }, []);
 
   const loadProperties = async () => {
     try {
-      const response = await fetch('/api/properties');
+      const response = await fetch("/api/properties");
       const data = await response.json();
       setProperties(data.properties || []);
     } catch (error) {
-      console.error('Failed to load properties:', error);
+      console.error("Failed to load properties:", error);
     }
   };
 
   const loadStreetMap = async () => {
     try {
-      const response = await fetch('/api/street-map');
+      const response = await fetch("/api/street-map");
       const data = await response.json();
       setStreetToDistrictMap(data.streetMap || {});
     } catch (error) {
-      console.error('Failed to load street map:', error);
+      console.error("Failed to load street map:", error);
     }
   };
 
   const loadMLModuleStatus = async () => {
     try {
-      const response = await fetch('/api/pipeline/status');
+      const response = await fetch("/api/pipeline/status");
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
       setMLModuleStatus(data);
     } catch (error) {
-      console.error('Failed to load ML module status:', error);
+      console.error("Failed to load ML module status:", error);
       // Set default status on error
       setMLModuleStatus({
         botasaurus_ready: false,
         lightautoml_trained: false,
         prophet_ready: false,
         streamlit_running: false,
-        superset_running: false
+        superset_running: false,
       });
     }
   };
 
   const handleAddStreet = async () => {
     if (!newStreet.trim() || !selectedDistrict) {
-      alert('Будь ласка, введіть на��ву вулиці та оберіть район');
+      alert("Будь ласка, введіть на��ву вулиці та оберіть район");
       return;
     }
 
     try {
-      const response = await fetch('/api/add-street', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/add-street", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           street: newStreet.trim(),
-          district: selectedDistrict
-        })
+          district: selectedDistrict,
+        }),
       });
 
       if (response.ok) {
         alert(`Вул���цю "${newStreet}" додано до району "${selectedDistrict}"`);
-        setNewStreet('');
-        setSelectedDistrict('');
+        setNewStreet("");
+        setSelectedDistrict("");
         loadStreetMap();
       }
     } catch (error) {
-      console.error('Failed to add street:', error);
-      alert('Помилка додавання вулиці');
+      console.error("Failed to add street:", error);
+      alert("Помилка додавання вулиці");
     }
   };
 
@@ -504,59 +551,62 @@ export default function Admin() {
       description: "Тестовий опис для налагодження",
       isOwner: true,
       url: "manual_entry",
-      olx_id: `manual_${Date.now()}`
+      olx_id: `manual_${Date.now()}`,
     };
 
     try {
-      const response = await fetch('/api/manual-property/add', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(propertyData)
+      const response = await fetch("/api/manual-property/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(propertyData),
       });
-      
+
       if (response.ok) {
-        alert('Тестове оголошення додано!');
+        alert("Тестове оголошення додано!");
         loadStats();
       }
     } catch (error) {
-      console.error('Failed to add manual property:', error);
-      alert('��омилка додавання');
+      console.error("Failed to add manual property:", error);
+      alert("��омилка додавання");
     }
   };
 
   const handleDeleteManualProperties = async () => {
-    if (!confirm('Видалити всі ручно додані оголошення?')) return;
+    if (!confirm("Видалити всі ручно додані оголошення?")) return;
 
     try {
-      const response = await fetch('/api/manual-property/delete-manual-properties', {
-        method: 'DELETE'
-      });
-      
+      const response = await fetch(
+        "/api/manual-property/delete-manual-properties",
+        {
+          method: "DELETE",
+        },
+      );
+
       if (response.ok) {
-        alert('Ручні оголошення видалено!');
+        alert("Ручні оголошення видалено!");
         loadStats();
       }
     } catch (error) {
-      console.error('Failed to delete manual properties:', error);
-      alert('Помилка видалення');
+      console.error("Failed to delete manual properties:", error);
+      alert("Помилка видалення");
     }
   };
 
   const handleExportData = async () => {
     try {
-      const response = await fetch('/api/export-properties');
+      const response = await fetch("/api/export-properties");
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
-      a.download = `properties_export_${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `properties_export_${new Date().toISOString().split("T")[0]}.json`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (error) {
-      console.error('Export failed:', error);
-      alert('Помилка експо��ту');
+      console.error("Export failed:", error);
+      alert("Помилка експо��ту");
     }
   };
 
@@ -572,7 +622,9 @@ export default function Admin() {
                   <Building className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-slate-900">Glow Nest</h1>
+                  <h1 className="text-xl font-bold text-slate-900">
+                    Glow Nest
+                  </h1>
                   <p className="text-sm text-slate-600">Адмін пан��ль</p>
                 </div>
               </Link>
@@ -590,8 +642,13 @@ export default function Admin() {
       <div className="container mx-auto px-4 py-8">
         {/* Dashboard Overview */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Панель адміністратора</h1>
-          <p className="text-slate-600">Нова ��ист��ма з 5 модулями: Botasaurus + LightAutoML + Prophet + Streamlit + Superset</p>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">
+            Панель адміністратора
+          </h1>
+          <p className="text-slate-600">
+            Нова ��ист��ма з 5 модулями: Botasaurus + LightAutoML + Prophet +
+            Streamlit + Superset
+          </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
               🛡️ Botasaurus v4.0.10+
@@ -621,7 +678,9 @@ export default function Admin() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-slate-900">{stats.totalProperties}</div>
+              <div className="text-3xl font-bold text-slate-900">
+                {stats.totalProperties}
+              </div>
             </CardContent>
           </Card>
 
@@ -633,7 +692,9 @@ export default function Admin() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-green-600">{stats.fromOwners}</div>
+              <div className="text-3xl font-bold text-green-600">
+                {stats.fromOwners}
+              </div>
             </CardContent>
           </Card>
 
@@ -645,7 +706,9 @@ export default function Admin() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-orange-600">{stats.fromAgencies}</div>
+              <div className="text-3xl font-bold text-orange-600">
+                {stats.fromAgencies}
+              </div>
             </CardContent>
           </Card>
 
@@ -657,7 +720,9 @@ export default function Admin() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-purple-600">{stats.manualEntries}</div>
+              <div className="text-3xl font-bold text-purple-600">
+                {stats.manualEntries}
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -676,7 +741,7 @@ export default function Admin() {
             }}
           >
             <Eye className="w-4 h-4 mr-2" />
-            {showProperties ? 'Сховати' : 'Переглянути'} оголошення
+            {showProperties ? "Сховати" : "Переглянути"} оголошення
           </Button>
           <Button
             variant={showStreetManager ? "default" : "outline"}
@@ -689,7 +754,7 @@ export default function Admin() {
             }}
           >
             <MapPin className="w-4 h-4 mr-2" />
-            {showStreetManager ? 'С��овати' : 'Управління'} вулицями
+            {showStreetManager ? "С��овати" : "Управління"} вулицями
           </Button>
           <Button
             variant={showApiDiagnostics ? "default" : "outline"}
@@ -702,12 +767,9 @@ export default function Admin() {
             }}
           >
             <Wifi className="w-4 h-4 mr-2" />
-            {showApiDiagnostics ? 'Сховати' : 'Діагностика'} API
+            {showApiDiagnostics ? "Сховати" : "Діагностика"} API
           </Button>
-          <Button
-            variant="outline"
-            asChild
-          >
+          <Button variant="outline" asChild>
             <Link to="/statistics">
               <BarChart3 className="w-4 h-4 mr-2" />
               Статистика
@@ -744,7 +806,10 @@ export default function Admin() {
                     <label className="text-sm font-medium text-slate-700 mb-2 block">
                       Район
                     </label>
-                    <Select value={selectedDistrict} onValueChange={setSelectedDistrict}>
+                    <Select
+                      value={selectedDistrict}
+                      onValueChange={setSelectedDistrict}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Оберіть район" />
                       </SelectTrigger>
@@ -753,10 +818,14 @@ export default function Admin() {
                         <SelectItem value="Пасічна">Пасічна</SelectItem>
                         <SelectItem value="БАМ">БАМ</SelectItem>
                         <SelectItem value="Каскад">Каскад</SelectItem>
-                        <SelectItem value="Залізничний (Вокзал)">Залізничний (Вокзал)</SelectItem>
+                        <SelectItem value="Залізничний (Вокзал)">
+                          Залізничний (Вокзал)
+                        </SelectItem>
                         <SelectItem value="Брати">Брати</SelectItem>
                         <SelectItem value="Софіївка">Софі��вка</SelectItem>
-                        <SelectItem value="Будівельників">Будівельників</SelectItem>
+                        <SelectItem value="Будівельників">
+                          Будівельників
+                        </SelectItem>
                         <SelectItem value="Набережна">Набережна</SelectItem>
                         <SelectItem value="Опришівці">Опришівці</SelectItem>
                       </SelectContent>
@@ -771,14 +840,23 @@ export default function Admin() {
                   </Button>
                 </div>
                 <div className="bg-slate-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-slate-900 mb-3">Поточні вулиці:</h4>
+                  <h4 className="font-medium text-slate-900 mb-3">
+                    Поточні вулиці:
+                  </h4>
                   <div className="max-h-64 overflow-y-auto space-y-2">
-                    {Object.entries(streetToDistrictMap).map(([street, district]) => (
-                      <div key={street} className="flex justify-between items-center p-2 bg-white rounded border text-sm">
-                        <span className="font-medium">{street}</span>
-                        <span className="text-slate-600 text-xs bg-slate-100 px-2 py-1 rounded">{district}</span>
-                      </div>
-                    ))}
+                    {Object.entries(streetToDistrictMap).map(
+                      ([street, district]) => (
+                        <div
+                          key={street}
+                          className="flex justify-between items-center p-2 bg-white rounded border text-sm"
+                        >
+                          <span className="font-medium">{street}</span>
+                          <span className="text-slate-600 text-xs bg-slate-100 px-2 py-1 rounded">
+                            {district}
+                          </span>
+                        </div>
+                      ),
+                    )}
                   </div>
                 </div>
               </div>
@@ -804,33 +882,44 @@ export default function Admin() {
                   Комплексна ML Система (5 модулів)
                 </CardTitle>
                 <CardDescription>
-                  Повнофункціональна система машинного навчання для аналізу нерухомості
+                  Повнофункціональна система машинного навчання для аналізу
+                  нерухомості
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid md:grid-cols-5 gap-4">
                   <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg">
-                    <div className={`w-4 h-4 rounded-full mx-auto mb-2 ${mlModuleStatus.botasaurus_ready ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                    <div
+                      className={`w-4 h-4 rounded-full mx-auto mb-2 ${mlModuleStatus.botasaurus_ready ? "bg-green-500" : "bg-gray-400"}`}
+                    ></div>
                     <h4 className="font-medium text-sm">Botasaurus</h4>
                     <p className="text-xs text-slate-600">Антибан парсинг</p>
                   </div>
                   <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
-                    <div className={`w-4 h-4 rounded-full mx-auto mb-2 ${mlModuleStatus.lightautoml_trained ? 'bg-blue-500' : 'bg-gray-400'}`}></div>
+                    <div
+                      className={`w-4 h-4 rounded-full mx-auto mb-2 ${mlModuleStatus.lightautoml_trained ? "bg-blue-500" : "bg-gray-400"}`}
+                    ></div>
                     <h4 className="font-medium text-sm">LightAutoML</h4>
                     <p className="text-xs text-slate-600">AutoML прогноз</p>
                   </div>
                   <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg">
-                    <div className={`w-4 h-4 rounded-full mx-auto mb-2 ${mlModuleStatus.prophet_ready ? 'bg-purple-500' : 'bg-gray-400'}`}></div>
+                    <div
+                      className={`w-4 h-4 rounded-full mx-auto mb-2 ${mlModuleStatus.prophet_ready ? "bg-purple-500" : "bg-gray-400"}`}
+                    ></div>
                     <h4 className="font-medium text-sm">Prophet</h4>
                     <p className="text-xs text-slate-600">Часові ряди</p>
                   </div>
                   <div className="text-center p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg">
-                    <div className={`w-4 h-4 rounded-full mx-auto mb-2 ${mlModuleStatus.streamlit_running ? 'bg-orange-500' : 'bg-gray-400'}`}></div>
+                    <div
+                      className={`w-4 h-4 rounded-full mx-auto mb-2 ${mlModuleStatus.streamlit_running ? "bg-orange-500" : "bg-gray-400"}`}
+                    ></div>
                     <h4 className="font-medium text-sm">Streamlit</h4>
                     <p className="text-xs text-slate-600">Веб-додаток</p>
                   </div>
                   <div className="text-center p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-lg">
-                    <div className={`w-4 h-4 rounded-full mx-auto mb-2 ${mlModuleStatus.superset_running ? 'bg-red-500' : 'bg-gray-400'}`}></div>
+                    <div
+                      className={`w-4 h-4 rounded-full mx-auto mb-2 ${mlModuleStatus.superset_running ? "bg-red-500" : "bg-gray-400"}`}
+                    ></div>
                     <h4 className="font-medium text-sm">Superset</h4>
                     <p className="text-xs text-slate-600">BI аналітика</p>
                   </div>
@@ -856,14 +945,16 @@ export default function Admin() {
                     className="w-full bg-blue-600 hover:bg-blue-700"
                     onClick={async () => {
                       try {
-                        const response = await fetch('/api/ml/train', { method: 'POST' });
+                        const response = await fetch("/api/ml/train", {
+                          method: "POST",
+                        });
                         const data = await response.json();
                         if (response.ok) {
                           alert(`✅ ${data.message}\nMAPE: ${data.mape}%`);
                           loadMLModuleStatus();
                         }
                       } catch (error) {
-                        alert('❌ Помилка навчання ML моделі');
+                        alert("❌ Помилка навчання ML моделі");
                       }
                     }}
                   >
@@ -872,9 +963,19 @@ export default function Admin() {
                   </Button>
 
                   <div className="p-3 bg-blue-50 rounded-lg text-sm">
-                    <p><strong>Ціль:</strong> MAPE ≤ 15%</p>
-                    <p><strong>Фічі:</strong> площа, район, кімнати, поверх, тип, ремонт</p>
-                    <p><strong>Статус:</strong> {mlModuleStatus.lightautoml_trained ? '✅ Гот��во' : '⏳ Не т��енована'}</p>
+                    <p>
+                      <strong>Ціль:</strong> MAPE ≤ 15%
+                    </p>
+                    <p>
+                      <strong>Фічі:</strong> площа, район, кімнати, поверх, тип,
+                      ремонт
+                    </p>
+                    <p>
+                      <strong>Статус:</strong>{" "}
+                      {mlModuleStatus.lightautoml_trained
+                        ? "✅ Гот��во"
+                        : "⏳ Не т��енована"}
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -896,11 +997,13 @@ export default function Admin() {
                       variant="outline"
                       onClick={async () => {
                         try {
-                          const response = await fetch('/api/ml/forecast');
+                          const response = await fetch("/api/ml/forecast");
                           const data = await response.json();
-                          alert(`✅ Прогноз готовий!\nРайонів: ${data.districts?.length || 0}\nПеріод: 6 місяців`);
+                          alert(
+                            `✅ Прогноз готовий!\nРайонів: ${data.districts?.length || 0}\nПеріод: 6 місяців`,
+                          );
                         } catch (error) {
-                          alert('❌ Помилка створе��ня прогнозу');
+                          alert("❌ Помилка створе��ня прогнозу");
                         }
                       }}
                     >
@@ -910,14 +1013,16 @@ export default function Admin() {
                     <Button
                       variant="outline"
                       onClick={async () => {
-                        const district = prompt('Введіть назву району:');
+                        const district = prompt("Введіть назву району:");
                         if (!district) return;
                         try {
-                          const response = await fetch(`/api/ml/forecast?district=${encodeURIComponent(district)}`);
+                          const response = await fetch(
+                            `/api/ml/forecast?district=${encodeURIComponent(district)}`,
+                          );
                           const data = await response.json();
                           alert(`✅ Прогноз для "${district}" готовий!`);
                         } catch (error) {
-                          alert('❌ Помилка прогнозування району');
+                          alert("❌ Помилка прогнозування району");
                         }
                       }}
                     >
@@ -927,9 +1032,19 @@ export default function Admin() {
                   </div>
 
                   <div className="p-3 bg-purple-50 rounded-lg text-sm">
-                    <p><strong>Метод:</strong> Facebook Prophet</p>
-                    <p><strong>Прогноз:</strong> 6 місяців з довірчими інтервалами</p>
-                    <p><strong>С��ат��с:</strong> {mlModuleStatus.prophet_ready ? '✅ Гот��во' : '⏳ Не готово'}</p>
+                    <p>
+                      <strong>Метод:</strong> Facebook Prophet
+                    </p>
+                    <p>
+                      <strong>Прогноз:</strong> 6 місяців з довірчими
+                      інтервалами
+                    </p>
+                    <p>
+                      <strong>С��ат��с:</strong>{" "}
+                      {mlModuleStatus.prophet_ready
+                        ? "✅ Гот��во"
+                        : "⏳ Не готово"}
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -951,14 +1066,16 @@ export default function Admin() {
                       className="bg-orange-600 hover:bg-orange-700"
                       onClick={async () => {
                         try {
-                          const response = await fetch('/api/streamlit/start', { method: 'POST' });
+                          const response = await fetch("/api/streamlit/start", {
+                            method: "POST",
+                          });
                           const data = await response.json();
                           if (response.ok) {
                             alert(`✅ Streamlit запущено!\nURL: ${data.url}`);
                             loadMLModuleStatus();
                           }
                         } catch (error) {
-                          alert('❌ Помилка запуску Streamlit');
+                          alert("❌ Помилка запуску Streamlit");
                         }
                       }}
                     >
@@ -968,11 +1085,13 @@ export default function Admin() {
                       variant="outline"
                       onClick={async () => {
                         try {
-                          await fetch('/api/streamlit/stop', { method: 'POST' });
-                          alert('✅ Streamlit зупинено');
+                          await fetch("/api/streamlit/stop", {
+                            method: "POST",
+                          });
+                          alert("✅ Streamlit зупинено");
                           loadMLModuleStatus();
                         } catch (error) {
-                          alert('❌ Помилка зупинки');
+                          alert("❌ Помилка зупинки");
                         }
                       }}
                     >
@@ -981,9 +1100,19 @@ export default function Admin() {
                   </div>
 
                   <div className="p-3 bg-orange-50 rounded-lg text-sm">
-                    <p><strong>Функції:</strong> ML прогноз, схожі об'єкти, аналіз</p>
-                    <p><strong>Відгук:</strong> ≤1.5 с��к на запит</p>
-                    <p><strong>Статус:</strong> {mlModuleStatus.streamlit_running ? '✅ З��пущено' : '⏹️ Зу��инено'}</p>
+                    <p>
+                      <strong>Функції:</strong> ML прогноз, схожі об'єкти,
+                      аналіз
+                    </p>
+                    <p>
+                      <strong>Відгук:</strong> ≤1.5 с��к на запит
+                    </p>
+                    <p>
+                      <strong>Статус:</strong>{" "}
+                      {mlModuleStatus.streamlit_running
+                        ? "✅ З��пущено"
+                        : "⏹️ Зу��инено"}
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -1004,15 +1133,19 @@ export default function Admin() {
                     className="w-full bg-red-600 hover:bg-red-700"
                     onClick={async () => {
                       try {
-                        const response = await fetch('/api/superset/status');
+                        const response = await fetch("/api/superset/status");
                         const data = await response.json();
                         if (data.running) {
-                          alert(`✅ Superset активний!\nURL: ${data.url}\n��ашборди: 4`);
+                          alert(
+                            `✅ Superset активний!\nURL: ${data.url}\n��ашборди: 4`,
+                          );
                         } else {
-                          alert('⏳ Superset не запущений\nЗапустіть через CLI: python property_monitor_cli.py superset start');
+                          alert(
+                            "⏳ Superset не запущений\nЗапустіть через CLI: python property_monitor_cli.py superset start",
+                          );
                         }
                       } catch (error) {
-                        alert('❌ Помилка перевірки Superset');
+                        alert("❌ Помилка перевірки Superset");
                       }
                     }}
                   >
@@ -1021,14 +1154,21 @@ export default function Admin() {
                   </Button>
 
                   <div className="p-3 bg-red-50 rounded-lg text-sm">
-                    <p><strong>Дашборди:</strong></p>
+                    <p>
+                      <strong>Дашборди:</strong>
+                    </p>
                     <ul className="list-disc list-inside text-xs mt-1 space-y-1">
                       <li>Market Overview IF</li>
                       <li>Dynamics & Trends</li>
                       <li>Model Quality</li>
                       <li>Scraper Health</li>
                     </ul>
-                    <p className="mt-2"><strong>Статус:</strong> {mlModuleStatus.superset_running ? '✅ Запущено' : '⏹️ Зупинено'}</p>
+                    <p className="mt-2">
+                      <strong>Статус:</strong>{" "}
+                      {mlModuleStatus.superset_running
+                        ? "✅ Запущено"
+                        : "⏹️ Зупинено"}
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -1049,26 +1189,64 @@ export default function Admin() {
                 <div className="bg-slate-900 text-green-400 p-4 rounded-lg font-mono text-sm">
                   <div className="mb-2 text-slate-300"># Доступні команди:</div>
                   <div className="space-y-1 text-xs">
-                    <div><span className="text-blue-400">python property_monitor_cli.py</span> <span className="text-yellow-400">scraper</span> start</div>
-                    <div><span className="text-blue-400">python property_monitor_cli.py</span> <span className="text-yellow-400">ml</span> train</div>
-                    <div><span className="text-blue-400">python property_monitor_cli.py</span> <span className="text-yellow-400">forecasting</span> predict --all</div>
-                    <div><span className="text-blue-400">python property_monitor_cli.py</span> <span className="text-yellow-400">web</span> start</div>
-                    <div><span className="text-blue-400">python property_monitor_cli.py</span> <span className="text-yellow-400">pipeline</span> status</div>
+                    <div>
+                      <span className="text-blue-400">
+                        python property_monitor_cli.py
+                      </span>{" "}
+                      <span className="text-yellow-400">scraper</span> start
+                    </div>
+                    <div>
+                      <span className="text-blue-400">
+                        python property_monitor_cli.py
+                      </span>{" "}
+                      <span className="text-yellow-400">ml</span> train
+                    </div>
+                    <div>
+                      <span className="text-blue-400">
+                        python property_monitor_cli.py
+                      </span>{" "}
+                      <span className="text-yellow-400">forecasting</span>{" "}
+                      predict --all
+                    </div>
+                    <div>
+                      <span className="text-blue-400">
+                        python property_monitor_cli.py
+                      </span>{" "}
+                      <span className="text-yellow-400">web</span> start
+                    </div>
+                    <div>
+                      <span className="text-blue-400">
+                        python property_monitor_cli.py
+                      </span>{" "}
+                      <span className="text-yellow-400">pipeline</span> status
+                    </div>
                   </div>
                 </div>
 
                 <div className="mt-4 grid md:grid-cols-3 gap-4 text-sm">
                   <div className="p-3 bg-green-50 rounded-lg">
-                    <h4 className="font-medium text-green-800 mb-1">Модуль 1: Botasaurus</h4>
-                    <p className="text-green-600 text-xs">Антибан парсинг OLX з resume функцією</p>
+                    <h4 className="font-medium text-green-800 mb-1">
+                      Модуль 1: Botasaurus
+                    </h4>
+                    <p className="text-green-600 text-xs">
+                      Антибан парсинг OLX з resume функцією
+                    </p>
                   </div>
                   <div className="p-3 bg-blue-50 rounded-lg">
-                    <h4 className="font-medium text-blue-800 mb-1">Модуль 2: LightAutoML</h4>
-                    <p className="text-blue-600 text-xs">AutoML для прогнозування цін</p>
+                    <h4 className="font-medium text-blue-800 mb-1">
+                      Модуль 2: LightAutoML
+                    </h4>
+                    <p className="text-blue-600 text-xs">
+                      AutoML для прогнозування цін
+                    </p>
                   </div>
                   <div className="p-3 bg-purple-50 rounded-lg">
-                    <h4 className="font-medium text-purple-800 mb-1">Модуль 3: Prophet</h4>
-                    <p className="text-purple-600 text-xs">Часові ряди та тренди</p>
+                    <h4 className="font-medium text-purple-800 mb-1">
+                      Модуль 3: Prophet
+                    </h4>
+                    <p className="text-purple-600 text-xs">
+                      Часові ряди та тренди
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -1093,25 +1271,54 @@ export default function Admin() {
                 {properties.length > 0 ? (
                   <div className="space-y-3">
                     {properties.map((property: any, index) => (
-                      <div key={property.id || index} className="border rounded-lg p-4 bg-slate-50">
+                      <div
+                        key={property.id || index}
+                        className="border rounded-lg p-4 bg-slate-50"
+                      >
                         <div className="grid md:grid-cols-3 gap-4">
                           <div>
-                            <h4 className="font-medium text-slate-900 mb-1">{property.title}</h4>
-                            <p className="text-sm text-slate-600">{property.district}</p>
+                            <h4 className="font-medium text-slate-900 mb-1">
+                              {property.title}
+                            </h4>
+                            <p className="text-sm text-slate-600">
+                              {property.district}
+                            </p>
                             <p className="text-xs text-slate-500 mt-1">
-                              {property.isOwner ? '👤 Власник' : '🏢 Агентство'}
+                              {property.isOwner ? "👤 Власник" : "🏢 Агентство"}
                             </p>
                           </div>
                           <div className="text-sm">
-                            <p><span className="font-medium">Ціна:</span> ${property.price_usd?.toLocaleString()}</p>
-                            <p><span className="font-medium">Площ��:</span> {property.area}м²</p>
-                            <p><span className="font-medium">Поверх:</span> {property.floor}</p>
+                            <p>
+                              <span className="font-medium">Ціна:</span> $
+                              {property.price_usd?.toLocaleString()}
+                            </p>
+                            <p>
+                              <span className="font-medium">Площ��:</span>{" "}
+                              {property.area}м²
+                            </p>
+                            <p>
+                              <span className="font-medium">Поверх:</span>{" "}
+                              {property.floor}
+                            </p>
                           </div>
                           <div className="text-xs text-slate-500">
-                            <p><span className="font-medium">ID:</span> {property.olx_id}</p>
-                            <p><span className="font-medium">Додано:</span> {new Date(property.created_at).toLocaleDateString('uk-UA')}</p>
+                            <p>
+                              <span className="font-medium">ID:</span>{" "}
+                              {property.olx_id}
+                            </p>
+                            <p>
+                              <span className="font-medium">Додано:</span>{" "}
+                              {new Date(property.created_at).toLocaleDateString(
+                                "uk-UA",
+                              )}
+                            </p>
                             {property.url && (
-                              <a href={property.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                              <a
+                                href={property.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:underline"
+                              >
                                 Переглянути на OLX
                               </a>
                             )}
@@ -1141,7 +1348,8 @@ export default function Admin() {
                 Швидке керування новими модулями
               </CardTitle>
               <CardDescription>
-                Оновлена система з 5 модулями: Botasaurus → LightAutoML → Prophet → Streamlit → Superset
+                Оновлена система з 5 модулями: Botasaurus → LightAutoML →
+                Prophet → Streamlit → Superset
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -1158,128 +1366,172 @@ export default function Admin() {
                     disabled={scraperStatus === "running"}
                     onClick={async () => {
                       try {
-                        console.log('🤖 Starting Botasaurus scraping...');
-                        addLogEntry('🤖 Запуск Botasaurus парсингу...');
+                        console.log("🤖 Starting Botasaurus scraping...");
+                        addLogEntry("🤖 Запуск Botasaurus парсингу...");
                         setScraperStatus("running");
                         setScraperProgress(0);
 
                         // Proper JSON body as required by FastAPI
                         const requestBody = {
-                          listing_type: 'sale',
+                          listing_type: "sale",
                           max_pages: 10,
                           delay_ms: 5000,
-                          headful: false
+                          headful: false,
                         };
 
-                        addLogEntry(`📦 Sending JSON body: ${JSON.stringify(requestBody)}`);
+                        addLogEntry(
+                          `📦 Sending JSON body: ${JSON.stringify(requestBody)}`,
+                        );
 
-                        const response = await fetch('/api/scraper/start', {
-                          method: 'POST',
+                        const response = await fetch("/api/scraper/start", {
+                          method: "POST",
                           headers: {
-                            'Content-Type': 'application/json'
+                            "Content-Type": "application/json",
                           },
-                          body: JSON.stringify(requestBody)
+                          body: JSON.stringify(requestBody),
                         });
 
                         // Enhanced safe JSON parsing with detailed diagnostics
                         let data;
                         try {
                           const text = await response.text();
-                          addLogEntry(`📖 Response status: ${response.status} ${response.statusText}`);
-                          addLogEntry(`📜 Response body length: ${text?.length || 0} chars`);
+                          addLogEntry(
+                            `📖 Response status: ${response.status} ${response.statusText}`,
+                          );
+                          addLogEntry(
+                            `📜 Response body length: ${text?.length || 0} chars`,
+                          );
 
-                          if (!text || text.trim() === '') {
-                            throw new Error(`Empty response from server (status: ${response.status})`);
+                          if (!text || text.trim() === "") {
+                            throw new Error(
+                              `Empty response from server (status: ${response.status})`,
+                            );
                           }
 
                           // Show first 100 chars of response for debugging
-                          addLogEntry(`📝 Response preview: ${text.substring(0, 100)}${text.length > 100 ? '...' : ''}`);
+                          addLogEntry(
+                            `📝 Response preview: ${text.substring(0, 100)}${text.length > 100 ? "..." : ""}`,
+                          );
 
                           data = JSON.parse(text);
-                          addLogEntry(`✅ JSON parsed successfully: ${data.ok ? 'success' : 'error'} response`);
-
+                          addLogEntry(
+                            `✅ JSON parsed successfully: ${data.ok ? "success" : "error"} response`,
+                          );
                         } catch (parseError) {
-                          console.error('JSON parse error:', parseError);
-                          addLogEntry(`❌ JSON parse error: ${parseError.message}`);
-                          addLogEntry(`🚫 Empty response body fix needed on backend`);
+                          console.error("JSON parse error:", parseError);
+                          addLogEntry(
+                            `❌ JSON parse error: ${parseError.message}`,
+                          );
+                          addLogEntry(
+                            `🚫 Empty response body fix needed on backend`,
+                          );
                           setScraperStatus("failed");
-                          alert('❌ Помилка парсингу відповіді сервера');
+                          alert("❌ Помилка парсингу відповіді сервера");
                           return;
                         }
 
-                        console.log('Scraper API response:', response.ok, data);
+                        console.log("Scraper API response:", response.ok, data);
 
                         // Check for both Node.js (data.success) and Python backend (data.ok) response formats
-                        const isSuccess = response.ok && (data.success || data.ok);
+                        const isSuccess =
+                          response.ok && (data.success || data.ok);
 
                         if (isSuccess) {
                           // Extract task info from response
-                          const taskId = data.task || data.task_id || 'unknown';
-                          const message = data.message || 'Scraping started';
+                          const taskId = data.task || data.task_id || "unknown";
+                          const message = data.message || "Scraping started";
 
-                          addLogEntry('🔧 FIX: Empty response body issue resolved, JSON secured');
+                          addLogEntry(
+                            "🔧 FIX: Empty response body issue resolved, JSON secured",
+                          );
                           addLogEntry(`📊 Task started: ${taskId}`);
                           addLogEntry(`📨 Message: ${message}`);
-                          addLogEntry('📞 Channel separation: Start=JSON, Progress=SSE');
+                          addLogEntry(
+                            "📞 Channel separation: Start=JSON, Progress=SSE",
+                          );
 
                           // Always connect to Python backend SSE (new architecture)
-                          addLogEntry('🔧 FIX: JSON parsing secured, using Python FastAPI backend');
+                          addLogEntry(
+                            "🔧 FIX: JSON parsing secured, using Python FastAPI backend",
+                          );
 
                           // Connect to Python backend SSE for real-time progress
-                          const pythonBackendUrl = 'http://localhost:8080';
-                          addLogEntry(`🔗 Connecting to SSE: ${pythonBackendUrl}/progress/scrape`);
-                          const pythonScraperSSE = new EventSource(`${pythonBackendUrl}/progress/scrape`);
+                          const pythonBackendUrl = "http://localhost:8080";
+                          addLogEntry(
+                            `🔗 Connecting to SSE: ${pythonBackendUrl}/progress/scrape`,
+                          );
+                          const pythonScraperSSE = new EventSource(
+                            `${pythonBackendUrl}/progress/scrape`,
+                          );
 
-                            pythonScraperSSE.onmessage = (event) => {
-                              try {
-                                const sseData = JSON.parse(event.data);
-                                if (sseData.type === 'progress' && sseData.module === 'scraper') {
-                                  setScraperProgress(sseData.progress || 0);
-                                  setScraperStatus(sseData.status || 'running');
+                          pythonScraperSSE.onmessage = (event) => {
+                            try {
+                              const sseData = JSON.parse(event.data);
+                              if (
+                                sseData.type === "progress" &&
+                                sseData.module === "scraper"
+                              ) {
+                                setScraperProgress(sseData.progress || 0);
+                                setScraperStatus(sseData.status || "running");
 
-                                  if (sseData.current_page && sseData.total_pages) {
-                                    addLogEntry(`📄 Прогрес: ${sseData.current_page}/${sseData.total_pages} (знайдено ${sseData.current_items || 0})`);
-                                  }
-
-                                  if (sseData.status === 'completed') {
-                                    addLogEntry('✅ Botasaurus парсинг за��ершено через Python backend!');
-                                    pythonScraperSSE.close();
-                                    loadStats();
-                                  } else if (sseData.status === 'error') {
-                                    addLogEntry('❌ Помилка Python backend scraper');
-                                    pythonScraperSSE.close();
-                                  }
+                                if (
+                                  sseData.current_page &&
+                                  sseData.total_pages
+                                ) {
+                                  addLogEntry(
+                                    `📄 Прогрес: ${sseData.current_page}/${sseData.total_pages} (знайдено ${sseData.current_items || 0})`,
+                                  );
                                 }
-                              } catch (error) {
-                                console.error('Error parsing Python SSE:', error);
-                              }
-                            };
 
-                          pythonScraperSSE.onerror = (error) => {
-                            console.error('Python SSE error:', error);
-                            addLogEntry('⚠️ Python SSE connection error');
+                                if (sseData.status === "completed") {
+                                  addLogEntry(
+                                    "✅ Botasaurus парсинг за��ершено через Python backend!",
+                                  );
+                                  pythonScraperSSE.close();
+                                  loadStats();
+                                } else if (sseData.status === "error") {
+                                  addLogEntry(
+                                    "❌ Помилка Python backend scraper",
+                                  );
+                                  pythonScraperSSE.close();
+                                }
+                              }
+                            } catch (error) {
+                              console.error("Error parsing Python SSE:", error);
+                            }
                           };
 
-                          addLogEntry('✅ Botasaurus успішно запущено з антидетекційним захистом');
-                          addLogEntry('🛡️ AntiDetectionDriver активовано');
-                          addLogEntry('🔄 Stealth режим увімкнено');
-                          alert('✅ Botasaurus запущено!');
+                          pythonScraperSSE.onerror = (error) => {
+                            console.error("Python SSE error:", error);
+                            addLogEntry("⚠️ Python SSE connection error");
+                          };
+
+                          addLogEntry(
+                            "✅ Botasaurus успішно запущено з антидетекційним захистом",
+                          );
+                          addLogEntry("🛡️ AntiDetectionDriver активовано");
+                          addLogEntry("🔄 Stealth режим увімкнено");
+                          alert("✅ Botasaurus запущено!");
                           startScraperProgressMonitoring();
                           loadMLModuleStatus();
                         } else {
-                          addLogEntry(`❌ Помилка запуску Botasaurus: ${data.error || 'невідома помилка'}`);
+                          addLogEntry(
+                            `❌ Помилка запуску Botasaurus: ${data.error || "невідома помилка"}`,
+                          );
                           setScraperStatus("failed");
-                          alert('❌ Помилка запуску Botasaurus');
+                          alert("❌ Помилка запуску Botasaurus");
                         }
                       } catch (error) {
-                        console.error('Scraper error:', error);
-                        addLogEntry('�� Критична помилка запуску Botasaurus');
+                        console.error("Scraper error:", error);
+                        addLogEntry("�� Критична помилка запуску Botasaurus");
                         setScraperStatus("failed");
-                        alert('❌ Поми��ка запуску Botasaurus');
+                        alert("❌ Поми��ка запуску Botasaurus");
                       }
                     }}
                   >
-                    {scraperStatus === "running" ? 'Парсинг...' : 'Запустити парсинг'}
+                    {scraperStatus === "running"
+                      ? "Парсинг..."
+                      : "Запустити парсинг"}
                   </Button>
 
                   {scraperStatus === "running" && (
@@ -1298,9 +1550,14 @@ export default function Admin() {
                   )}
 
                   <p className="text-xs text-green-700">
-                    Статус: {scraperStatus === "running" ? '🔄 Парсинг' :
-                             scraperStatus === "completed" ? '✅ Завершено' :
-                             scraperStatus === "failed" ? '❌ Помилка' : '⏳ Неактивний'}
+                    Статус:{" "}
+                    {scraperStatus === "running"
+                      ? "🔄 Парсинг"
+                      : scraperStatus === "completed"
+                        ? "✅ Завершено"
+                        : scraperStatus === "failed"
+                          ? "❌ Помилка"
+                          : "⏳ Неактивний"}
                   </p>
                 </div>
 
@@ -1316,39 +1573,47 @@ export default function Admin() {
                     disabled={mlTrainingStatus === "training"}
                     onClick={async () => {
                       try {
-                        console.log('🧠 Starting LightAutoML training...');
-                        addLogEntry('🧠 Запуск LightAutoML навчання...');
+                        console.log("🧠 Starting LightAutoML training...");
+                        addLogEntry("🧠 Запуск LightAutoML навчання...");
                         setMLTrainingStatus("training");
                         setMLTrainingProgress(0);
 
-                        console.log('Making API call to /api/ml/train');
-                        const response = await fetch('/api/ml/train', { method: 'POST' });
+                        console.log("Making API call to /api/ml/train");
+                        const response = await fetch("/api/ml/train", {
+                          method: "POST",
+                        });
                         const data = await response.json();
 
-                        console.log('Train API response:', response.ok, data);
+                        console.log("Train API response:", response.ok, data);
 
                         if (response.ok && data.success) {
-                          addLogEntry('✅ LightAutoML навчання успішно запущено');
+                          addLogEntry(
+                            "✅ LightAutoML навчання успішно запущено",
+                          );
                           addLogEntry(`🎯 Ціль: MAPE ≤ 15%`);
-                          addLogEntry('📊 Завантаження даних з бази...');
-                          alert('✅ LightAutoML навчання запущено!');
-                          console.log('Starting progress monitoring...');
+                          addLogEntry("📊 Завантаження даних з бази...");
+                          alert("✅ LightAutoML навчання запущено!");
+                          console.log("Starting progress monitoring...");
                           startMLProgressMonitoring();
                           loadMLModuleStatus();
                         } else {
-                          addLogEntry(`❌ Помилка LightAutoML: ${data.error || 'невідома помилка'}`);
+                          addLogEntry(
+                            `❌ Помилка LightAutoML: ${data.error || "невідома помилка"}`,
+                          );
                           setMLTrainingStatus("failed");
                           alert(`❌ Помилка: ${data.error}`);
                         }
                       } catch (error) {
-                        console.error('Training error:', error);
-                        addLogEntry('❌ Критична помилка запуску LightAutoML');
+                        console.error("Training error:", error);
+                        addLogEntry("❌ Критична помилка запуску LightAutoML");
                         setMLTrainingStatus("failed");
-                        alert('❌ По��илка запуску нав��ання');
+                        alert("❌ По��илка запуску нав��ання");
                       }
                     }}
                   >
-                    {mlTrainingStatus === "training" ? 'Тренування...' : '��ренувати модель'}
+                    {mlTrainingStatus === "training"
+                      ? "Тренування..."
+                      : "��ренувати модель"}
                   </Button>
 
                   {mlTrainingStatus === "training" && (
@@ -1366,7 +1631,10 @@ export default function Admin() {
                     </div>
                   )}
                   <p className="text-xs text-blue-700">
-                    Статус: {mlModuleStatus.lightautoml_trained ? '✅ Навчена' : '⏳ Не навчена'}
+                    Статус:{" "}
+                    {mlModuleStatus.lightautoml_trained
+                      ? "✅ Навчена"
+                      : "⏳ Не навчена"}
                   </p>
                 </div>
 
@@ -1382,22 +1650,30 @@ export default function Admin() {
                       className="bg-orange-600 hover:bg-orange-700 text-xs"
                       onClick={async () => {
                         try {
-                          addLogEntry('🌐 Запуск Streamlit веб-додатку...');
-                          const response = await fetch('/api/streamlit/start', { method: 'POST' });
+                          addLogEntry("🌐 Запуск Streamlit веб-додатку...");
+                          const response = await fetch("/api/streamlit/start", {
+                            method: "POST",
+                          });
                           const data = await response.json();
 
                           if (response.ok) {
-                            addLogEntry('✅ Streamlit успішно запущено на порту 8501');
-                            addLogEntry('🚀 Веб-інтерфейс доступний для оцін��и нерух��мості');
-                            alert('✅ Streamlit запущено!');
+                            addLogEntry(
+                              "✅ Streamlit успішно запущено на порту 8501",
+                            );
+                            addLogEntry(
+                              "🚀 Веб-інтерфейс доступний для оцін��и нерух��мості",
+                            );
+                            alert("✅ Streamlit запущено!");
                             loadMLModuleStatus();
                           } else {
-                            addLogEntry(`❌ Помилка запуску Streamlit: ${data.error || 'невідома помилка'}`);
-                            alert('❌ Помилка запуску');
+                            addLogEntry(
+                              `❌ Помилка запуску Streamlit: ${data.error || "невідома помилка"}`,
+                            );
+                            alert("❌ Помилка запуску");
                           }
                         } catch (error) {
-                          addLogEntry('❌ Критична помилка запуску Streamlit');
-                          alert('❌ Помилка запуску');
+                          addLogEntry("❌ Критична помилка запуску Streamlit");
+                          alert("❌ Помилка запуску");
                         }
                       }}
                     >
@@ -1409,14 +1685,16 @@ export default function Admin() {
                       className="text-xs"
                       onClick={async () => {
                         try {
-                          addLogEntry('⏹️ Зупинка Streamlit веб-��одатку...');
-                          await fetch('/api/streamlit/stop', { method: 'POST' });
-                          addLogEntry('✅ Streamlit успішно зупинено');
-                          alert('⏹�� Streamlit зупин��но');
+                          addLogEntry("⏹️ Зупинка Streamlit веб-��одатку...");
+                          await fetch("/api/streamlit/stop", {
+                            method: "POST",
+                          });
+                          addLogEntry("✅ Streamlit успішно зупинено");
+                          alert("⏹�� Streamlit зупин��но");
                           loadMLModuleStatus();
                         } catch (error) {
-                          addLogEntry('❌ Помилка зупи��ки Streamlit');
-                          alert('❌ Помилка зупинки');
+                          addLogEntry("❌ Помилка зупи��ки Streamlit");
+                          alert("❌ Помилка зупинки");
                         }
                       }}
                     >
@@ -1424,13 +1702,18 @@ export default function Admin() {
                     </Button>
                   </div>
                   <p className="text-xs text-orange-700">
-                    Статус: {mlModuleStatus.streamlit_running ? '✅ Запущено' : '⏹️ Зупинено'}
+                    Статус:{" "}
+                    {mlModuleStatus.streamlit_running
+                      ? "✅ Запущено"
+                      : "⏹️ Зупинено"}
                   </p>
                 </div>
               </div>
 
               <div className="mt-4 p-3 bg-indigo-50 rounded-lg">
-                <h4 className="font-medium text-indigo-800 mb-2">📋 Доступні CLI команди для всіх модулів:</h4>
+                <h4 className="font-medium text-indigo-800 mb-2">
+                  📋 Доступні CLI команди для всіх модулів:
+                </h4>
                 <div className="text-xs text-indigo-700 space-y-1 font-mono">
                   <div>npm run ml:train - Тренування LightAutoML</div>
                   <div>npm run ml:forecast - Prophet прогнозу��ання</div>
@@ -1457,17 +1740,27 @@ export default function Admin() {
             <div className="bg-slate-900 text-green-400 p-4 rounded-lg font-mono text-sm h-48 overflow-y-auto">
               {activityLogs.length > 0 ? (
                 activityLogs.map((log, index) => (
-                  <div key={index} className={`mb-1 ${
-                    log.includes('Парсинг') || log.includes('парсинг') ? 'text-green-400' :
-                    log.includes('Модель') || log.includes('��одель') || log.includes('тренування') ? 'text-purple-400' :
-                    log.includes('Помилка') || log.includes('помилка') ? 'text-red-400' :
-                    'text-blue-400'
-                  }`}>
+                  <div
+                    key={index}
+                    className={`mb-1 ${
+                      log.includes("Парсинг") || log.includes("парсинг")
+                        ? "text-green-400"
+                        : log.includes("Модель") ||
+                            log.includes("��одель") ||
+                            log.includes("тренування")
+                          ? "text-purple-400"
+                          : log.includes("Помилка") || log.includes("помилка")
+                            ? "text-red-400"
+                            : "text-blue-400"
+                    }`}
+                  >
                     {log}
                   </div>
                 ))
               ) : (
-                <div className="text-slate-500">Журнал активності порожній...</div>
+                <div className="text-slate-500">
+                  Журнал активності порожній...
+                </div>
               )}
             </div>
             <div className="mt-3 flex justify-between text-xs text-slate-500">
