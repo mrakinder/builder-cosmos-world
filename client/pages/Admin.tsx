@@ -144,7 +144,7 @@ export default function Admin() {
             // Add detailed progress logs
             if (data.current_page && data.total_pages) {
               addLogEntry(
-                `📄 Python backend: Сторінка ${data.current_page}/${data.total_pages} - знайдено ${data.current_items || 0} оголошень`,
+                `📄 Python backend: С��орінка ${data.current_page}/${data.total_pages} - знайдено ${data.current_items || 0} оголошень`,
               );
             }
             if (data.message) {
@@ -358,7 +358,7 @@ export default function Admin() {
           clearInterval(progressInterval);
           loadStats();
         } else if (data.status === "error") {
-          addLogEntry("❌ Botasaurus парсинг завершилось з помилкою");
+          addLogEntry("❌ Botasaurus ��арсинг завершилось з помилкою");
           setScraperStatus("failed");
           clearInterval(progressInterval);
         } else if (data.status === "running") {
@@ -439,7 +439,7 @@ export default function Admin() {
           `[${currentTime}] Система запущена`,
           `[${currentTime}] База даних ініціал��зована`,
           `[${currentTime}] API гот��ве до роботи`,
-          `[${currentTime}] Нова система з 5 модулями активована`,
+          `[${currentTime}] Н��ва система з 5 модулями активована`,
           `[${currentTime}] Botasaurus v4.0.10+ готовий ��о парсингу`,
         ];
         setActivityLogs(sampleLogs);
@@ -515,7 +515,7 @@ export default function Admin() {
 
   const handleAddStreet = async () => {
     if (!newStreet.trim() || !selectedDistrict) {
-      alert("Будь ласка, введіть на��ву вулиці та оберіть район");
+      alert("Будь ласка, введіть на��ву вулиці та оберіть ��айон");
       return;
     }
 
@@ -1566,11 +1566,17 @@ export default function Admin() {
                           startScraperProgressMonitoring();
                           loadMLModuleStatus();
                         } else {
-                          addLogEntry(
-                            `❌ Помилка запуску Botasaurus: ${data.error || "невідома помилка"}`,
-                          );
+                          const errorMsg = data.error || "невідома помилка";
+                          addLogEntry(`❌ Помилка запуску Botasaurus: ${errorMsg}`);
+
+                          // User-friendly error message
+                          if (errorMsg.includes('health check failed') || errorMsg.includes('not reachable')) {
+                            addLogEntry('💡 Рішення: Спочатку натисніть "🚀 Deploy Backend"');
+                            alert('❌ API недоступний!\n\nСпочатку натисніть "Deploy Backend" для розгортання сервера.');
+                          } else {
+                            alert(`❌ Помилка запуску: ${errorMsg}`);
+                          }
                           setScraperStatus("failed");
-                          alert("❌ Помилка запуску Botasaurus");
                         }
                       } catch (error) {
                         console.error("Scraper error:", error);
