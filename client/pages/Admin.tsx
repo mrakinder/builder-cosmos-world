@@ -311,7 +311,7 @@ export default function Admin() {
           clearInterval(progressInterval);
           loadMLModuleStatus();
         } else if (data.status === "failed") {
-          addLogEntry("❌ LightAutoML навчання завершилось з помилкою");
+          addLogEntry("❌ LightAutoML навчання завершилос�� з помилкою");
           setMLTrainingStatus("failed");
           clearInterval(progressInterval);
         } else if (attempts >= maxAttempts) {
@@ -548,7 +548,7 @@ export default function Admin() {
       area: 60,
       floor: 3,
       district: "Центр",
-      description: "Тестовий опис для налагодження",
+      description: "Тестовий опис д��я налагодження",
       isOwner: true,
       url: "manual_entry",
       olx_id: `manual_${Date.now()}`,
@@ -1407,7 +1407,7 @@ export default function Admin() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid md:grid-cols-3 gap-4">
+              <div className="grid md:grid-cols-4 gap-4">
                 {/* Botasaurus */}
                 <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg">
                   <h4 className="font-medium text-green-800 mb-2 flex items-center">
