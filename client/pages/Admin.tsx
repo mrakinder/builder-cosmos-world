@@ -937,7 +937,7 @@ export default function Admin() {
                     LightAutoML Прогнозування
                   </CardTitle>
                   <CardDescription>
-                    Автоматичне ML для п��огнозування цін нерухомості
+                    Автоматичне ML для п��огноз��вання цін нерухомості
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -1426,7 +1426,7 @@ export default function Admin() {
                             `🚫 Empty response body fix needed on backend`,
                           );
                           setScraperStatus("failed");
-                          alert("❌ Помилка парсингу відповіді сервера");
+                          alert("❌ П��милка парсингу відповіді сервера");
                           return;
                         }
 
@@ -1456,13 +1456,11 @@ export default function Admin() {
                           );
 
                           // Connect to Python backend SSE for real-time progress
-                          const pythonBackendUrl = "http://localhost:8080";
+                          const progressUrl = getProgressStreamUrl();
                           addLogEntry(
-                            `🔗 Connecting to SSE: ${pythonBackendUrl}/progress/scrape`,
+                            `🔗 Connecting to SSE: ${progressUrl}`,
                           );
-                          const pythonScraperSSE = new EventSource(
-                            `${pythonBackendUrl}/progress/scrape`,
-                          );
+                          const pythonScraperSSE = new EventSource(progressUrl);
 
                           pythonScraperSSE.onmessage = (event) => {
                             try {
@@ -1479,7 +1477,7 @@ export default function Admin() {
                                   sseData.total_pages
                                 ) {
                                   addLogEntry(
-                                    `📄 Прогрес: ${sseData.current_page}/${sseData.total_pages} (знайдено ${sseData.current_items || 0})`,
+                                    `📄 Прогрес: ${sseData.current_page}/${sseData.total_pages} (зна��дено ${sseData.current_items || 0})`,
                                   );
                                 }
 
@@ -1588,7 +1586,7 @@ export default function Admin() {
 
                         if (response.ok && data.success) {
                           addLogEntry(
-                            "✅ LightAutoML навчання успішно запущено",
+                            "✅ LightAutoML навчання успішно ��апущено",
                           );
                           addLogEntry(`🎯 Ціль: MAPE ≤ 15%`);
                           addLogEntry("📊 Завантаження даних з бази...");
