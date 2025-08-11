@@ -2,32 +2,7 @@ import { RequestHandler } from "express";
 import { initializeDatabase, dbOperations } from '../database';
 import { API_CONFIG, safeFetch, getScraperStartUrl, buildApiUrl, logApiRequest, logApiResponse, handleApiError } from '../../shared/config';
 
-// Safe JSON parsing function to prevent "Unexpected end of JSON input" errors
-async function safeJsonParse(response: Response): Promise<{ok: boolean, data?: any, error?: string, status: number}> {
-  try {
-    const text = await response.text();
-    if (!text || text.trim() === '') {
-      return { ok: false, error: 'Empty response body', status: response.status };
-    }
-
-    try {
-      const data = JSON.parse(text);
-      return { ok: true, data, status: response.status };
-    } catch (parseError) {
-      return {
-        ok: false,
-        error: `Invalid JSON: ${parseError.message}`,
-        status: response.status
-      };
-    }
-  } catch (error) {
-    return {
-      ok: false,
-      error: `Response read error: ${error.message}`,
-      status: response.status
-    };
-  }
-}
+// Note: Safe JSON parsing is now handled by the centralized safeFetch function from shared/config.ts
 
 // Ensure database is initialized (will be called when first route is accessed)
 const ensureDatabase = () => {
