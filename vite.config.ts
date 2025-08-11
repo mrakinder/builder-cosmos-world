@@ -1,14 +1,17 @@
-import { defineConfig, Plugin } from "vite";
-import react from "@vitejs/plugin-react-swc";
-import path from "path";
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react-swc';
+import path from 'path';
 
 // https://vitejs.dev/config/
-export default defineConfig(({ command, mode }) => {
+export default defineConfig(({ command }) => {
   const plugins = [react()];
 
-  // Додаємо express plugin ТІЛЬКИ в dev режимі
+  // Увага: жодних імпортів ./server на топ-рівні.
+  // Якщо для dev потрібен якийсь код із ./server — роби це тільки в режимі serve
+  // і лише динамічним імпортом (щоб build його не бачив):
   if (command === 'serve') {
-    plugins.push(expressPlugin());
+    // За потреби можна додати динамічний імпорт тут
+    // import('./server').then(mod => mod.setupDev?.())
   }
 
   return {
@@ -32,18 +35,3 @@ export default defineConfig(({ command, mode }) => {
     },
   };
 });
-
-function expressPlugin(): Plugin {
-  return {
-    name: "express-plugin",
-    apply: "serve", // Only apply during development (serve mode)
-    async configureServer(server) {
-      // Динамічний імпорт тільки в dev режимі
-      const { createServer } = await import("./server/index.js");
-      const app = createServer();
-
-      // Add Express app as middleware to Vite dev server
-      server.middlewares.use(app);
-    },
-  };
-}
