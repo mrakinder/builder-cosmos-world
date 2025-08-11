@@ -133,10 +133,8 @@ export const handleStartScraping: RequestHandler = async (req, res) => {
     addActivity(`🛡️ Використання: AntiDetectionDriver + Stealth режим`);
     addActivity(`🎯 Цільовий регіон: Івано-Франківськ, валюта: USD`);
 
-    // Call Python FastAPI backend instead of Node spawn
-    // Production API URL will be https://glow-nest-api.fly.dev
-    const pythonBackendUrl = process.env.PYTHON_API_URL || 'https://glow-nest-api.fly.dev';
-    const requestUrl = `${pythonBackendUrl}/scraper/start`;
+    // Use centralized API configuration
+    const requestUrl = getScraperStartUrl();
 
     // Prepare request body with validation
     const requestBody = {
@@ -148,34 +146,46 @@ export const handleStartScraping: RequestHandler = async (req, res) => {
 
     addActivity(`🚪 Node → Python: POST ${requestUrl}`);
     addActivity(`📦 Request body: ${JSON.stringify(requestBody)}`);
-    addActivity(`🏷️ Content-Type: application/json`);
+    addActivity(`🔧 Using centralized API config: ${API_CONFIG.BASE_URL}`);
+    addActivity(`⏱️ Timeout: ${API_CONFIG.TIMEOUT}ms`);
 
-    const response = await fetch(requestUrl, {
+    // Use safeFetch for comprehensive error handling
+    const fetchResult = await safeFetch(requestUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(requestBody)
     });
 
-    addActivity(`📨 Python response: ${response.status} ${response.statusText}`);
+    // Enhanced logging with detailed error diagnostics
+    addActivity(`📨 Python response: ${fetchResult.status} ${fetchResult.ok ? 'OK' : 'ERROR'}`);
 
-    // Safe JSON parsing to prevent "Unexpected end of JSON input"
-    const parsedResponse = await safeJsonParse(response);
+    if (!fetchResult.ok) {
+      const errorMsg = fetchResult.error || 'Unknown fetch error';
+      const details = fetchResult.details || {};
 
-    // Log response details for diagnostics
-    addActivity(`📖 Response body (first 100 chars): ${parsedResponse.ok ? JSON.stringify(parsedResponse.data).substring(0, 100) + '...' : parsedResponse.error}`);
+      // Comprehensive error logging
+      addActivity(`❌ FETCH FAILED: ${errorMsg}`);
+      addActivity(`🔍 Error type: ${details.name || 'Unknown'}`);
+      addActivity(`📝 Error code: ${details.code || 'N/A'}`);
+      addActivity(`🌐 DNS issue: ${details.code === 'ENOTFOUND' ? 'YES' : 'NO'}`);
+      addActivity(`🔌 Connection refused: ${details.code === 'ECONNREFUSED' ? 'YES' : 'NO'}`);
+      addActivity(`⏰ Timeout: ${details.code === 'ABORT_ERR' || errorMsg.includes('timeout') ? 'YES' : 'NO'}`);
+      addActivity(`📍 Target URL: ${requestUrl}`);
+      addActivity(`🔧 Suggested fixes: Check FastAPI deployment, DNS, firewall, SSL cert`);
 
-    if (!parsedResponse.ok) {
-      addActivity(`❌ JSON parse error: ${parsedResponse.error}`);
-      addActivity(`📜 Raw response: ${parsedResponse.error}`);
-      throw new Error(`Python backend JSON error: ${parsedResponse.error}`);
+      // Log full error details for debugging
+      if (details.errno) addActivity(`🔢 Error errno: ${details.errno}`);
+      if (details.cause) addActivity(`🎯 Error cause: ${JSON.stringify(details.cause)}`);
+
+      throw new Error(`Python backend fetch failed: ${errorMsg} (${details.code || 'Unknown error'})`);
     }
 
-    const pythonResult = parsedResponse.data;
+    const pythonResult = fetchResult.data;
 
-    if (!response.ok || !pythonResult?.ok) {
-      const errorMsg = pythonResult?.error || pythonResult?.detail || `HTTP ${response.status}`;
+    // Log response details for diagnostics
+    addActivity(`📖 Response body (first 100 chars): ${fetchResult.text ? fetchResult.text.substring(0, 100) + '...' : 'N/A'}`);
+
+    if (!pythonResult?.ok) {
+      const errorMsg = pythonResult?.error || pythonResult?.detail || `HTTP ${fetchResult.status}`;
       addActivity(`❌ Python backend error: ${errorMsg}`);
       throw new Error(errorMsg);
     }
@@ -568,7 +578,7 @@ export const handlePriceTrends: RequestHandler = (req, res) => {
         top_streets: [],
         total_properties: 0,
         last_update: new Date().toISOString(),
-        message: "Немає даних для аналізу. Запустіть парсинг для збору оголошень."
+        message: "Немає даних д��я аналізу. Запустіть парсинг для збору оголошень."
       });
     }
 
