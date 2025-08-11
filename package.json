@@ -25,7 +25,9 @@
     "ml:streamlit": "python property_monitor_cli.py web start",
     "ml:superset": "python property_monitor_cli.py superset start",
     "ml:pipeline": "python property_monitor_cli.py pipeline full",
-    "ml:status": "python property_monitor_cli.py status"
+    "ml:status": "python property_monitor_cli.py status",
+    "test:acceptance-prod": "NODE_ENV=production npx tsx acceptance-production-test.ts",
+    "lint:localhost-ban": "grep -r 'localhost:8080' --exclude-dir=node_modules --exclude='*.md' . && echo '🚨 LOCALHOST FOUND' || echo '✅ LOCALHOST BANNED'"
   },
   "dependencies": {
     "@types/better-sqlite3": "^7.6.13",
