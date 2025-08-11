@@ -29,6 +29,7 @@ import {
   Wifi
 } from "lucide-react";
 import ApiDiagnostics from "@/components/ApiDiagnostics";
+import { API_CONFIG, buildApiUrl, getProgressStreamUrl, getEventsStreamUrl } from "../../shared/config";
 
 export default function Admin() {
   const [stats, setStats] = useState({
@@ -863,7 +864,7 @@ export default function Admin() {
                   <div className="p-3 bg-purple-50 rounded-lg text-sm">
                     <p><strong>Метод:</strong> Facebook Prophet</p>
                     <p><strong>Прогноз:</strong> 6 місяців з довірчими інтервалами</p>
-                    <p><strong>С��ат��с:</strong> {mlModuleStatus.prophet_ready ? '✅ Готово' : '⏳ Не готово'}</p>
+                    <p><strong>С��ат��с:</strong> {mlModuleStatus.prophet_ready ? '✅ Гот��во' : '⏳ Не готово'}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -917,7 +918,7 @@ export default function Admin() {
                   <div className="p-3 bg-orange-50 rounded-lg text-sm">
                     <p><strong>Функції:</strong> ML прогноз, схожі об'єкти, аналіз</p>
                     <p><strong>Відгук:</strong> ≤1.5 с��к на запит</p>
-                    <p><strong>Статус:</strong> {mlModuleStatus.streamlit_running ? '✅ З��пущено' : '⏹️ Зупинено'}</p>
+                    <p><strong>Статус:</strong> {mlModuleStatus.streamlit_running ? '✅ З��пущено' : '⏹️ Зу��инено'}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -1322,7 +1323,7 @@ export default function Admin() {
 
                           if (response.ok) {
                             addLogEntry('✅ Streamlit успішно запущено на порту 8501');
-                            addLogEntry('🚀 Веб-інтерфейс доступний для оцінки нерух��мості');
+                            addLogEntry('🚀 Веб-інтерфейс доступний для оцін��и нерух��мості');
                             alert('✅ Streamlit запущено!');
                             loadMLModuleStatus();
                           } else {
@@ -1346,7 +1347,7 @@ export default function Admin() {
                           addLogEntry('⏹️ Зупинка Streamlit веб-��одатку...');
                           await fetch('/api/streamlit/stop', { method: 'POST' });
                           addLogEntry('✅ Streamlit успішно зупинено');
-                          alert('⏹️ Streamlit зупин��но');
+                          alert('⏹�� Streamlit зупин��но');
                           loadMLModuleStatus();
                         } catch (error) {
                           addLogEntry('❌ Помилка зупи��ки Streamlit');
