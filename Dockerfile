@@ -7,8 +7,12 @@ WORKDIR /app
 # Копіюємо package.json і package-lock.json (якщо є)
 COPY package*.json ./
 
-# Встановлюємо залежності
-RUN npm ci --only=production --silent
+# Встановлюємо залежності (включаючи devDependencies для збірки)
+RUN npm ci --silent
+
+# Встановлюємо змінні оточення для збірки
+ENV NODE_ENV=production
+ENV PYTHON_API_URL=https://glow-nest-api.fly.dev
 
 # Копіюємо весь код
 COPY . .
