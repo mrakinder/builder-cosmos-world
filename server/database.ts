@@ -1,8 +1,9 @@
 import Database from 'better-sqlite3';
+import type { Database as BetterSqlite3Database } from 'better-sqlite3';
 import { join } from 'path';
 
 // Initialize SQLite database lazily
-let db: Database | null = null;
+let db: BetterSqlite3Database | null = null;
 
 const getDatabase = () => {
   if (!db) {
@@ -94,7 +95,7 @@ export const initializeDatabase = () => {
       // Center
       ["Галицька", "Центр"],
       ["Незалежності", "Центр"],
-      ["Грушевського", "Центр"],
+      ["Г��ушевського", "Центр"],
       ["Січових Стрільців", "Центр"],
       ["Шевченка", "Центр"],
       ["Леся Курбаса", "Центр"],
