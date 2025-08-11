@@ -1,0 +1,56 @@
+name: Deploy FastAPI Backend
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Fly CLI
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy to Fly.dev
+        run: flyctl deploy -c fly.api.toml --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Health check after deployment
+        run: |
+          echo "Waiting for deployment to be ready..."
+          sleep 30
+          
+          # Health check with retry
+          for i in {1..10}; do
+            if curl -f https://glow-nest-api.fly.dev/health; then
+              echo "✅ Health check passed"
+              break
+            else
+              echo "⏳ Waiting for health check... (attempt $i)"
+              sleep 10
+            fi
+          done
+
+      - name: Deployment notification
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ Backend deployment successful!"
+            echo "🌐 API URL: https://glow-nest-api.fly.dev"
+          else
+            echo "❌ Backend deployment failed!"
+          fi
