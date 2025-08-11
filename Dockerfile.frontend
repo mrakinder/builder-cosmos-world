@@ -1,0 +1,46 @@
+# Multi-stage build для фронтенда
+FROM node:18-bullseye AS builder
+
+# Встановлюємо робочу директорію
+WORKDIR /app
+
+# Копіюємо package.json і package-lock.json
+COPY package*.json ./
+
+# Встановлюємо залежності (включаючи devDependencies для збірки)
+RUN npm ci --silent
+
+# Встановлюємо змінні оточення для збірки
+ENV NODE_ENV=production
+ENV PYTHON_API_URL=https://glow-nest-api.fly.dev
+
+# Копіюємо весь код
+COPY . .
+
+# Збираємо тільки клієнтську частину
+RUN npm run build:client
+
+# Production stage з nginx
+FROM nginx:alpine
+
+# Встановлюємо curl для health check
+RUN apk add --no-cache curl
+
+# Копіюємо збудовані статичні файли
+COPY --from=builder /app/dist/spa /usr/share/nginx/html
+
+# Копіюємо кастомну конфігурацію nginx
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Створюємо папку для логів nginx
+RUN mkdir -p /var/log/nginx
+
+# Відкриваємо порт 80
+EXPOSE 80
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost/ || exit 1
+
+# Запускаємо nginx
+CMD ["nginx", "-g", "daemon off;"]
