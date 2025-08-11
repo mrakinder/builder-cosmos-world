@@ -67,7 +67,9 @@ export const ApiDiagnostics: React.FC = () => {
   const runClientSideTest = async () => {
     setIsClientTesting(true);
     setClientResults(null);
-    
+
+    console.log(`🔍 CLIENT-SIDE DIAGNOSTICS: Testing ${API_CONFIG.BASE_URL}`);
+
     const results = {
       health: { success: false } as DiagnosticResult,
       routes: { success: false } as DiagnosticResult,
@@ -76,27 +78,42 @@ export const ApiDiagnostics: React.FC = () => {
 
     try {
       // Test 1: Health Check
-      const healthResult = await safeFetch(getHealthUrl());
+      console.log(`🏥 Testing health: ${getHealthUrl()}`);
+      const healthResult = await safeFetchJson(getHealthUrl());
       results.health = {
         success: healthResult.ok && healthResult.status === 200,
         status: healthResult.status,
         data: healthResult.data,
         error: healthResult.error,
-        details: healthResult.details
+        details: { raw: healthResult.raw?.substring(0, 100) }
       };
 
+      if (results.health.success) {
+        console.log(`✅ Health: OK`);
+      } else {
+        console.log(`❌ Health: ${healthResult.error}`);
+      }
+
       // Test 2: Routes Check
-      const routesResult = await safeFetch(getDebugRoutesUrl());
+      console.log(`🛣️  Testing routes: ${getDebugRoutesUrl()}`);
+      const routesResult = await safeFetchJson(getDebugRoutesUrl());
       results.routes = {
         success: routesResult.ok && routesResult.status === 200,
         status: routesResult.status,
         data: routesResult.data,
         error: routesResult.error,
-        details: routesResult.details
+        details: { raw: routesResult.raw?.substring(0, 100) }
       };
 
+      if (results.routes.success) {
+        console.log(`✅ Routes: OK`);
+      } else {
+        console.log(`❌ Routes: ${routesResult.error}`);
+      }
+
       // Test 3: Scraper Test (light test)
-      const scraperResult = await safeFetch(getScraperStartUrl(), {
+      console.log(`🤖 Testing scraper: ${getScraperStartUrl()}`);
+      const scraperResult = await safeFetchJson(getScraperStartUrl(), {
         method: 'POST',
         body: JSON.stringify({
           listing_type: 'sale',
@@ -105,16 +122,23 @@ export const ApiDiagnostics: React.FC = () => {
           headful: false
         })
       });
-      
+
       results.scraper = {
         success: scraperResult.ok && (scraperResult.status === 202 || scraperResult.status === 409),
         status: scraperResult.status,
         data: scraperResult.data,
         error: scraperResult.error,
-        details: scraperResult.details
+        details: { raw: scraperResult.raw?.substring(0, 100) }
       };
 
+      if (results.scraper.success) {
+        console.log(`✅ Scraper: OK (${scraperResult.status})`);
+      } else {
+        console.log(`❌ Scraper: ${scraperResult.error}`);
+      }
+
     } catch (error: any) {
+      console.log(`💥 Client test error: ${error.message}`);
       results.health.error = `Client test failed: ${error.message}`;
     }
 
