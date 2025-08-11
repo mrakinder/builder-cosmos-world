@@ -133,8 +133,9 @@ export const safeFetch = async (
   logApiRequest(method, url, options.body);
 
   try {
+    const timeout = (options as any).timeout || API_CONFIG.TIMEOUT;
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
 
     const response = await fetch(url, {
       ...options,
