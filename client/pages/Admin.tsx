@@ -324,7 +324,7 @@ export default function Admin() {
       if (!data.logs || data.logs.length === 0) {
         const currentTime = new Date().toLocaleTimeString('uk-UA');
         const sampleLogs = [
-          `[${currentTime}] Система запущена`,
+          `[${currentTime}] Система з��пущена`,
           `[${currentTime}] База даних ініціалізована`,
           `[${currentTime}] API готове до роботи`,
           `[${currentTime}] Нова система з 5 модулями активована`,
@@ -449,7 +449,7 @@ export default function Admin() {
       });
       
       if (response.ok) {
-        alert('Тестове оголошення додано!');
+        alert('Тестове оголошенн�� додано!');
         loadStats();
       }
     } catch (error) {
@@ -618,6 +618,7 @@ export default function Admin() {
               setShowStreetManager(!showStreetManager);
               if (!showStreetManager) {
                 setShowProperties(false);
+                setShowApiDiagnostics(false);
               }
             }}
           >
@@ -644,7 +645,7 @@ export default function Admin() {
                 Управління вулицями та районами
               </CardTitle>
               <CardDescription>
-                Додавання нових вулиць д�� існуючих районів
+                Додавання нових вулиць до ��снуючих районів
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -670,7 +671,7 @@ export default function Admin() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Центр">Центр</SelectItem>
-                        <SelectItem value="Пасічна">Пасічн��</SelectItem>
+                        <SelectItem value="Пасічна">Пасічна</SelectItem>
                         <SelectItem value="БАМ">БАМ</SelectItem>
                         <SelectItem value="Каскад">Каскад</SelectItem>
                         <SelectItem value="Залізничний (Вокзал)">Залізничний (Вокзал)</SelectItem>
@@ -717,7 +718,7 @@ export default function Admin() {
                   Комплексна ML Система (5 модулів)
                 </CardTitle>
                 <CardDescription>
-                  Повнофункціональна система машинного навчання для аналізу нерухомості
+                  Повнофункціональна система машинного навчання для ана��ізу нерухомості
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -758,7 +759,7 @@ export default function Admin() {
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <Brain className="w-5 h-5 mr-2 text-blue-600" />
-                    LightAutoML Прогнозуванн��
+                    LightAutoML Прогнозування
                   </CardTitle>
                   <CardDescription>
                     Автоматичне ML для п��огнозування цін нерухомості
@@ -1343,7 +1344,7 @@ export default function Admin() {
               </div>
 
               <div className="mt-4 p-3 bg-indigo-50 rounded-lg">
-                <h4 className="font-medium text-indigo-800 mb-2">📋 Доступні CLI команди для всіх модулів:</h4>
+                <h4 className="font-medium text-indigo-800 mb-2">📋 Доступні CLI команди для всіх м��дулів:</h4>
                 <div className="text-xs text-indigo-700 space-y-1 font-mono">
                   <div>npm run ml:train - Тренування LightAutoML</div>
                   <div>npm run ml:forecast - Prophet прогнозу��ання</div>
