@@ -377,25 +377,30 @@ async def stream_ml_progress():
         try:
             while True:
                 progress = await task_manager.get_ml_training_progress()
-                
+
                 # Format as SSE
                 data = json.dumps(progress)
                 yield f"data: {data}\n\n"
-                
+
                 # Break if training completed
                 if progress.get('status') in ['completed', 'failed']:
                     break
-                
+
                 await asyncio.sleep(2)  # Update every 2 seconds
-                
+
         except Exception as e:
             error_data = json.dumps({"error": str(e)})
             yield f"data: {error_data}\n\n"
-    
+
     return StreamingResponse(
         event_stream(),
-        media_type="text/plain",
-        headers={"Cache-Control": "no-cache", "Connection": "keep-alive"}
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "Cache-Control"
+        }
     )
 
 
