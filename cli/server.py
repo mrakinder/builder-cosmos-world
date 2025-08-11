@@ -96,9 +96,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://dea706f0b3dd454188742d996e9d262a-58026be633ce45519cb96963e.fly.dev",  # Frontend URL
-        "http://localhost:3000",  # Local development
-        "http://localhost:8080",  # Local API testing
-        "*"  # Allow all for development (remove in production)
+        "https://glow-nest-api.fly.dev",  # API itself
+        "*"  # Allow all for development (will be restricted in production)
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
