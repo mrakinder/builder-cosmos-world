@@ -68,7 +68,7 @@ export default function Admin() {
   const [showApiDiagnostics, setShowApiDiagnostics] = useState(false);
   const [newStreet, setNewStreet] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
-  const [streetToDistrictMap, setStreetToDistrictMap] = useState({});
+  const [streetToDistrictMap, setStreetToDistrictMap] = useState<Record<string, string>>({});
   const [mlModuleStatus, setMLModuleStatus] = useState({
     botasaurus_ready: false,
     lightautoml_trained: false,
@@ -321,7 +321,7 @@ export default function Admin() {
         }
       } catch (error) {
         console.error("Failed to get ML progress:", error);
-        addLogEntry("❌ Помилка отримання прогресу навчання");
+        addLogEntry("❌ Помилка отримання прогрес�� навчання");
 
         if (attempts >= 5) {
           // Stop after 5 failed attempts
@@ -606,7 +606,7 @@ export default function Admin() {
       document.body.removeChild(a);
     } catch (error) {
       console.error("Export failed:", error);
-      alert("Помилка експо��ту");
+      alert("Помилка ��кспо��ту");
     }
   };
 
@@ -823,7 +823,7 @@ export default function Admin() {
                         </SelectItem>
                         <SelectItem value="Брати">Брати</SelectItem>
                         <SelectItem value="Софіївка">Софі��вка</SelectItem>
-                        <SelectItem value="Будівельників">
+                        <SelectItem value="��удівельників">
                           Будівельників
                         </SelectItem>
                         <SelectItem value="Набережна">Набережна</SelectItem>
@@ -988,7 +988,7 @@ export default function Admin() {
                     Prophet Прогнозування
                   </CardTitle>
                   <CardDescription>
-                    Прогноз цінов��х трендів на 6 місяців по районах
+                    Прогноз цінов��х трендів на 6 місяців п�� районах
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -1550,7 +1550,7 @@ export default function Admin() {
                     {scraperStatus === "running"
                       ? "🔄 Парсинг"
                       : scraperStatus === "completed"
-                        ? "✅ Завершено"
+                        ? "✅ Завершен��"
                         : scraperStatus === "failed"
                           ? "❌ Помилка"
                           : "⏳ Неактивний"}
