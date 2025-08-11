@@ -1,0 +1,42 @@
+[app]
+app = "glow-nest-frontend"
+primary_region = "fra"
+
+[build]
+dockerfile = "Dockerfile"
+
+[env]
+NODE_ENV = "production"
+
+[processes]
+app = "nginx -g 'daemon off;'"
+
+[[services]]
+internal_port = 80
+protocol = "tcp"
+auto_stop_machines = true
+auto_start_machines = true
+min_machines_running = 0
+
+  [[services.ports]]
+  handlers = ["http"]
+  port = 80
+
+  [[services.ports]]
+  handlers = ["tls", "http"]
+  port = 443
+
+  [services.concurrency]
+  hard_limit = 100
+  soft_limit = 50
+  type = "connections"
+
+  # Health check для nginx
+  [[services.http_checks]]
+  interval = "15s"
+  timeout = "2s"
+  method = "get"
+  path = "/"
+  protocol = "http"
+  tls_skip_verify = false
+  headers = {}
