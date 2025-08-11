@@ -13,7 +13,7 @@ RUN npm ci --silent
 COPY . .
 
 # ❗ тільки клієнтська збірка
-RUN npm run build:client
+RUN npm run build
 
 # ---------- runtime (nginx) ----------
 FROM nginx:alpine
