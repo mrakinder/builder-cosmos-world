@@ -5,6 +5,7 @@ set -euo pipefail
 # CRITICAL: Block all auto-launch mechanisms
 export FLY_NO_LAUNCH=1
 export FLY_NO_DEPLOY_LOGS=1
+export FLY_NO_BUILDER_CACHE=1
 
 TARGET=${1:-frontend}
 
