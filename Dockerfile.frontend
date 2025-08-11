@@ -1,28 +1,31 @@
-# ---------- build stage ----------
+# ---------- build ----------
 FROM node:18-bullseye AS build
-
 WORKDIR /app
 
-# Копіюємо package.json і package-lock.json
-COPY package*.json ./
+# Показати, що є в корені (діагностика)
+COPY package.json ./
+# Якщо lock-файл є — копіюємо; якщо нема — пропуститься
+COPY package-lock.json* ./
+RUN echo "=== ls -la at /app (before install) ===" && ls -la
 
-# Встановлюємо залежності
-RUN npm ci --silent
+# Якщо lock є — npm ci; інакше npm install. Без --silent, з логами.
+RUN if [ -f package-lock.json ]; then \
+      echo "Using npm ci (lockfile found)"; \
+      npm ci --no-audit --no-fund; \
+    else \
+      echo "No lockfile, using npm install"; \
+      npm install --no-audit --no-fund; \
+    fi
 
-# Копіюємо весь код
+# Тепер копіюємо решту проєкту
 COPY . .
 
-# ❗ тільки клієнтська збірка
+# Стандартний прод-білд лише клієнта
 RUN npm run build
 
-# ---------- runtime (nginx) ----------
+# ---------- runtime ----------
 FROM nginx:alpine
-
-# SPA nginx конфіг
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Vite збірка у dist/spa
 COPY --from=build /app/dist/spa /usr/share/nginx/html
-
 EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["nginx","-g","daemon off;"]
