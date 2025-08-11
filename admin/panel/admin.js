@@ -256,7 +256,7 @@ async function getScrapingStatus() {
 async function deployBackend() {
     try {
         showButtonLoading("deployBackendBtn");
-        const response = await fetch(`${API_BASE_URL}/deploy`, { method: "POST" });
+        const response = await fetch(`/api/deploy`, { method: "POST" });
         const result = await response.json();
 
         if (result.success) {
@@ -407,7 +407,7 @@ async function generateForecasts() {
 
     if (result.success) {
       showAlert(
-        `📈 Прогнозування запущено на ${result.forecast_months} місяців`,
+        `📈 Прогнозування запу��ено на ${result.forecast_months} місяців`,
         "success",
       );
       updateModuleStatus("prophet", "running", 0);
@@ -489,7 +489,7 @@ async function controlStreamlit(action) {
     }
   } catch (error) {
     console.error("Error controlling Streamlit:", error);
-    showAlert("❌ Помилка керування Streamlit", "error");
+    showAlert("�� Помилка керування Streamlit", "error");
   } finally {
     hideButtonLoading();
   }
