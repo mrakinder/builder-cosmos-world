@@ -4,9 +4,17 @@ import { promisify } from 'util';
 
 const dnsLookup = promisify(dns.lookup);
 
-// Get API URL from environment or fallback
+// PRODUCTION-ONLY API URL - NO LOCALHOST IN PRODUCTION
 const getApiUrl = (): string => {
-  return process.env.PYTHON_API_URL || 'https://glow-nest-api.fly.dev';
+  const apiUrl = process.env.PYTHON_API_URL || 'https://glow-nest-api.fly.dev';
+
+  // PRODUCTION SAFETY: Ban localhost in production builds
+  if (process.env.NODE_ENV === 'production' && apiUrl.includes('localhost')) {
+    console.error('🚨 LOCALHOST BANNED IN PRODUCTION BUILD');
+    return 'https://glow-nest-api.fly.dev';
+  }
+
+  return apiUrl;
 };
 
 // Safe fetch with comprehensive error handling
