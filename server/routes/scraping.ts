@@ -9,6 +9,7 @@ import {
   logApiResponse,
   handleApiError,
 } from "../../shared/config";
+import { safeJson } from "../../shared/safe-parser";
 
 // Note: Safe JSON parsing is now handled by the centralized safeFetch function from shared/config.ts
 
