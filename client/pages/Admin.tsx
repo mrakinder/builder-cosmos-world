@@ -311,7 +311,7 @@ export default function Admin() {
           clearInterval(progressInterval);
           loadMLModuleStatus();
         } else if (data.status === "failed") {
-          addLogEntry("❌ LightAutoML навчання завершилос�� з помилкою");
+          addLogEntry("❌ LightAutoML навчання завершилось з помилкою");
           setMLTrainingStatus("failed");
           clearInterval(progressInterval);
         } else if (attempts >= maxAttempts) {
@@ -548,7 +548,7 @@ export default function Admin() {
       area: 60,
       floor: 3,
       district: "Центр",
-      description: "Тестовий опис д��я налагодження",
+      description: "��естовий опис для налагодження",
       isOwner: true,
       url: "manual_entry",
       olx_id: `manual_${Date.now()}`,
@@ -654,7 +654,7 @@ export default function Admin() {
               🛡️ Botasaurus v4.0.10+
             </span>
             <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-              🧠 LightAutoML v0.3.7+
+              ���� LightAutoML v0.3.7+
             </span>
             <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">
               📈 Prophet v1.1.4+
@@ -1236,7 +1236,7 @@ export default function Admin() {
                   Уніфіко��аний CLI Інтерфейс
                 </CardTitle>
                 <CardDescription>
-                  Командний рядок для управління всіма 5 модулями систе��и
+                  Ко��андний рядок для управління всіма 5 модулями систе��и
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -1373,7 +1373,7 @@ export default function Admin() {
                                 rel="noopener noreferrer"
                                 className="text-blue-600 hover:underline"
                               >
-                                Переглянути на OLX
+                                Пере��лянути на OLX
                               </a>
                             )}
                           </div>
@@ -1758,11 +1758,54 @@ export default function Admin() {
                       : "⏹️ Зупинено"}
                   </p>
                 </div>
+
+                {/* Backend Deployment */}
+                <div className="p-4 bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-lg">
+                  <h4 className="font-medium text-cyan-800 mb-2 flex items-center">
+                    <Activity className="w-4 h-4 mr-2" />
+                    Backend Deploy
+                  </h4>
+                  <Button
+                    size="sm"
+                    className="w-full bg-cyan-600 hover:bg-cyan-700 mb-2"
+                    onClick={async () => {
+                      try {
+                        addLogEntry('🚀 Запуск розгортання backend...');
+                        const response = await fetch('/api/deploy', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json'
+                          }
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                          addLogEntry('✅ Backend deployment розпочато успішно');
+                          addLogEntry(`📍 Target: ${result.url || 'https://glow-nest-api.fly.dev'}`);
+                          alert('✅ Backend deployment запущено!');
+                        } else {
+                          addLogEntry(`❌ Помилка deployment: ${result.message || 'Невідома помилка'}`);
+                          alert(`❌ Помилка: ${result.message || 'Deployment failed'}`);
+                        }
+                      } catch (error) {
+                        console.error('Backend deployment error:', error);
+                        addLogEntry('❌ Критична помилка deployment запиту');
+                        alert('❌ Помилка запиту deployment');
+                      }
+                    }}
+                  >
+                    🚀 Deploy
+                  </Button>
+                  <p className="text-xs text-cyan-700">
+                    Статус: Ready to deploy
+                  </p>
+                </div>
               </div>
 
               <div className="mt-4 p-3 bg-indigo-50 rounded-lg">
                 <h4 className="font-medium text-indigo-800 mb-2">
-                  📋 Доступні CLI команди для всіх модулів:
+                  📋 Доступні CLI команди для всі�� модулів:
                 </h4>
                 <div className="text-xs text-indigo-700 space-y-1 font-mono">
                   <div>npm run ml:train - Тренування LightAutoML</div>
