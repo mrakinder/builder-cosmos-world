@@ -47,6 +47,7 @@ export default function Admin() {
   const [properties, setProperties] = useState([]);
   const [showProperties, setShowProperties] = useState(false);
   const [showStreetManager, setShowStreetManager] = useState(false);
+  const [showApiDiagnostics, setShowApiDiagnostics] = useState(false);
   const [newStreet, setNewStreet] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [streetToDistrictMap, setStreetToDistrictMap] = useState({});
@@ -120,7 +121,7 @@ export default function Admin() {
               addLogEntry(`📄 Python backend: Сторінка ${data.current_page}/${data.total_pages} - знайдено ${data.current_items || 0} оголошень`);
             }
             if (data.message) {
-              addLogEntry(`🐍 ${data.message}`);
+              addLogEntry(`�� ${data.message}`);
             }
           } else if (data.type === 'error') {
             addLogEntry(`❌ Python backend error: ${data.error}`);
@@ -211,7 +212,7 @@ export default function Admin() {
         }
       } catch (error) {
         console.error('Failed to get ML progress:', error);
-        addLogEntry('❌ П��милка отримання прогресу навчання');
+        addLogEntry('❌ Помилка отримання прогресу навчання');
 
         if (attempts >= 5) { // Stop after 5 failed attempts
           setMLTrainingStatus("failed");
@@ -401,7 +402,7 @@ export default function Admin() {
 
   const handleAddStreet = async () => {
     if (!newStreet.trim() || !selectedDistrict) {
-      alert('Будь ласка, введіть назву вулиці та оберіть район');
+      alert('Будь ласка, введіть на��ву вулиці та оберіть район');
       return;
     }
 
@@ -671,7 +672,7 @@ export default function Admin() {
                         <SelectItem value="Пасічна">Пасічна</SelectItem>
                         <SelectItem value="БАМ">БАМ</SelectItem>
                         <SelectItem value="Каскад">Каскад</SelectItem>
-                        <SelectItem value="Залізничний (Вокза��)">Залізничний (Вокзал)</SelectItem>
+                        <SelectItem value="Залізничний (Вокзал)">Залізничний (Вокзал)</SelectItem>
                         <SelectItem value="Брати">Брати</SelectItem>
                         <SelectItem value="Софіївка">Софі��вка</SelectItem>
                         <SelectItem value="Будівельників">Будівельників</SelectItem>
@@ -785,7 +786,7 @@ export default function Admin() {
                   <div className="p-3 bg-blue-50 rounded-lg text-sm">
                     <p><strong>Ціль:</strong> MAPE ≤ 15%</p>
                     <p><strong>Фічі:</strong> площа, район, кімнати, поверх, тип, ремонт</p>
-                    <p><strong>Статус:</strong> {mlModuleStatus.lightautoml_trained ? '✅ Готово' : '⏳ Не т��енована'}</p>
+                    <p><strong>Статус:</strong> {mlModuleStatus.lightautoml_trained ? '✅ Гот��во' : '⏳ Не т��енована'}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -839,7 +840,7 @@ export default function Admin() {
 
                   <div className="p-3 bg-purple-50 rounded-lg text-sm">
                     <p><strong>Метод:</strong> Facebook Prophet</p>
-                    <p><strong>Прогн��з:</strong> 6 місяців з довірчими інтервалами</p>
+                    <p><strong>Прогноз:</strong> 6 місяців з довірчими інтервалами</p>
                     <p><strong>С��ат��с:</strong> {mlModuleStatus.prophet_ready ? '✅ Готово' : '⏳ Не готово'}</p>
                   </div>
                 </CardContent>
@@ -893,7 +894,7 @@ export default function Admin() {
 
                   <div className="p-3 bg-orange-50 rounded-lg text-sm">
                     <p><strong>Функції:</strong> ML прогноз, схожі об'єкти, аналіз</p>
-                    <p><strong>Від��ук:</strong> ≤1.5 с��к на запит</p>
+                    <p><strong>Відгук:</strong> ≤1.5 с��к на запит</p>
                     <p><strong>Статус:</strong> {mlModuleStatus.streamlit_running ? '✅ З��пущено' : '⏹️ Зупинено'}</p>
                   </div>
                 </CardContent>
@@ -918,7 +919,7 @@ export default function Admin() {
                         const response = await fetch('/api/superset/status');
                         const data = await response.json();
                         if (data.running) {
-                          alert(`✅ Superset активний!\nURL: ${data.url}\n��ашборд��: 4`);
+                          alert(`✅ Superset активний!\nURL: ${data.url}\n��ашборди: 4`);
                         } else {
                           alert('⏳ Superset не запущений\nЗапустіть через CLI: python property_monitor_cli.py superset start');
                         }
@@ -1153,7 +1154,7 @@ export default function Admin() {
                                   }
 
                                   if (sseData.status === 'completed') {
-                                    addLogEntry('✅ Botasaurus парсинг завершено через Python backend!');
+                                    addLogEntry('✅ Botasaurus парсинг за��ершено через Python backend!');
                                     pythonScraperSSE.close();
                                     loadStats();
                                   } else if (sseData.status === 'error') {
@@ -1320,7 +1321,7 @@ export default function Admin() {
                       className="text-xs"
                       onClick={async () => {
                         try {
-                          addLogEntry('⏹️ Зупинка Streamlit веб-додатку...');
+                          addLogEntry('⏹️ Зупинка Streamlit веб-��одатку...');
                           await fetch('/api/streamlit/stop', { method: 'POST' });
                           addLogEntry('✅ Streamlit успішно зупинено');
                           alert('⏹️ Streamlit зупин��но');
