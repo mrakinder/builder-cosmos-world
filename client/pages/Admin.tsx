@@ -170,6 +170,9 @@ export default function Admin() {
       };
     };
 
+    // Initialize scraper progress SSE connection
+    connectToPythonScraperSSE();
+
     // Add comprehensive fix notification
     addLogEntry('🔧 FIX COMPLETED: spawn python ENOENT + JSON parsing issues resolved');
     addLogEntry('✅ Ключові виправлення:');
@@ -340,7 +343,7 @@ export default function Admin() {
           `[${currentTime}] База даних ініціал��зована`,
           `[${currentTime}] API готове до роботи`,
           `[${currentTime}] Нова система з 5 модулями активована`,
-          `[${currentTime}] Botasaurus v4.0.10+ готовий ��о парсин��у`
+          `[${currentTime}] Botasaurus v4.0.10+ готовий ��о парсингу`
         ];
         setActivityLogs(sampleLogs);
       } else {
@@ -471,7 +474,7 @@ export default function Admin() {
   };
 
   const handleDeleteManualProperties = async () => {
-    if (!confirm('Видалити всі ручно д��дані оголошення?')) return;
+    if (!confirm('Видалити всі ручно додані оголошення?')) return;
 
     try {
       const response = await fetch('/api/manual-property/delete-manual-properties', {
@@ -768,7 +771,7 @@ export default function Admin() {
                   <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg">
                     <div className={`w-4 h-4 rounded-full mx-auto mb-2 ${mlModuleStatus.prophet_ready ? 'bg-purple-500' : 'bg-gray-400'}`}></div>
                     <h4 className="font-medium text-sm">Prophet</h4>
-                    <p className="text-xs text-slate-600">Часові ряди</p>
+                    <p className="text-xs text-slate-600">Часові ря��и</p>
                   </div>
                   <div className="text-center p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg">
                     <div className={`w-4 h-4 rounded-full mx-auto mb-2 ${mlModuleStatus.streamlit_running ? 'bg-orange-500' : 'bg-gray-400'}`}></div>
@@ -794,7 +797,7 @@ export default function Admin() {
                     LightAutoML Прогнозування
                   </CardTitle>
                   <CardDescription>
-                    Автоматичне ML для п��огнозування цін нерухомості
+                    Автоматичне ML для п��огнозування цін нерухомост��
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -861,7 +864,7 @@ export default function Admin() {
                         try {
                           const response = await fetch(`/api/ml/forecast?district=${encodeURIComponent(district)}`);
                           const data = await response.json();
-                          alert(`✅ П��огноз для "${district}" готовий!`);
+                          alert(`✅ Прогноз для "${district}" готовий!`);
                         } catch (error) {
                           alert('❌ Помилка прогнозування району');
                         }
@@ -942,7 +945,7 @@ export default function Admin() {
                     Apache Superset
                   </CardTitle>
                   <CardDescription>
-                    Бізнес-аналі��ика з 4 готовими дашбордами
+                    Бізнес-аналітика з 4 готовими дашбордами
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -1274,7 +1277,7 @@ export default function Admin() {
                         console.log('Train API response:', response.ok, data);
 
                         if (response.ok && data.success) {
-                          addLogEntry('✅ LightAutoML навчання ��спішно запущено');
+                          addLogEntry('✅ LightAutoML навчання успішно запущено');
                           addLogEntry(`🎯 Ціль: MAPE ≤ 15%`);
                           addLogEntry('📊 Завантаження даних з бази...');
                           alert('✅ LightAutoML навчання запущено!');
@@ -1342,7 +1345,7 @@ export default function Admin() {
                             alert('❌ Помилка запуску');
                           }
                         } catch (error) {
-                          addLogEntry('�� Критична помилка запуску Streamlit');
+                          addLogEntry('❌ Критична помилка запуску Streamlit');
                           alert('❌ Помилка запуску');
                         }
                       }}
