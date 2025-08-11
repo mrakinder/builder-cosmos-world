@@ -543,7 +543,7 @@ export default function Admin() {
 
   const handleManualPropertyAdd = async () => {
     const propertyData = {
-      title: "Тестове оголошення",
+      title: "Тест��ве оголошення",
       price_usd: 50000,
       area: 60,
       floor: 3,
@@ -716,7 +716,7 @@ export default function Admin() {
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center">
                 <Settings className="w-5 h-5 mr-2 text-purple-600" />
-                Ручні записи
+                Руч��і записи
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -817,7 +817,7 @@ export default function Admin() {
                         <SelectItem value="Центр">Центр</SelectItem>
                         <SelectItem value="Пасічна">Пасічна</SelectItem>
                         <SelectItem value="БАМ">БАМ</SelectItem>
-                        <SelectItem value="Каскад">Каскад</SelectItem>
+                        <SelectItem value="Каска��">Каскад</SelectItem>
                         <SelectItem value="Залізничний (Вокзал)">
                           Залізничний (Вокзал)
                         </SelectItem>
@@ -1027,7 +1027,7 @@ export default function Admin() {
                       }}
                     >
                       <BarChart3 className="w-4 h-4 mr-1" />
-                      Один район
+                      Один р��йон
                     </Button>
                   </div>
 
@@ -1169,6 +1169,60 @@ export default function Admin() {
                         ? "✅ Запущено"
                         : "⏹️ Зупинено"}
                     </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Backend Deployment */}
+              <Card className="border-0 shadow-xl">
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Activity className="w-5 h-5 mr-2 text-cyan-600" />
+                    Backend Deployment
+                  </CardTitle>
+                  <CardDescription>
+                    Розгортання FastAPI backend на Fly.dev
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Button
+                    className="w-full bg-cyan-600 hover:bg-cyan-700"
+                    onClick={async () => {
+                      try {
+                        addLogEntry('🚀 Запуск розгортання backend...');
+                        const response = await fetch('/api/deploy', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json'
+                          }
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                          addLogEntry('✅ Backend deployment розпочато успішно');
+                          addLogEntry(`📍 Target: ${result.url || 'https://glow-nest-api.fly.dev'}`);
+                          alert('✅ Backend deployment запущено!');
+                        } else {
+                          addLogEntry(`❌ Помилка deployment: ${result.message || 'Невідома помилка'}`);
+                          alert(`❌ Помилка: ${result.message || 'Deployment failed'}`);
+                        }
+                      } catch (error) {
+                        console.error('Backend deployment error:', error);
+                        addLogEntry('❌ Критична помилка deployment запиту');
+                        alert('❌ Помилка запиту deployment');
+                      }
+                    }}
+                  >
+                    <Activity className="w-4 h-4 mr-2" />
+                    🚀 Deploy Backend
+                  </Button>
+
+                  <div className="p-3 bg-cyan-50 rounded-lg text-sm">
+                    <p><strong>Команда:</strong> fly deploy -c fly.api.toml</p>
+                    <p><strong>Target:</strong> glow-nest-api.fly.dev</p>
+                    <p><strong>Docker:</strong> Python 3.11 + FastAPI + Uvicorn</p>
+                    <p><strong>Статус:</strong> <span className="text-cyan-700 font-medium">Ready to deploy</span></p>
                   </div>
                 </CardContent>
               </Card>
@@ -1689,7 +1743,7 @@ export default function Admin() {
                           alert("⏹�� Streamlit зупин��но");
                           loadMLModuleStatus();
                         } catch (error) {
-                          addLogEntry("❌ Помилка зупи��ки Streamlit");
+                          addLogEntry("❌ Помилк�� зупи��ки Streamlit");
                           alert("❌ Помилка зупинки");
                         }
                       }}
