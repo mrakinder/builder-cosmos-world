@@ -1457,9 +1457,7 @@ export default function Admin() {
 
                           // Connect to Python backend SSE for real-time progress
                           const progressUrl = getProgressStreamUrl();
-                          addLogEntry(
-                            `🔗 Connecting to SSE: ${progressUrl}`,
-                          );
+                          addLogEntry(`🔗 Connecting to SSE: ${progressUrl}`);
                           const pythonScraperSSE = new EventSource(progressUrl);
 
                           pythonScraperSSE.onmessage = (event) => {

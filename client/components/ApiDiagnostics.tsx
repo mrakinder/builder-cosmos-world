@@ -1,11 +1,29 @@
-import React, { useState } from 'react';
-import { Button } from '../components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Badge } from '../components/ui/badge';
-import { Alert, AlertDescription } from '../components/ui/alert';
-import { Loader2, CheckCircle, XCircle, AlertTriangle, Activity } from 'lucide-react';
-import { API_CONFIG, safeFetch, getHealthUrl, getDebugRoutesUrl, getScraperStartUrl } from '../../shared/config';
-import { safeJson, safeFetchJson } from '../../shared/safe-parser';
+import React, { useState } from "react";
+import { Button } from "../components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
+import { Alert, AlertDescription } from "../components/ui/alert";
+import {
+  Loader2,
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+  Activity,
+} from "lucide-react";
+import {
+  API_CONFIG,
+  safeFetch,
+  getHealthUrl,
+  getDebugRoutesUrl,
+  getScraperStartUrl,
+} from "../../shared/config";
+import { safeJson, safeFetchJson } from "../../shared/safe-parser";
 
 interface DiagnosticResult {
   success: boolean;
@@ -31,7 +49,9 @@ interface ServerDiagnostics {
 export const ApiDiagnostics: React.FC = () => {
   const [isServerTesting, setIsServerTesting] = useState(false);
   const [isClientTesting, setIsClientTesting] = useState(false);
-  const [serverResults, setServerResults] = useState<ServerDiagnostics | null>(null);
+  const [serverResults, setServerResults] = useState<ServerDiagnostics | null>(
+    null,
+  );
   const [clientResults, setClientResults] = useState<{
     health: DiagnosticResult;
     routes: DiagnosticResult;
@@ -41,9 +61,9 @@ export const ApiDiagnostics: React.FC = () => {
   const runServerSideTest = async () => {
     setIsServerTesting(true);
     setServerResults(null);
-    
+
     try {
-      const response = await fetch('/diag/api-check');
+      const response = await fetch("/diag/api-check");
       const data = await response.json();
       setServerResults(data);
     } catch (error: any) {
@@ -54,10 +74,10 @@ export const ApiDiagnostics: React.FC = () => {
           healthOk: false,
           routesOk: false,
           scraperOk: false,
-          overallOk: false
+          overallOk: false,
         },
         diagnostics: {},
-        recommendations: [`Server-side test failed: ${error.message}`]
+        recommendations: [`Server-side test failed: ${error.message}`],
       });
     } finally {
       setIsServerTesting(false);
@@ -73,7 +93,7 @@ export const ApiDiagnostics: React.FC = () => {
     const results = {
       health: { success: false } as DiagnosticResult,
       routes: { success: false } as DiagnosticResult,
-      scraper: { success: false } as DiagnosticResult
+      scraper: { success: false } as DiagnosticResult,
     };
 
     try {
@@ -85,7 +105,7 @@ export const ApiDiagnostics: React.FC = () => {
         status: healthResult.status,
         data: healthResult.data,
         error: healthResult.error,
-        details: { raw: healthResult.raw?.substring(0, 100) }
+        details: { raw: healthResult.raw?.substring(0, 100) },
       };
 
       if (results.health.success) {
@@ -102,7 +122,7 @@ export const ApiDiagnostics: React.FC = () => {
         status: routesResult.status,
         data: routesResult.data,
         error: routesResult.error,
-        details: { raw: routesResult.raw?.substring(0, 100) }
+        details: { raw: routesResult.raw?.substring(0, 100) },
       };
 
       if (results.routes.success) {
@@ -114,21 +134,23 @@ export const ApiDiagnostics: React.FC = () => {
       // Test 3: Scraper Test (light test)
       console.log(`🤖 Testing scraper: ${getScraperStartUrl()}`);
       const scraperResult = await safeFetchJson(getScraperStartUrl(), {
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify({
-          listing_type: 'sale',
+          listing_type: "sale",
           max_pages: 1,
           delay_ms: 500,
-          headful: false
-        })
+          headful: false,
+        }),
       });
 
       results.scraper = {
-        success: scraperResult.ok && (scraperResult.status === 202 || scraperResult.status === 409),
+        success:
+          scraperResult.ok &&
+          (scraperResult.status === 202 || scraperResult.status === 409),
         status: scraperResult.status,
         data: scraperResult.data,
         error: scraperResult.error,
-        details: { raw: scraperResult.raw?.substring(0, 100) }
+        details: { raw: scraperResult.raw?.substring(0, 100) },
       };
 
       if (results.scraper.success) {
@@ -136,7 +158,6 @@ export const ApiDiagnostics: React.FC = () => {
       } else {
         console.log(`❌ Scraper: ${scraperResult.error}`);
       }
-
     } catch (error: any) {
       console.log(`💥 Client test error: ${error.message}`);
       results.health.error = `Client test failed: ${error.message}`;
@@ -171,17 +192,21 @@ export const ApiDiagnostics: React.FC = () => {
             API Diagnostics
           </CardTitle>
           <CardDescription>
-            Test API connectivity and functionality from both server and client perspectives
+            Test API connectivity and functionality from both server and client
+            perspectives
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          
           {/* API Configuration Info */}
           <Alert>
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              <strong>🎯 Production API:</strong> {API_CONFIG.BASE_URL}<br/>
-              <strong>🚫 Localhost banned:</strong> {API_CONFIG.BASE_URL.includes('localhost') ? '❌ DETECTED' : '✅ Confirmed'}
+              <strong>🎯 Production API:</strong> {API_CONFIG.BASE_URL}
+              <br />
+              <strong>🚫 Localhost banned:</strong>{" "}
+              {API_CONFIG.BASE_URL.includes("localhost")
+                ? "❌ DETECTED"
+                : "✅ Confirmed"}
             </AlertDescription>
           </Alert>
 
@@ -201,20 +226,21 @@ export const ApiDiagnostics: React.FC = () => {
                     Testing...
                   </>
                 ) : (
-                  '🔍 Test from Server'
+                  "🔍 Test from Server"
                 )}
               </Button>
             </div>
-            
+
             {serverResults && (
               <div className="space-y-2 p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center">
                   {getStatusIcon(serverResults.summary.overallOk)}
                   <span className="ml-2 font-medium">
-                    Overall Status: {serverResults.summary.overallOk ? 'PASS' : 'FAIL'}
+                    Overall Status:{" "}
+                    {serverResults.summary.overallOk ? "PASS" : "FAIL"}
                   </span>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div className="flex items-center">
                     {getStatusIcon(serverResults.summary.dnsOk)}
@@ -233,13 +259,15 @@ export const ApiDiagnostics: React.FC = () => {
                     <span className="ml-2">Scraper Endpoint</span>
                   </div>
                 </div>
-                
+
                 {serverResults.recommendations.length > 0 && (
                   <div className="mt-2">
                     <p className="font-medium text-sm">Recommendations:</p>
                     <ul className="text-xs space-y-1 mt-1">
                       {serverResults.recommendations.map((rec, index) => (
-                        <li key={index} className="text-gray-600">{rec}</li>
+                        <li key={index} className="text-gray-600">
+                          {rec}
+                        </li>
                       ))}
                     </ul>
                   </div>
@@ -264,54 +292,77 @@ export const ApiDiagnostics: React.FC = () => {
                     Testing...
                   </>
                 ) : (
-                  '🌐 Test from Browser'
+                  "🌐 Test from Browser"
                 )}
               </Button>
             </div>
-            
+
             {clientResults && (
               <div className="space-y-2 p-3 bg-gray-50 rounded-lg">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Health Check:</span>
                     <div className="flex items-center">
-                      {getStatusBadge(clientResults.health.success, `${clientResults.health.status || 'ERR'}`)}
+                      {getStatusBadge(
+                        clientResults.health.success,
+                        `${clientResults.health.status || "ERR"}`,
+                      )}
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Routes Check:</span>
                     <div className="flex items-center">
-                      {getStatusBadge(clientResults.routes.success, `${clientResults.routes.status || 'ERR'}`)}
+                      {getStatusBadge(
+                        clientResults.routes.success,
+                        `${clientResults.routes.status || "ERR"}`,
+                      )}
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Scraper Test:</span>
                     <div className="flex items-center">
-                      {getStatusBadge(clientResults.scraper.success, `${clientResults.scraper.status || 'ERR'}`)}
+                      {getStatusBadge(
+                        clientResults.scraper.success,
+                        `${clientResults.scraper.status || "ERR"}`,
+                      )}
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Show errors if any */}
-                {(clientResults.health.error || clientResults.routes.error || clientResults.scraper.error) && (
+                {(clientResults.health.error ||
+                  clientResults.routes.error ||
+                  clientResults.scraper.error) && (
                   <div className="mt-2 p-2 bg-red-50 rounded border">
                     <p className="font-medium text-sm text-red-800">Errors:</p>
                     <ul className="text-xs space-y-1 mt-1 text-red-700">
-                      {clientResults.health.error && <li>Health: {clientResults.health.error}</li>}
-                      {clientResults.routes.error && <li>Routes: {clientResults.routes.error}</li>}
-                      {clientResults.scraper.error && <li>Scraper: {clientResults.scraper.error}</li>}
+                      {clientResults.health.error && (
+                        <li>Health: {clientResults.health.error}</li>
+                      )}
+                      {clientResults.routes.error && (
+                        <li>Routes: {clientResults.routes.error}</li>
+                      )}
+                      {clientResults.scraper.error && (
+                        <li>Scraper: {clientResults.scraper.error}</li>
+                      )}
                     </ul>
                   </div>
                 )}
-                
+
                 {/* Show success data if available */}
                 {clientResults.health.success && clientResults.health.data && (
                   <div className="mt-2 p-2 bg-green-50 rounded border">
-                    <p className="font-medium text-sm text-green-800">API Response Sample:</p>
+                    <p className="font-medium text-sm text-green-800">
+                      API Response Sample:
+                    </p>
                     <pre className="text-xs text-green-700 mt-1 overflow-x-auto">
-                      {JSON.stringify(clientResults.health.data, null, 2).substring(0, 300)}
+                      {JSON.stringify(
+                        clientResults.health.data,
+                        null,
+                        2,
+                      ).substring(0, 300)}
                     </pre>
                   </div>
                 )}
@@ -323,11 +374,16 @@ export const ApiDiagnostics: React.FC = () => {
           {(serverResults || clientResults) && (
             <Alert>
               <AlertDescription>
-                <strong>Quick Summary:</strong> {' '}
-                {serverResults?.summary.overallOk && clientResults?.health.success ? (
-                  <span className="text-green-600 font-medium">✅ API is working correctly from both server and client!</span>
+                <strong>Quick Summary:</strong>{" "}
+                {serverResults?.summary.overallOk &&
+                clientResults?.health.success ? (
+                  <span className="text-green-600 font-medium">
+                    ✅ API is working correctly from both server and client!
+                  </span>
                 ) : (
-                  <span className="text-red-600 font-medium">❌ API has connectivity issues. Check diagnostics above.</span>
+                  <span className="text-red-600 font-medium">
+                    ❌ API has connectivity issues. Check diagnostics above.
+                  </span>
                 )}
               </AlertDescription>
             </Alert>
