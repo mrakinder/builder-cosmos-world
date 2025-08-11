@@ -3,36 +3,20 @@
  * Single source of truth for all API URLs and settings
  */
 
-// Environment-based API URL configuration
+// PRODUCTION-ONLY API URL configuration
+// NO LOCALHOST REFERENCES IN PRODUCTION BUILD
 const getApiUrl = (): string => {
-  // Check environment variables first
+  // 1. Check environment variables first
   if (typeof process !== 'undefined' && process.env?.PYTHON_API_URL) {
     return process.env.PYTHON_API_URL;
   }
-  
-  // Check browser environment variables (injected during build)
+
+  // 2. Check browser environment variables (injected during build)
   if (typeof window !== 'undefined' && (window as any).__PYTHON_API_URL__) {
     return (window as any).__PYTHON_API_URL__;
   }
-  
-  // Development vs Production defaults
-  if (typeof window !== 'undefined') {
-    // Browser environment - check hostname
-    if (window.location.hostname.includes('fly.dev') || window.location.hostname.includes('localhost')) {
-      return 'https://glow-nest-api.fly.dev';
-    }
-  }
-  
-  // Server environment - check NODE_ENV or hostname
-  if (typeof process !== 'undefined') {
-    if (process.env.NODE_ENV === 'production') {
-      return 'https://glow-nest-api.fly.dev';
-    }
-    // Local development fallback
-    return 'http://localhost:8080';
-  }
-  
-  // Final fallback
+
+  // 3. PRODUCTION DEFAULT - ALWAYS use fly.dev API
   return 'https://glow-nest-api.fly.dev';
 };
 
