@@ -11,22 +11,17 @@ COPY yarn.lock* ./
 RUN echo "=== Node/NPM versions ===" && node -v && npm -v || true
 RUN echo "=== ls -la /app (before install) ===" && ls -la
 
-# 2) Стійка установка залежностей з видимими логами
-#    - якщо є package-lock.json -> npm ci
-#    - якщо є pnpm/yarn lock -> використовуємо corepack
-#    - інакше -> npm install
+# 2) Стійка установка залежностей з fallback
+#    - намагаємось npm ci, якщо є package-lock.json
+#    - якщо npm ci падає або lock-файл відсутній → npm install
 RUN if [ -f package-lock.json ]; then \
       echo "Using npm ci (lockfile found)"; \
-      npm ci --no-audit --no-fund --loglevel=verbose || (echo 'npm ci failed'; exit 1); \
-    elif [ -f pnpm-lock.yaml ]; then \
-      echo "Using pnpm (lockfile found)"; \
-      corepack enable && pnpm i --frozen-lockfile || (echo 'pnpm install failed'; exit 1); \
-    elif [ -f yarn.lock ]; then \
-      echo "Using yarn (lockfile found)"; \
-      corepack enable && yarn install --frozen-lockfile || (echo 'yarn install failed'; exit 1); \
+      npm ci --no-audit --no-fund --loglevel=verbose || \ 
+      (echo 'npm ci failed, falling back to npm install'; \
+       npm install --no-audit --no-fund --loglevel=verbose); \
     else \
-      echo "No lockfile, using npm install"; \
-      npm install --no-audit --no-fund --loglevel=verbose || (echo 'npm install failed'; exit 1); \
+      echo "No package-lock.json, using npm install"; \
+      npm install --no-audit --no-fund --loglevel=verbose; \
     fi
 
 # 3) Копіюємо решту коду (щоб кешувався install)

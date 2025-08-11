@@ -12,10 +12,9 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "npm run build:client",
-    "build:client": "vite build",
+    "build": "vite build",
     "build:server": "vite build --config vite.config.server.ts",
-    "build:full": "npm run build:client && npm run build:server",
+    "build:full": "npm run build && npm run build:server",
     "start": "node dist/server/node-build.mjs",
     "test": "vitest --run",
     "format.fix": "prettier --write .",

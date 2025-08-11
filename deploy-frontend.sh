@@ -1,13 +1,18 @@
 #!/bin/bash
 
 # Деплой фронтенда на Fly.io
-set -e
+set -euo pipefail
+
+# Блокуємо будь-яке auto-launch від Fly
+export FLY_NO_LAUNCH=1
+# Прибираємо потенційно згенеровані конфіги
+rm -f fly.toml .fly.toml fly.tmp.toml 2>/dev/null || true
 
 echo "🚀 Deploying Glow Nest Frontend to Fly.io..."
 
 # Перевірка локальної збірки
 echo "📦 Testing local build..."
-npm run build:client
+npm run build
 
 if [ $? -eq 0 ]; then
     echo "✅ Local build successful"
