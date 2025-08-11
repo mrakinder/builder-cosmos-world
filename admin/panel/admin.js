@@ -4,8 +4,8 @@
  * Manages all 5 modules through REST API calls
  */
 
-// API Configuration
-const API_BASE_URL = "http://localhost:8080";
+// API Configuration - PRODUCTION ONLY
+const API_BASE_URL = "https://glow-nest-api.fly.dev";
 
 // Global state
 let eventSource = null;
@@ -324,7 +324,7 @@ async function testMLPrediction() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         area: 65,
-        district: "Центр",
+        district: "Цен��р",
         rooms: 2,
         floor: 5,
         total_floors: 9,
@@ -396,7 +396,7 @@ async function generateForecasts() {
     }
   } catch (error) {
     console.error("Error generating forecasts:", error);
-    showAlert("❌ Помилка генерації прогнозів", "error");
+    showAlert("❌ Помилка ��енерації прогнозів", "error");
   } finally {
     hideButtonLoading();
   }
