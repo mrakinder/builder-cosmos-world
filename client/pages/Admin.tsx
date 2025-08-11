@@ -140,9 +140,13 @@ export default function Admin() {
         }
       };
 
+      pythonScraperSSE.onopen = () => {
+        addLogEntry('✅ Scraper progress SSE connection established');
+      };
+
       pythonScraperSSE.onerror = (error) => {
-        console.error('Python SSE connection error:', error);
-        addLogEntry('⚠️ Python backend SSE connection lost, retrying...');
+        console.error('Scraper progress SSE connection error:', error);
+        addLogEntry('⚠️ Scraper progress SSE connection lost, retrying in 5s...');
         // Auto-retry connection after 5 seconds
         setTimeout(() => {
           if (pythonScraperSSE) {
@@ -336,7 +340,7 @@ export default function Admin() {
           `[${currentTime}] База даних ініціал��зована`,
           `[${currentTime}] API готове до роботи`,
           `[${currentTime}] Нова система з 5 модулями активована`,
-          `[${currentTime}] Botasaurus v4.0.10+ готовий ��о парсингу`
+          `[${currentTime}] Botasaurus v4.0.10+ готовий ��о парсин��у`
         ];
         setActivityLogs(sampleLogs);
       } else {
@@ -467,7 +471,7 @@ export default function Admin() {
   };
 
   const handleDeleteManualProperties = async () => {
-    if (!confirm('Видалити всі ручно додані оголошення?')) return;
+    if (!confirm('Видалити всі ручно д��дані оголошення?')) return;
 
     try {
       const response = await fetch('/api/manual-property/delete-manual-properties', {
@@ -816,7 +820,7 @@ export default function Admin() {
                   <div className="p-3 bg-blue-50 rounded-lg text-sm">
                     <p><strong>Ціль:</strong> MAPE ≤ 15%</p>
                     <p><strong>Фічі:</strong> площа, район, кімнати, поверх, тип, ремонт</p>
-                    <p><strong>Статус:</strong> {mlModuleStatus.lightautoml_trained ? '✅ Гот����о' : '⏳ Не т��енована'}</p>
+                    <p><strong>Статус:</strong> {mlModuleStatus.lightautoml_trained ? '✅ Гот��во' : '⏳ Не т��енована'}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -857,7 +861,7 @@ export default function Admin() {
                         try {
                           const response = await fetch(`/api/ml/forecast?district=${encodeURIComponent(district)}`);
                           const data = await response.json();
-                          alert(`✅ Прогноз для "${district}" готовий!`);
+                          alert(`✅ П��огноз для "${district}" готовий!`);
                         } catch (error) {
                           alert('❌ Помилка прогнозування району');
                         }
@@ -938,7 +942,7 @@ export default function Admin() {
                     Apache Superset
                   </CardTitle>
                   <CardDescription>
-                    Бізнес-аналітика з 4 готовими дашбордами
+                    Бізнес-аналі��ика з 4 готовими дашбордами
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -949,7 +953,7 @@ export default function Admin() {
                         const response = await fetch('/api/superset/status');
                         const data = await response.json();
                         if (data.running) {
-                          alert(`��� Superset активний!\nURL: ${data.url}\n��ашборди: 4`);
+                          alert(`✅ Superset активний!\nURL: ${data.url}\n��ашборди: 4`);
                         } else {
                           alert('⏳ Superset не запущений\nЗапустіть через CLI: python property_monitor_cli.py superset start');
                         }
@@ -1010,7 +1014,7 @@ export default function Admin() {
                   </div>
                   <div className="p-3 bg-purple-50 rounded-lg">
                     <h4 className="font-medium text-purple-800 mb-1">Модуль 3: Prophet</h4>
-                    <p className="text-purple-600 text-xs">Часові ��яди та тренди</p>
+                    <p className="text-purple-600 text-xs">Часові ряди та тренди</p>
                   </div>
                 </div>
               </CardContent>
@@ -1270,7 +1274,7 @@ export default function Admin() {
                         console.log('Train API response:', response.ok, data);
 
                         if (response.ok && data.success) {
-                          addLogEntry('✅ LightAutoML навчання успішно запущено');
+                          addLogEntry('✅ LightAutoML навчання ��спішно запущено');
                           addLogEntry(`🎯 Ціль: MAPE ≤ 15%`);
                           addLogEntry('📊 Завантаження даних з бази...');
                           alert('✅ LightAutoML навчання запущено!');
@@ -1338,7 +1342,7 @@ export default function Admin() {
                             alert('❌ Помилка запуску');
                           }
                         } catch (error) {
-                          addLogEntry('❌ Критична помилка запуску Streamlit');
+                          addLogEntry('�� Критична помилка запуску Streamlit');
                           alert('❌ Помилка запуску');
                         }
                       }}
@@ -1351,7 +1355,7 @@ export default function Admin() {
                       className="text-xs"
                       onClick={async () => {
                         try {
-                          addLogEntry('⏹️ Зупинка Streamlit веб-����одатку...');
+                          addLogEntry('⏹️ Зупинка Streamlit веб-��одатку...');
                           await fetch('/api/streamlit/stop', { method: 'POST' });
                           addLogEntry('✅ Streamlit успішно зупинено');
                           alert('⏹�� Streamlit зупин��но');
