@@ -548,7 +548,7 @@ export default function Admin() {
       area: 60,
       floor: 3,
       district: "Центр",
-      description: "��естовий опис для налагодження",
+      description: "Тестовий опис для налагодження",
       isOwner: true,
       url: "manual_entry",
       olx_id: `manual_${Date.now()}`,
@@ -654,7 +654,7 @@ export default function Admin() {
               🛡️ Botasaurus v4.0.10+
             </span>
             <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-              ���� LightAutoML v0.3.7+
+              🧠 LightAutoML v0.3.7+
             </span>
             <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">
               📈 Prophet v1.1.4+
@@ -964,7 +964,7 @@ export default function Admin() {
 
                   <div className="p-3 bg-blue-50 rounded-lg text-sm">
                     <p>
-                      <strong>Ціль:</strong> MAPE ≤ 15%
+                      <strong>Ціль:</strong> MAPE �� 15%
                     </p>
                     <p>
                       <strong>Фічі:</strong> площа, район, кімнати, поверх, тип,
@@ -1166,7 +1166,7 @@ export default function Admin() {
                     <p className="mt-2">
                       <strong>Статус:</strong>{" "}
                       {mlModuleStatus.superset_running
-                        ? "✅ Запущено"
+                        ? "✅ Запуще��о"
                         : "⏹️ Зупинено"}
                     </p>
                   </div>
@@ -1236,7 +1236,7 @@ export default function Admin() {
                   Уніфіко��аний CLI Інтерфейс
                 </CardTitle>
                 <CardDescription>
-                  Ко��андний рядок для управління всіма 5 модулями систе��и
+                  Командний рядок для управління всіма 5 модулями систе��и
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -1373,7 +1373,7 @@ export default function Admin() {
                                 rel="noopener noreferrer"
                                 className="text-blue-600 hover:underline"
                               >
-                                Пере��лянути на OLX
+                                Переглянути на OLX
                               </a>
                             )}
                           </div>
@@ -1422,6 +1422,7 @@ export default function Admin() {
                       try {
                         console.log("🤖 Starting Botasaurus scraping...");
                         addLogEntry("🤖 Запуск Botasaurus парсингу...");
+                        addLogEntry("🏥 Перевірка API перед запуском...");
                         setScraperStatus("running");
                         setScraperProgress(0);
 
@@ -1575,7 +1576,7 @@ export default function Admin() {
                         console.error("Scraper error:", error);
                         addLogEntry("�� Критична помилка запуску Botasaurus");
                         setScraperStatus("failed");
-                        alert("❌ Поми��ка запуску Botasaurus");
+                        alert("❌ Поми��ка запус��у Botasaurus");
                       }
                     }}
                   >
@@ -1805,7 +1806,7 @@ export default function Admin() {
 
               <div className="mt-4 p-3 bg-indigo-50 rounded-lg">
                 <h4 className="font-medium text-indigo-800 mb-2">
-                  📋 Доступні CLI команди для всі�� модулів:
+                  📋 Доступні CLI команди для всіх модулів:
                 </h4>
                 <div className="text-xs text-indigo-700 space-y-1 font-mono">
                   <div>npm run ml:train - Тренування LightAutoML</div>
@@ -1819,7 +1820,7 @@ export default function Admin() {
           </Card>
         </div>
 
-        {/* Старі контрольні панелі видалені - тепер використовуємо тільки нові 5 модулів */}
+        {/* Старі контрольні панелі видале��і - тепер використовуємо тільки нові 5 модулів */}
 
         {/* Logs Section */}
         <Card className="border-0 shadow-xl mt-8">
