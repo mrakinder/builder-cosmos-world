@@ -173,6 +173,53 @@ export default function Admin() {
     // Initialize scraper progress SSE connection
     connectToPythonScraperSSE();
 
+    // Set up ML progress SSE for real-time training updates
+    let mlProgressSSE = null;
+    const connectToMLProgressSSE = () => {
+      const mlProgressUrl = buildApiUrl('/ml/progress/stream');
+      addLogEntry(`🔗 Connecting to ML progress: ${mlProgressUrl}`);
+      mlProgressSSE = new EventSource(mlProgressUrl);
+
+      mlProgressSSE.onopen = () => {
+        addLogEntry('✅ ML progress SSE connection established');
+      };
+
+      mlProgressSSE.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.progress !== undefined) {
+            setMLTrainingProgress(data.progress);
+            if (data.status) {
+              setMLTrainingStatus(data.status);
+            }
+            if (data.stage) {
+              addLogEntry(`🧠 ML Training: ${data.progress}% - ${data.stage}`);
+            }
+
+            // Handle completion
+            if (data.status === 'completed') {
+              addLogEntry('✅ ML training completed successfully!');
+              loadMLModuleStatus();
+              mlProgressSSE.close();
+            } else if (data.status === 'failed') {
+              addLogEntry('❌ ML training failed');
+              mlProgressSSE.close();
+            }
+          }
+        } catch (error) {
+          console.error('Error parsing ML progress SSE data:', error);
+        }
+      };
+
+      mlProgressSSE.onerror = (error) => {
+        console.error('ML progress SSE connection error:', error);
+        addLogEntry('⚠️ ML progress SSE connection lost');
+      };
+    };
+
+    // Initialize ML progress SSE connection (will auto-connect when training starts)
+    connectToMLProgressSSE();
+
     // Add comprehensive fix notification
     addLogEntry('🔧 FIX COMPLETED: spawn python ENOENT + JSON parsing issues resolved');
     addLogEntry('✅ Ключові виправлення:');
@@ -263,7 +310,7 @@ export default function Admin() {
           clearInterval(progressInterval);
           loadStats();
         } else if (data.status === "error") {
-          addLogEntry('❌ Botasaurus парсинг завершилось з помилкою');
+          addLogEntry('❌ Botasaurus парс��нг завершилось з помилкою');
           setScraperStatus("failed");
           clearInterval(progressInterval);
         } else if (data.status === "running") {
@@ -464,7 +511,7 @@ export default function Admin() {
       });
       
       if (response.ok) {
-        alert('Тестове оголошення додано!');
+        alert('Тестове оголошен��я додано!');
         loadStats();
       }
     } catch (error) {
@@ -771,7 +818,7 @@ export default function Admin() {
                   <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg">
                     <div className={`w-4 h-4 rounded-full mx-auto mb-2 ${mlModuleStatus.prophet_ready ? 'bg-purple-500' : 'bg-gray-400'}`}></div>
                     <h4 className="font-medium text-sm">Prophet</h4>
-                    <p className="text-xs text-slate-600">Часові ря��и</p>
+                    <p className="text-xs text-slate-600">Часові ряди</p>
                   </div>
                   <div className="text-center p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg">
                     <div className={`w-4 h-4 rounded-full mx-auto mb-2 ${mlModuleStatus.streamlit_running ? 'bg-orange-500' : 'bg-gray-400'}`}></div>
@@ -797,7 +844,7 @@ export default function Admin() {
                     LightAutoML Прогнозування
                   </CardTitle>
                   <CardDescription>
-                    Автоматичне ML для п��огнозування цін нерухомост��
+                    Автоматичне ML для п��огнозування цін нерухомості
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -1034,7 +1081,7 @@ export default function Admin() {
                 Спаршені оголошення ({properties.length})
               </CardTitle>
               <CardDescription>
-                ��ерегляд усіх зібраних оголошень з OLX
+                ��ерегляд усіх зібраних оголошень �� OLX
               </CardDescription>
             </CardHeader>
             <CardContent>
