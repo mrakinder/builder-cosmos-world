@@ -359,29 +359,39 @@ export const handleActivityLog: RequestHandler = (req, res) => {
 
 export const handleStopScraping: RequestHandler = async (req, res) => {
   try {
-    // Call Python FastAPI backend to stop scraping
-    // Production API URL will be https://glow-nest-api.fly.dev
-    const pythonBackendUrl = process.env.PYTHON_API_URL || 'https://glow-nest-api.fly.dev';
+    // Use centralized API configuration for stop endpoint
+    const stopUrl = buildApiUrl(API_CONFIG.ENDPOINTS.SCRAPER_STOP);
 
-    const response = await fetch(`${pythonBackendUrl}/scraper/stop`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      }
+    addActivity(`🛑 Node → Python: POST ${stopUrl}`);
+    addActivity(`🔧 Using centralized API config: ${API_CONFIG.BASE_URL}`);
+
+    // Use safeFetch for comprehensive error handling
+    const fetchResult = await safeFetch(stopUrl, {
+      method: 'POST'
     });
 
-    // Safe JSON parsing to prevent "Unexpected end of JSON input"
-    const parsedResponse = await safeJsonParse(response);
+    addActivity(`📨 Python stop response: ${fetchResult.status} ${fetchResult.ok ? 'OK' : 'ERROR'}`);
 
-    if (!parsedResponse.ok) {
-      addActivity(`❌ Stop JSON parse error: ${parsedResponse.error}`);
-      throw new Error(`Python backend JSON error: ${parsedResponse.error}`);
+    if (!fetchResult.ok) {
+      const errorMsg = fetchResult.error || 'Unknown fetch error';
+      const details = fetchResult.details || {};
+
+      // Enhanced error logging for stop operation
+      addActivity(`❌ STOP FETCH FAILED: ${errorMsg}`);
+      addActivity(`🔍 Error type: ${details.name || 'Unknown'}`);
+      addActivity(`📝 Error code: ${details.code || 'N/A'}`);
+      addActivity(`🌐 DNS issue: ${details.code === 'ENOTFOUND' ? 'YES' : 'NO'}`);
+      addActivity(`🔌 Connection refused: ${details.code === 'ECONNREFUSED' ? 'YES' : 'NO'}`);
+      addActivity(`⏰ Timeout: ${details.code === 'ABORT_ERR' || errorMsg.includes('timeout') ? 'YES' : 'NO'}`);
+      addActivity(`📍 Target URL: ${stopUrl}`);
+
+      throw new Error(`Python backend stop fetch failed: ${errorMsg} (${details.code || 'Unknown error'})`);
     }
 
-    const pythonResult = parsedResponse.data;
+    const pythonResult = fetchResult.data;
 
-    if (!response.ok || !pythonResult?.ok) {
-      const errorMsg = pythonResult?.error || pythonResult?.detail || `HTTP ${response.status}`;
+    if (!pythonResult?.ok) {
+      const errorMsg = pythonResult?.error || pythonResult?.detail || `HTTP ${fetchResult.status}`;
       addActivity(`❌ Python backend stop error: ${errorMsg}`);
       throw new Error(errorMsg);
     }
@@ -578,7 +588,7 @@ export const handlePriceTrends: RequestHandler = (req, res) => {
         top_streets: [],
         total_properties: 0,
         last_update: new Date().toISOString(),
-        message: "Немає даних д��я аналізу. Запустіть парсинг для збору оголошень."
+        message: "Немає даних для аналізу. Запустіть парсинг для збору оголошень."
       });
     }
 
