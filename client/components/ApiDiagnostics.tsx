@@ -5,6 +5,7 @@ import { Badge } from '../components/ui/badge';
 import { Alert, AlertDescription } from '../components/ui/alert';
 import { Loader2, CheckCircle, XCircle, AlertTriangle, Activity } from 'lucide-react';
 import { API_CONFIG, safeFetch, getHealthUrl, getDebugRoutesUrl, getScraperStartUrl } from '../../shared/config';
+import { safeJson, safeFetchJson } from '../../shared/safe-parser';
 
 interface DiagnosticResult {
   success: boolean;
