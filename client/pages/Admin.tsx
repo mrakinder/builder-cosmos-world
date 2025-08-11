@@ -81,8 +81,9 @@ export default function Admin() {
       loadMLModuleStatus();
     }, 2000); // Update every 2 seconds
 
-    // Set up Server-Sent Events for real-time updates (Node.js backend)
-    const eventSource = new EventSource('/api/events/stream');
+    // Set up Server-Sent Events using centralized configuration
+    addLogEntry(`🔗 Setting up SSE connections to ${API_CONFIG.BASE_URL}`);
+    const eventSource = new EventSource(getEventsStreamUrl());
 
     eventSource.onmessage = (event) => {
       try {
@@ -1034,7 +1035,7 @@ export default function Admin() {
                             <h4 className="font-medium text-slate-900 mb-1">{property.title}</h4>
                             <p className="text-sm text-slate-600">{property.district}</p>
                             <p className="text-xs text-slate-500 mt-1">
-                              {property.isOwner ? '👤 Власник' : '🏢 Агентство'}
+                              {property.isOwner ? '👤 ��ласник' : '🏢 Агентство'}
                             </p>
                           </div>
                           <div className="text-sm">
@@ -1350,7 +1351,7 @@ export default function Admin() {
                           alert('⏹�� Streamlit зупин��но');
                           loadMLModuleStatus();
                         } catch (error) {
-                          addLogEntry('❌ Помилка зупи��ки Streamlit');
+                          addLogEntry('��� Помилка зупи��ки Streamlit');
                           alert('❌ Помилка зупинки');
                         }
                       }}
