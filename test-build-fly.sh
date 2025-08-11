@@ -1,22 +1,22 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-echo "🔧 Testing Fly.io build without deploy..."
+CONFIG=${CONFIG:-fly.frontend.toml}
+APP_NAME=${APP_NAME:-glow-nest-frontend}
 
-# Перенесення старого fly.toml щоб не заважав
-if [ -f "fly.toml" ]; then
-    echo "📦 Moving old fly.toml to fly.old.toml"
-    mv fly.toml fly.old.toml
+# 1) sanity checks
+test -f "$CONFIG" || { echo "❌ Missing $CONFIG"; exit 1; }
+grep -q '^app\s*=\s*"' "$CONFIG" || { echo "❌ $CONFIG must contain: app = \"...\""; exit 1; }
+
+# 2) disable auto-launch
+export FLY_NO_LAUNCH=1
+
+# 3) avoid conflicting root fly.toml
+if [ -f fly.toml ] && [ "$(basename "$CONFIG")" != "fly.toml" ]; then
+  echo "⚠️  Renaming root fly.toml to avoid conflicts"
+  mv -f fly.toml fly.old.toml
 fi
 
-# Тестування білду на Fly.io без деплою
-echo "🔨 Running build test..."
-fly deploy --build-only --remote-only --config fly.frontend.toml
-
-if [ $? -eq 0 ]; then
-    echo "✅ Build test successful! Ready for deployment."
-    echo "🚀 To deploy frontend: fly deploy --config fly.frontend.toml --remote-only"
-    echo "🚀 To deploy API: fly deploy --config fly.api.toml --remote-only"
-else
-    echo "❌ Build test failed"
-    exit 1
-fi
+# 4) build & deploy using explicit config
+echo "🚀 Deploying $APP_NAME with $CONFIG"
+flyctl deploy --config "$CONFIG" --remote-only
