@@ -1,6 +1,6 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react-swc';
-import path from 'path';
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react-swc";
+import path from "path";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command }) => {
@@ -9,7 +9,7 @@ export default defineConfig(({ command }) => {
   // Увага: жодних імпортів ./server на топ-рівні.
   // Якщо для dev потрібен якийсь код із ./server — роби це тільки в режимі serve
   // і лише динамічним імпортом (щоб build його не бачив):
-  if (command === 'serve') {
+  if (command === "serve") {
     // За потреби можна додати динамічний імпорт тут
     // import('./server').then(mod => mod.setupDev?.())
   }
