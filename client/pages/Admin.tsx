@@ -25,8 +25,10 @@ import {
   TrendingUp,
   Globe,
   BarChart3,
-  Zap
+  Zap,
+  Wifi
 } from "lucide-react";
+import ApiDiagnostics from "@/components/ApiDiagnostics";
 
 export default function Admin() {
   const [stats, setStats] = useState({
@@ -209,7 +211,7 @@ export default function Admin() {
         }
       } catch (error) {
         console.error('Failed to get ML progress:', error);
-        addLogEntry('❌ Помилка отримання прогресу навчання');
+        addLogEntry('❌ П��милка отримання прогресу навчання');
 
         if (attempts >= 5) { // Stop after 5 failed attempts
           setMLTrainingStatus("failed");
@@ -669,7 +671,7 @@ export default function Admin() {
                         <SelectItem value="Пасічна">Пасічна</SelectItem>
                         <SelectItem value="БАМ">БАМ</SelectItem>
                         <SelectItem value="Каскад">Каскад</SelectItem>
-                        <SelectItem value="Залізничний (Вокзал)">Залізничний (Вокзал)</SelectItem>
+                        <SelectItem value="Залізничний (Вокза��)">Залізничний (Вокзал)</SelectItem>
                         <SelectItem value="Брати">Брати</SelectItem>
                         <SelectItem value="Софіївка">Софі��вка</SelectItem>
                         <SelectItem value="Будівельників">Будівельників</SelectItem>
@@ -837,7 +839,7 @@ export default function Admin() {
 
                   <div className="p-3 bg-purple-50 rounded-lg text-sm">
                     <p><strong>Метод:</strong> Facebook Prophet</p>
-                    <p><strong>Прогноз:</strong> 6 місяців з довірчими інтервалами</p>
+                    <p><strong>Прогн��з:</strong> 6 місяців з довірчими інтервалами</p>
                     <p><strong>С��ат��с:</strong> {mlModuleStatus.prophet_ready ? '✅ Готово' : '⏳ Не готово'}</p>
                   </div>
                 </CardContent>
@@ -891,7 +893,7 @@ export default function Admin() {
 
                   <div className="p-3 bg-orange-50 rounded-lg text-sm">
                     <p><strong>Функції:</strong> ML прогноз, схожі об'єкти, аналіз</p>
-                    <p><strong>Відгук:</strong> ≤1.5 с��к на запит</p>
+                    <p><strong>Від��ук:</strong> ≤1.5 с��к на запит</p>
                     <p><strong>Статус:</strong> {mlModuleStatus.streamlit_running ? '✅ З��пущено' : '⏹️ Зупинено'}</p>
                   </div>
                 </CardContent>
@@ -916,7 +918,7 @@ export default function Admin() {
                         const response = await fetch('/api/superset/status');
                         const data = await response.json();
                         if (data.running) {
-                          alert(`✅ Superset активний!\nURL: ${data.url}\n��ашборди: 4`);
+                          alert(`✅ Superset активний!\nURL: ${data.url}\n��ашборд��: 4`);
                         } else {
                           alert('⏳ Superset не запущений\nЗапустіть через CLI: python property_monitor_cli.py superset start');
                         }
