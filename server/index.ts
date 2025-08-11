@@ -93,6 +93,9 @@ export function createServer() {
   app.get("/api/superset/status", handleSupersetStatus);
   app.get("/api/pipeline/status", handlePipelineStatus);
 
+  // Deploy routes
+  app.use("/api", deployRouter);
+
   // New 5-Module System Routes
   app.post("/api/scraper/start", handleStartScraping);
   app.get("/api/scraper/status", handleScrapingStatus);
