@@ -324,7 +324,7 @@ export default function Admin() {
       if (!data.logs || data.logs.length === 0) {
         const currentTime = new Date().toLocaleTimeString('uk-UA');
         const sampleLogs = [
-          `[${currentTime}] Система з��пущена`,
+          `[${currentTime}] Система запущена`,
           `[${currentTime}] База даних ініціалізована`,
           `[${currentTime}] API готове до роботи`,
           `[${currentTime}] Нова система з 5 модулями активована`,
@@ -449,7 +449,7 @@ export default function Admin() {
       });
       
       if (response.ok) {
-        alert('Тестове оголошенн�� додано!');
+        alert('Тестове оголошення додано!');
         loadStats();
       }
     } catch (error) {
@@ -626,6 +626,19 @@ export default function Admin() {
             {showStreetManager ? 'С��овати' : 'Управління'} вулицями
           </Button>
           <Button
+            variant={showApiDiagnostics ? "default" : "outline"}
+            onClick={() => {
+              setShowApiDiagnostics(!showApiDiagnostics);
+              if (!showApiDiagnostics) {
+                setShowProperties(false);
+                setShowStreetManager(false);
+              }
+            }}
+          >
+            <Wifi className="w-4 h-4 mr-2" />
+            {showApiDiagnostics ? 'Сховати' : 'Діагностика'} API
+          </Button>
+          <Button
             variant="outline"
             asChild
           >
@@ -645,7 +658,7 @@ export default function Admin() {
                 Управління вулицями та районами
               </CardTitle>
               <CardDescription>
-                Додавання нових вулиць до ��снуючих районів
+                Додавання нових вулиць до існуючих районів
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -718,7 +731,7 @@ export default function Admin() {
                   Комплексна ML Система (5 модулів)
                 </CardTitle>
                 <CardDescription>
-                  Повнофункціональна система машинного навчання для ана��ізу нерухомості
+                  Повнофункціональна система машинного навчання для аналізу нерухомості
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -1344,7 +1357,7 @@ export default function Admin() {
               </div>
 
               <div className="mt-4 p-3 bg-indigo-50 rounded-lg">
-                <h4 className="font-medium text-indigo-800 mb-2">📋 Доступні CLI команди для всіх м��дулів:</h4>
+                <h4 className="font-medium text-indigo-800 mb-2">📋 Доступні CLI команди для всіх модулів:</h4>
                 <div className="text-xs text-indigo-700 space-y-1 font-mono">
                   <div>npm run ml:train - Тренування LightAutoML</div>
                   <div>npm run ml:forecast - Prophet прогнозу��ання</div>
