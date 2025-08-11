@@ -605,6 +605,7 @@ export default function Admin() {
               if (!showProperties) {
                 loadProperties();
                 setShowStreetManager(false);
+                setShowApiDiagnostics(false);
               }
             }}
           >
@@ -643,7 +644,7 @@ export default function Admin() {
                 Управління вулицями та районами
               </CardTitle>
               <CardDescription>
-                Додавання нових вулиць до існуючих районів
+                Додавання нових вулиць д�� існуючих районів
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -669,7 +670,7 @@ export default function Admin() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Центр">Центр</SelectItem>
-                        <SelectItem value="Пасічна">Пасічна</SelectItem>
+                        <SelectItem value="Пасічна">Пасічн��</SelectItem>
                         <SelectItem value="БАМ">БАМ</SelectItem>
                         <SelectItem value="Каскад">Каскад</SelectItem>
                         <SelectItem value="Залізничний (Вокзал)">Залізничний (Вокзал)</SelectItem>
@@ -757,7 +758,7 @@ export default function Admin() {
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <Brain className="w-5 h-5 mr-2 text-blue-600" />
-                    LightAutoML Прогнозування
+                    LightAutoML Прогнозуванн��
                   </CardTitle>
                   <CardDescription>
                     Автоматичне ML для п��огнозування цін нерухомості
