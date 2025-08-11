@@ -101,8 +101,13 @@ export default function Admin() {
       }
     };
 
+    eventSource.onopen = () => {
+      addLogEntry('✅ Events SSE connection established');
+    };
+
     eventSource.onerror = (error) => {
-      console.error('SSE connection error:', error);
+      console.error('Events SSE connection error:', error);
+      addLogEntry('⚠️ Events SSE connection lost');
     };
 
     // Connect to Python backend SSE for real-time scraper progress
@@ -438,7 +443,7 @@ export default function Admin() {
       area: 60,
       floor: 3,
       district: "Центр",
-      description: "Тестов��й опис для налагодження",
+      description: "Тестовий опис для налагодження",
       isOwner: true,
       url: "manual_entry",
       olx_id: `manual_${Date.now()}`
@@ -811,7 +816,7 @@ export default function Admin() {
                   <div className="p-3 bg-blue-50 rounded-lg text-sm">
                     <p><strong>Ціль:</strong> MAPE ≤ 15%</p>
                     <p><strong>Фічі:</strong> площа, район, кімнати, поверх, тип, ремонт</p>
-                    <p><strong>Статус:</strong> {mlModuleStatus.lightautoml_trained ? '✅ Гот��во' : '⏳ Не т��енована'}</p>
+                    <p><strong>Статус:</strong> {mlModuleStatus.lightautoml_trained ? '✅ Гот����о' : '⏳ Не т��енована'}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -918,7 +923,7 @@ export default function Admin() {
                   </div>
 
                   <div className="p-3 bg-orange-50 rounded-lg text-sm">
-                    <p><strong>Функції:</strong> ML прогноз, схожі об'єкти, ана��із</p>
+                    <p><strong>Функції:</strong> ML прогноз, схожі об'єкти, аналіз</p>
                     <p><strong>Відгук:</strong> ≤1.5 с��к на запит</p>
                     <p><strong>Статус:</strong> {mlModuleStatus.streamlit_running ? '✅ З��пущено' : '⏹️ Зу��инено'}</p>
                   </div>
@@ -944,7 +949,7 @@ export default function Admin() {
                         const response = await fetch('/api/superset/status');
                         const data = await response.json();
                         if (data.running) {
-                          alert(`✅ Superset ак��ивний!\nURL: ${data.url}\n��ашборди: 4`);
+                          alert(`��� Superset активний!\nURL: ${data.url}\n��ашборди: 4`);
                         } else {
                           alert('⏳ Superset не запущений\nЗапустіть через CLI: python property_monitor_cli.py superset start');
                         }
@@ -1005,7 +1010,7 @@ export default function Admin() {
                   </div>
                   <div className="p-3 bg-purple-50 rounded-lg">
                     <h4 className="font-medium text-purple-800 mb-1">Модуль 3: Prophet</h4>
-                    <p className="text-purple-600 text-xs">Часові ряди та тренди</p>
+                    <p className="text-purple-600 text-xs">Часові ��яди та тренди</p>
                   </div>
                 </div>
               </CardContent>
@@ -1179,7 +1184,7 @@ export default function Admin() {
                                   }
 
                                   if (sseData.status === 'completed') {
-                                    addLogEntry('✅ Botasaurus парсинг за����ершено через Python backend!');
+                                    addLogEntry('✅ Botasaurus парсинг за��ершено через Python backend!');
                                     pythonScraperSSE.close();
                                     loadStats();
                                   } else if (sseData.status === 'error') {
@@ -1346,7 +1351,7 @@ export default function Admin() {
                       className="text-xs"
                       onClick={async () => {
                         try {
-                          addLogEntry('⏹️ Зупинка Streamlit веб-��одатку...');
+                          addLogEntry('⏹️ Зупинка Streamlit веб-����одатку...');
                           await fetch('/api/streamlit/stop', { method: 'POST' });
                           addLogEntry('✅ Streamlit успішно зупинено');
                           alert('⏹�� Streamlit зупин��но');
