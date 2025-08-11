@@ -1,4 +1,3 @@
-[app]
 app = "glow-nest-api"
 primary_region = "fra"
 
