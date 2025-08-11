@@ -156,7 +156,8 @@ export const ApiDiagnostics: React.FC = () => {
           <Alert>
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              <strong>Current API URL:</strong> {API_CONFIG.BASE_URL}
+              <strong>🎯 Production API:</strong> {API_CONFIG.BASE_URL}<br/>
+              <strong>🚫 Localhost banned:</strong> {API_CONFIG.BASE_URL.includes('localhost') ? '❌ DETECTED' : '✅ Confirmed'}
             </AlertDescription>
           </Alert>
 
