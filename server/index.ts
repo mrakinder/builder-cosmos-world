@@ -38,6 +38,7 @@ import {
   handlePipelineStatus,
   handleMLProgress
 } from "./routes/ml-integration";
+import deployRouter from "./routes/deploy";
 
 export function createServer() {
   const app = express();
