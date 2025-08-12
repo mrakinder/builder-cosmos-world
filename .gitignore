@@ -25,3 +25,8 @@ dist-ssr
 
 .config/
 !.env
+
+# Ignore any Fly.io auto-generated config
+fly.toml
+.fly.toml
+fly.tmp.toml
