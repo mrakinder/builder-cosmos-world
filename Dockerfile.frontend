@@ -5,7 +5,6 @@ WORKDIR /app
 # 1) Копіюємо маніфести, показуємо діагностику
 COPY package.json ./
 COPY package-lock.json* ./
-COPY pnpm-lock.yaml* ./
 COPY yarn.lock* ./
 
 RUN echo "=== Node/NPM versions ===" && node -v && npm -v || true

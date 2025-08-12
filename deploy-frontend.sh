@@ -6,6 +6,11 @@ set -euo pipefail
 # Блокуємо будь-яке auto-launch від Fly
 export FLY_NO_LAUNCH=1
 # Прибираємо потенційно згенеровані конфіги
+rm -f fly.toml .fly.toml fly.tmp.toml 2>/dev/null || trueuo pipefail
+
+# Блокуємо будь-яке auto-launch від Fly
+export FLY_NO_LAUNCH=1
+# Прибираємо потенційно згенеровані конфіги
 rm -f fly.toml .fly.toml fly.tmp.toml 2>/dev/null || true
 
 echo "🚀 Deploying Glow Nest Frontend to Fly.io..."
