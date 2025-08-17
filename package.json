@@ -17,6 +17,7 @@
     "build:full": "npm run build && npm run build:server",
     "start": "node dist/server/node-build.mjs",
     "test": "vitest --run",
+    "selftest": "node scripts/selftest.mjs",
     "format.fix": "prettier --write .",
     "typecheck": "tsc",
     "ml:cli": "python property_monitor_cli.py",
