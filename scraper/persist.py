@@ -26,6 +26,10 @@ class DatabaseManager:
         if db_url.startswith("sqlite:///"):
             self.db_path = db_url.replace("sqlite:///", "")
             self._ensure_directories()
+        else:
+            # Use unified DB path from config
+            from cli.db_config import get_db_path
+            self.db_path = get_db_path()
             self._init_sqlite_db()
         else:
             raise ValueError("Only SQLite databases are supported currently")
