@@ -1,15 +1,15 @@
-import Database from 'better-sqlite3';
-import type { Database as BetterSqlite3Database } from 'better-sqlite3';
-import { join } from 'path';
+import Database from "better-sqlite3";
+import type { Database as BetterSqlite3Database } from "better-sqlite3";
+import { join } from "path";
 
 // Initialize SQLite database lazily
 let db: BetterSqlite3Database | null = null;
 
 export const getDatabase = () => {
   if (!db) {
-    const dbPath = process.env.DB_PATH || join(process.cwd(), 'glow_nest.db');
+    const dbPath = process.env.DB_PATH || join(process.cwd(), "glow_nest.db");
     db = new Database(dbPath);
-    db.pragma('journal_mode = WAL');
+    db.pragma("journal_mode = WAL");
   }
   return db;
 };
@@ -17,7 +17,7 @@ export const getDatabase = () => {
 // Create tables if they don't exist
 export const initializeDatabase = () => {
   const database = getDatabase();
-  
+
   // Properties table
   database.exec(`
     CREATE TABLE IF NOT EXISTS properties (
@@ -85,11 +85,15 @@ export const initializeDatabase = () => {
   `);
 
   // Initialize default street mappings if empty
-  const streetCount = database.prepare('SELECT COUNT(*) as count FROM street_districts').get() as { count: number };
-  
+  const streetCount = database
+    .prepare("SELECT COUNT(*) as count FROM street_districts")
+    .get() as { count: number };
+
   if (streetCount.count === 0) {
-    const insertStreet = database.prepare('INSERT INTO street_districts (street, district) VALUES (?, ?)');
-    
+    const insertStreet = database.prepare(
+      "INSERT INTO street_districts (street, district) VALUES (?, ?)",
+    );
+
     const defaultStreets = [
       // Center
       ["Галицька", "Центр"],
@@ -98,51 +102,51 @@ export const initializeDatabase = () => {
       ["Січових Стрільців", "Центр"],
       ["Шевченка", "Центр"],
       ["Леся Курбаса", "Центр"],
-      
+
       // Pasichna
       ["Тролейбусна", "Пасічна"],
       ["Пасічна", "Пасічна"],
       ["Чорновола", "Пасічна"],
-      
+
       // BAM
       ["Івасюка", "БАМ"],
       ["Надрічна", "БАМ"],
       ["Вовчинецька", "БАМ"],
-      
+
       // Kaskad
       ["24 Серпня", "Каскад"],
       ["Каскадна", "Каскад"],
       ["Короля Данила", "Каскад"],
-      
+
       // Railway (Vokzal)
       ["Стефаника", "Залізничний (Вокзал)"],
       ["Привокзальна", "Залізничний (Вокзал)"],
       ["Залізнична", "Залізничний (Вокзал)"],
-      
+
       // Braty
       ["Хоткевича", "Брати"],
       ["Миколайчука", "Брати"],
       ["Довга", "Брати"],
-      
+
       // Sofiyivka
       ["Пстрака", "Софіївка"],
       ["Софійська", "Софіївка"],
       ["Левицького", "Софіївка"],
-      
+
       // Budivelnikiv
       ["Селянська", "Будівельників"],
       ["Будівельників", "Будівельників"],
       ["Промислова", "Будівельників"],
-      
+
       // Naberezhna
       ["Набережна ім. В. Стефаника", "Набережна"],
       ["Набережна", "Набережна"],
       ["Дністровська", "Набережна"],
-      
+
       // Opryshivtsi
       ["Опришівська", "Опришівці"],
       ["Гуцульська", "Опришівці"],
-      ["Карпатська", "Опришівці"]
+      ["Карпатська", "Опришівці"],
     ];
 
     defaultStreets.forEach(([street, district]) => {
@@ -151,9 +155,13 @@ export const initializeDatabase = () => {
   }
 
   // Initialize scraping state if empty
-  const stateCount = database.prepare('SELECT COUNT(*) as count FROM scraping_state').get() as { count: number };
+  const stateCount = database
+    .prepare("SELECT COUNT(*) as count FROM scraping_state")
+    .get() as { count: number };
   if (stateCount.count === 0) {
-    database.prepare('INSERT INTO scraping_state (id, status) VALUES (1, ?)').run('idle');
+    database
+      .prepare("INSERT INTO scraping_state (id, status) VALUES (1, ?)")
+      .run("idle");
   }
 };
 
@@ -174,15 +182,19 @@ export const dbOperations = {
       WHERE title = ? AND area = ? AND street = ? AND price_usd = ?
     `);
   },
-  
+
   get getAllProperties() {
-    return getDatabase().prepare('SELECT * FROM properties WHERE is_active = 1 ORDER BY created_at DESC');
+    return getDatabase().prepare(
+      "SELECT * FROM properties WHERE is_active = 1 ORDER BY created_at DESC",
+    );
   },
-  
+
   get getPropertyByOlxId() {
-    return getDatabase().prepare('SELECT * FROM properties WHERE olx_id = ? AND is_active = 1');
+    return getDatabase().prepare(
+      "SELECT * FROM properties WHERE olx_id = ? AND is_active = 1",
+    );
   },
-  
+
   get updatePropertyPrice() {
     return getDatabase().prepare(`
       UPDATE properties 
@@ -190,7 +202,7 @@ export const dbOperations = {
       WHERE olx_id = ?
     `);
   },
-  
+
   // Price history
   get insertPriceHistory() {
     return getDatabase().prepare(`
@@ -198,27 +210,31 @@ export const dbOperations = {
       VALUES (?, ?, ?)
     `);
   },
-  
+
   // Street districts
   get getAllStreetDistricts() {
-    return getDatabase().prepare('SELECT * FROM street_districts ORDER BY district, street');
+    return getDatabase().prepare(
+      "SELECT * FROM street_districts ORDER BY district, street",
+    );
   },
-  
+
   get insertStreetDistrict() {
     return getDatabase().prepare(`
       INSERT INTO street_districts (street, district) VALUES (?, ?)
     `);
   },
-  
+
   get getDistrictByStreet() {
-    return getDatabase().prepare('SELECT district FROM street_districts WHERE street = ?');
+    return getDatabase().prepare(
+      "SELECT district FROM street_districts WHERE street = ?",
+    );
   },
-  
+
   // Scraping state
   get getScrapingState() {
-    return getDatabase().prepare('SELECT * FROM scraping_state WHERE id = 1');
+    return getDatabase().prepare("SELECT * FROM scraping_state WHERE id = 1");
   },
-  
+
   get updateScrapingState() {
     return getDatabase().prepare(`
       UPDATE scraping_state 
@@ -226,18 +242,20 @@ export const dbOperations = {
       WHERE id = 1
     `);
   },
-  
+
   // Activity log
   get insertActivity() {
     return getDatabase().prepare(`
       INSERT INTO activity_log (message, type) VALUES (?, ?)
     `);
   },
-  
+
   get getRecentActivities() {
-    return getDatabase().prepare('SELECT * FROM activity_log ORDER BY timestamp DESC LIMIT ?');
+    return getDatabase().prepare(
+      "SELECT * FROM activity_log ORDER BY timestamp DESC LIMIT ?",
+    );
   },
-  
+
   // Statistics
   get getPropertyStats() {
     return getDatabase().prepare(`
@@ -251,7 +269,7 @@ export const dbOperations = {
       WHERE is_active = 1
     `);
   },
-  
+
   get getDistrictStats() {
     return getDatabase().prepare(`
       SELECT 
@@ -264,7 +282,7 @@ export const dbOperations = {
       GROUP BY district 
       ORDER BY count DESC
     `);
-  }
+  },
 };
 
 export default getDatabase;

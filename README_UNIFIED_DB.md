@@ -21,16 +21,19 @@ PORT=8080
 ## Database Schema Changes
 
 ### ✅ Unified Database Path
+
 - **Node.js**: Uses `process.env.DB_PATH` in `server/database.ts`
 - **Python**: Uses `cli.db_config.get_db_path()` in all modules
 - **Default**: `glow_nest.db` in project root
 
 ### ✅ Unified Table Schema
+
 - **Table**: `street_districts` (migrated from `street_district_map`)
 - **Migration**: Automatic in `cli/utils.py`
 - **Columns**: `id`, `street`, `district`, `created_at`
 
 ### ✅ Fixed Property Insertion
+
 - **Fixed**: Removed `is_promoted` field from insert
 - **Fixed**: Added missing comma in values tuple
 - **Schema**: 11 fields, 11 placeholders
@@ -43,6 +46,7 @@ PORT=8080
 ## SSE Headers
 
 All Server-Sent Events endpoints now use:
+
 ```
 Content-Type: text/event-stream
 Cache-Control: no-cache
@@ -52,12 +56,14 @@ Connection: keep-alive
 ## CORS Configuration
 
 Origins are read from `ALLOWED_ORIGINS` environment variable:
+
 - Development: `http://localhost:5173`
 - Production: `https://*.fly.dev,https://*.builder.my`
 
 ## Testing
 
 ### Local Testing
+
 ```bash
 # Build frontend
 npm run build
@@ -73,6 +79,7 @@ npm run dev
 ```
 
 ### Expected Results
+
 - ✅ Health endpoint: `{"status": "ok"}`
 - ✅ Database unified: One path for all modules
 - ✅ Street districts: Migrated schema
@@ -83,10 +90,12 @@ npm run dev
 ## Migration Notes
 
 ### From Old Schema
+
 - `street_district_map` → `street_districts` (automatic migration)
 - `data/olx_offers.sqlite` → `glow_nest.db` (set in .env)
 
 ### Fixed Issues
+
 - ❌ Property insert: 12 values, 11 placeholders → ✅ 11 values, 11 placeholders
 - ❌ SSE headers: `text/plain` → ✅ `text/event-stream`
 - ❌ Hardcoded ports: 8080 conflict → ✅ Vite:5173, API:8080
