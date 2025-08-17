@@ -159,6 +159,14 @@ def ensure_database_schema(db_path: str = None):
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
+
+        # Migrate from old table if exists
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='street_district_map'")
+        if cursor.fetchone():
+            cursor.execute("""
+                INSERT OR IGNORE INTO street_districts (street, district)
+                SELECT street, district FROM street_district_map
+            """)
         
         # Event log
         cursor.execute("""
