@@ -92,13 +92,19 @@ app = FastAPI(
 )
 
 # CORS middleware
+import os
+_env = os.getenv("ENV", "development").lower()
+_allowed_origins_base = [
+    "https://dea706f0b3dd454188742d996e9d262a-58026be633ce45519cb96963e.fly.dev",  # Frontend URL
+    "https://glow-nest-api.fly.dev",  # API itself
+]
+_allow_all_flag = os.getenv("ALLOW_ALL_ORIGINS", "false").lower() == "true"
+_allow_origins = (
+    _allowed_origins_base + ["*"] if (_env != "production" or _allow_all_flag) else _allowed_origins_base
+)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://dea706f0b3dd454188742d996e9d262a-58026be633ce45519cb96963e.fly.dev",  # Frontend URL
-        "https://glow-nest-api.fly.dev",  # API itself
-        "*"  # Allow all for development (will be restricted in production)
-    ],
+    allow_origins=_allow_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
@@ -613,7 +619,7 @@ async def stream_events():
 
     return StreamingResponse(
         event_stream(),
-        media_type="text/plain",
+        media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "Connection": "keep-alive"}
     )
 

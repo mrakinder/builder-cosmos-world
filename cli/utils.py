@@ -55,7 +55,7 @@ class Logger:
 class EventLogger:
     """Event logger for system activities"""
     
-    def __init__(self, db_path: str = "data/olx_offers.sqlite"):
+    def __init__(self, db_path: str = "glow_nest.db"):
         self.db_path = db_path
         self.logger = Logger("cli/logs/events.log")
         
@@ -106,10 +106,10 @@ class EventLogger:
             return []
 
 
-def ensure_database_schema(db_path: str = "data/olx_offers.sqlite"):
+def ensure_database_schema(db_path: str = "glow_nest.db"):
     """Ensure database has all required tables"""
     try:
-        os.makedirs(os.path.dirname(db_path), exist_ok=True)
+        os.makedirs(os.path.dirname(db_path) or ".", exist_ok=True)
         
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
@@ -146,7 +146,7 @@ def ensure_database_schema(db_path: str = "data/olx_offers.sqlite"):
         
         # Street to district mapping
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS street_district_map (
+            CREATE TABLE IF NOT EXISTS street_districts (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 street TEXT UNIQUE,
                 district TEXT,

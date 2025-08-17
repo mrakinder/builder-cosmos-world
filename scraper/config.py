@@ -62,7 +62,7 @@ class ScrapingConfig:
         "promoted": "[data-cy='promoted-badge']"
     }
     
-    # Database settings - consistent with Node.js
+    # Database settings - unified with Node.js
     DB_URL: str = os.getenv("DB_URL", "sqlite:///glow_nest.db")
     
     # Logging settings
@@ -171,7 +171,7 @@ STREET_TO_DISTRICT = {
     
     # Будівельників
     "Будівельників": "Будівельників",
-    "Конструкторська": "Б��дівельників",
+    "Конструкторська": "Будівельників",
     "Робітнича": "Будівельників",
     "Енергетична": "Будівельників",
     "Монтажна": "Будівельників",

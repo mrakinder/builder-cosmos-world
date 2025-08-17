@@ -221,9 +221,8 @@ class DatabaseManager:
             prop_dict.get('description', ''),
             is_owner,
             prop_dict.get('listing_url', '')
-            prop_dict.get('is_promoted', False),
         )
-
+        
         cursor.execute(insert_sql, values)
 
         # Also add to price history if price exists

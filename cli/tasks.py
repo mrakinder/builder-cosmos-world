@@ -33,7 +33,7 @@ class TaskManager:
         # Process management
         self.processes: Dict[str, subprocess.Popen] = {}
         
-        # Database path - consistent with Node.js
+        # Database path - unified
         self.db_path = "glow_nest.db"
         
     async def initialize(self):

@@ -7,7 +7,8 @@ let db: BetterSqlite3Database | null = null;
 
 const getDatabase = () => {
   if (!db) {
-    const dbPath = join(process.cwd(), 'glow_nest.db');
+    const dbFile = process.env.DB_PATH || 'glow_nest.db';
+    const dbPath = join(process.cwd(), dbFile);
     db = new Database(dbPath);
     // Enable WAL mode for better performance
     db.pragma('journal_mode = WAL');
@@ -95,14 +96,14 @@ export const initializeDatabase = () => {
       // Center
       ["Галицька", "Центр"],
       ["Незалежності", "Центр"],
-      ["Г��ушевського", "Центр"],
+      ["Грушевського", "Центр"],
       ["Січових Стрільців", "Центр"],
       ["Шевченка", "Центр"],
       ["Леся Курбаса", "Центр"],
       
       // Pasichna
       ["Тролейбусна", "Пасічна"],
-      ["Пасічна", "П��січна"],
+      ["Пасічна", "Пасічна"],
       ["Чорновола", "Пасічна"],
       
       // BAM
@@ -112,7 +113,7 @@ export const initializeDatabase = () => {
       
       // Kaskad
       ["24 Серпня", "Каскад"],
-      ["Каскадна", "Кас��ад"],
+      ["Каскадна", "Каскад"],
       ["Короля Данила", "Каскад"],
       
       // Railway (Vokzal)
@@ -136,7 +137,7 @@ export const initializeDatabase = () => {
       ["Промислова", "Будівельників"],
       
       // Naberezhna
-      ["Набережна ім. В. Ст��фаника", "Набережна"],
+      ["Набережна ім. В. Стефаника", "Набережна"],
       ["Набережна", "Набережна"],
       ["Дністровська", "Набережна"],
       

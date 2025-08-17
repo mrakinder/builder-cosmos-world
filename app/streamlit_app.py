@@ -130,7 +130,7 @@ class PropertyEvaluator:
     """Property price evaluation engine"""
     
     def __init__(self):
-        self.db_path = "data/olx_offers.sqlite"
+        self.db_path = "glow_nest.db"
         
     def predict_price(self, property_data: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -528,7 +528,7 @@ def main():
                 
                 with stat_col3:
                     st.metric(
-                        "Ціна за м��",
+                        "Ціна за м²",
                         f"${district_stats.get('avg_price_per_sqm', 0):,.0f}"
                     )
                 
