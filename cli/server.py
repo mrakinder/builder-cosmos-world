@@ -92,17 +92,13 @@ app = FastAPI(
 )
 
 # CORS middleware
+origins = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "*").split(",")]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://dea706f0b3dd454188742d996e9d262a-58026be633ce45519cb96963e.fly.dev",  # Frontend URL
-        "https://glow-nest-api.fly.dev",  # API itself
-        "*"  # Allow all for development (will be restricted in production)
-    ],
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["*"],
-    expose_headers=["*"]
+    allow_methods=["*"],
+    allow_headers=["*"]
 )
 
 
