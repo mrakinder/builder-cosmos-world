@@ -401,7 +401,7 @@ class DatabaseManager:
                 cursor = conn.cursor()
                 
                 cursor.execute("""
-                    INSERT OR REPLACE INTO street_district_map (street, district)
+                    INSERT OR REPLACE INTO street_districts (street, district)
                     VALUES (?, ?)
                 """, (street, district))
                 
@@ -419,7 +419,7 @@ class DatabaseManager:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
                 
-                cursor.execute("SELECT street, district FROM street_district_map")
+                cursor.execute("SELECT street, district FROM street_districts")
                 rows = cursor.fetchall()
                 
                 return dict(rows)

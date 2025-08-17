@@ -150,8 +150,9 @@ def ensure_database_schema(db_path: str = None):
         """)
         
         # Street to district mapping
+        # Migration: create street_districts if not exists
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS street_district_map (
+            CREATE TABLE IF NOT EXISTS street_districts (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 street TEXT UNIQUE,
                 district TEXT,
