@@ -55,8 +55,9 @@ class Logger:
 class EventLogger:
     """Event logger for system activities"""
     
-    def __init__(self, db_path: str = "data/olx_offers.sqlite"):
-        self.db_path = db_path
+    def __init__(self, db_path: str = None):
+        from .db_config import get_db_path
+        self.db_path = db_path if db_path else get_db_path()
         self.logger = Logger("cli/logs/events.log")
         
     def log_event(self, module: str, action: str, details: str, status: str = "INFO"):
@@ -106,10 +107,14 @@ class EventLogger:
             return []
 
 
-def ensure_database_schema(db_path: str = "data/olx_offers.sqlite"):
+def ensure_database_schema(db_path: str = None):
     """Ensure database has all required tables"""
+    from .db_config import get_db_path
+    if not db_path:
+        db_path = get_db_path()
     try:
-        os.makedirs(os.path.dirname(db_path), exist_ok=True)
+        if os.path.dirname(db_path):
+            os.makedirs(os.path.dirname(db_path), exist_ok=True)
         
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()

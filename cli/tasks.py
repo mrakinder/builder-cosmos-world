@@ -33,8 +33,9 @@ class TaskManager:
         # Process management
         self.processes: Dict[str, subprocess.Popen] = {}
         
-        # Database path - consistent with Node.js
-        self.db_path = "glow_nest.db"
+        # Database path - from environment
+        from .db_config import get_db_path
+        self.db_path = get_db_path()
         
     async def initialize(self):
         """Initialize task manager"""
