@@ -16,8 +16,8 @@ export default defineConfig(({ command }) => {
 
   return {
     server: {
-      host: "::",
-      port: 8080,
+      host: "0.0.0.0",
+      port: 5173,
       fs: {
         allow: ["./client", "./shared"],
         deny: [".env", ".env.*", "*.{crt,pem}", "**/.git/**", "server/**"],
