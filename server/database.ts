@@ -5,11 +5,10 @@ import { join } from 'path';
 // Initialize SQLite database lazily
 let db: BetterSqlite3Database | null = null;
 
-const getDatabase = () => {
+export const getDatabase = () => {
   if (!db) {
-    const dbPath = join(process.cwd(), 'glow_nest.db');
+    const dbPath = process.env.DB_PATH || join(process.cwd(), 'glow_nest.db');
     db = new Database(dbPath);
-    // Enable WAL mode for better performance
     db.pragma('journal_mode = WAL');
   }
   return db;
