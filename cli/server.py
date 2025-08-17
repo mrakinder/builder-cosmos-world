@@ -613,8 +613,11 @@ async def stream_events():
 
     return StreamingResponse(
         event_stream(),
-        media_type="text/plain",
-        headers={"Cache-Control": "no-cache", "Connection": "keep-alive"}
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive"
+        }
     )
 
 
