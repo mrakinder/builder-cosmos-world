@@ -747,7 +747,7 @@ async def events_stream_options():
 
 
 # Run server
-def run_server(host: str = "0.0.0.0", port: int = 8080, debug: bool = True):
+def run_server(host: str = "0.0.0.0", port: int = None, debug: bool = True):
     """Run the FastAPI server"""
     logger.info(f"🌐 Starting API server on {host}:{port}")
 
