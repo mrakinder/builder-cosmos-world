@@ -749,6 +749,9 @@ async def events_stream_options():
 # Run server
 def run_server(host: str = "0.0.0.0", port: int = None, debug: bool = True):
     """Run the FastAPI server"""
+    if port is None:
+        port = int(os.getenv("PORT", "8080"))
+
     logger.info(f"🌐 Starting API server on {host}:{port}")
 
     # LOG ALL ROUTES for debugging 404 issues
