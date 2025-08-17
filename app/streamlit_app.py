@@ -130,7 +130,8 @@ class PropertyEvaluator:
     """Property price evaluation engine"""
     
     def __init__(self):
-        self.db_path = "data/olx_offers.sqlite"
+        from cli.db_config import get_db_path
+        self.db_path = get_db_path()
         
     def predict_price(self, property_data: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -164,7 +165,7 @@ class PropertyEvaluator:
         except Exception as e:
             return {
                 'success': False,
-                'error': f"Помилка прогнозування: {str(e)}",
+                'error': f"Помилка ��рогнозування: {str(e)}",
                 'predicted_price': None
             }
     
@@ -316,7 +317,7 @@ def main():
             districts = [
                 "Центр", "Пасічна", "БАМ", "Каскад", 
                 "Залізничний (Вокзал)", "Брати", "Софіївка", 
-                "Будівельників", "Набережна", "Опришівці"
+                "Будівельників", "Набере��на", "Опришівці"
             ]
             
             district = st.selectbox(
@@ -347,7 +348,7 @@ def main():
         with col2:
             # Floor input
             floor = st.number_input(
-                "🏢 Поверх",
+                "🏢 Пов��рх",
                 min_value=1,
                 max_value=30,
                 value=5,
@@ -390,7 +391,7 @@ def main():
                 ["owner", "agency"],
                 format_func=lambda x: "👤 Власник" if x == "owner" else "🏢 Агентство",
                 index=0,
-                help="Хто продає нерухомість"
+                help="��то продає нерухомість"
             )
         
         st.markdown('</div>', unsafe_allow_html=True)
@@ -439,7 +440,7 @@ def main():
                                     {predicted_price * 28:,.0f} ₴ (за курсом НБУ)
                                 </p>
                                 <p style="color: #888; font-size: 0.9rem;">
-                                    ${predicted_price/area:.0f}/м² • {prediction_result.get('response_time', 0)} сек
+                                    ${predicted_price/area:.0f}/м² • {prediction_result.get('response_time', 0)} с��к
                                 </p>
                             </div>
                         """, unsafe_allow_html=True)
@@ -528,7 +529,7 @@ def main():
                 
                 with stat_col3:
                     st.metric(
-                        "Ціна за м��",
+                        "Ціна за м²",
                         f"${district_stats.get('avg_price_per_sqm', 0):,.0f}"
                     )
                 
@@ -571,7 +572,7 @@ def main():
                 
                 st.markdown('</div>', unsafe_allow_html=True)
             else:
-                st.info("🔍 Схожі об'єкти не знайдено в поточній базі даних")
+                st.info("🔍 Схожі об'єкти не знайден�� в поточній базі даних")
     
     # Footer
     st.markdown("""

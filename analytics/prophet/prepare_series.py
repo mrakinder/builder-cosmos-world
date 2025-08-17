@@ -19,8 +19,9 @@ class TimeSeriesPreparator:
     Aggregates property data by district and time period
     """
     
-    def __init__(self, db_path: str = "data/olx_offers.sqlite"):
-        self.db_path = db_path
+    def __init__(self, db_path: str = None):
+        from cli.db_config import get_db_path
+        self.db_path = db_path if db_path else get_db_path()
         self.logger = Logger("analytics/reports/prophet_prep.log")
         
     def prepare_district_series(self, 
