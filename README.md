@@ -189,6 +189,8 @@ DB_URL=sqlite:///data/olx_offers.sqlite
 # API Server
 API_HOST=localhost
 API_PORT=8080
+API_KEY=changeme-secret
+REQUIRE_AUTH_FOR_SSE=true
 
 # Module Ports
 STREAMLIT_PORT=8501
@@ -345,7 +347,7 @@ curl -X POST http://localhost:8080/ml/predict -H "Content-Type: application/json
 
 **Events & Logging:**
 
-- `GET /events/stream` - SSE event stream
+- `GET /events/stream` - SSE event stream (supports `?api_key=...` when `API_KEY` is set)
 - `GET /events/recent` - Recent events
 
 ## 🤝 Support & Documentation
