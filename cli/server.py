@@ -102,6 +102,35 @@ app.add_middleware(
 )
 
 
+# ---- SIMPLE API KEY AUTH (env-driven) ----
+def _get_env_api_key() -> Optional[str]:
+    key = os.getenv("API_KEY")
+    return key.strip() if key else None
+
+
+async def require_auth(request: Request):
+    """Require API key for protected endpoints if API_KEY is set in env.
+    Accepts header X-API-Key, Authorization: Bearer <token>, or query param api_key (for SSE/EventSource).
+    """
+    required_key = _get_env_api_key()
+    if not required_key:
+        return  # Auth disabled
+
+    # Header-based
+    supplied = request.headers.get("x-api-key") or request.headers.get("X-API-Key")
+    if not supplied:
+        # Bearer token
+        auth_header = request.headers.get("Authorization", "")
+        if auth_header.lower().startswith("bearer "):
+            supplied = auth_header.split(" ", 1)[1].strip()
+
+    # For SSE, allow query param
+    if not supplied:
+        supplied = request.query_params.get("api_key")
+
+    if not supplied or supplied != required_key:
+        raise HTTPException(status_code=401, detail="Unauthorized: invalid or missing API key")
+
 # Enhanced health check endpoint with runtime info
 @app.get("/health")
 async def health_check():
@@ -187,7 +216,7 @@ def debug_routes():
 # Module 1: Botasaurus Scraper Endpoints - DIRECT APP DECORATORS
 @app.post("/scraper/start")
 @app.post("/api/scraper/start")  # alias для проксі з префіксом
-async def start_scraping(request: ScrapingRequest, background_tasks: BackgroundTasks):
+async def start_scraping(request: ScrapingRequest, background_tasks: BackgroundTasks, _auth: None = Depends(require_auth)):
     """Start Botasaurus OLX scraping - GUARANTEED JSON-only response, never empty body"""
 
     # ENTRY LOG for diagnostics + request body details
@@ -265,7 +294,7 @@ async def start_scraping(request: ScrapingRequest, background_tasks: BackgroundT
 
 @app.post("/scraper/stop")
 @app.post("/api/scraper/stop")  # alias для проксі з префіксом
-async def stop_scraping():
+async def stop_scraping(_auth: None = Depends(require_auth)):
     """Stop current scraping task - returns JSON-only response"""
     try:
         success = await task_manager.stop_scraping_task()
@@ -322,7 +351,7 @@ async def get_scraping_logs(limit: int = 50):
 
 # Module 2: LightAutoML Endpoints  
 @app.post("/ml/train")
-async def train_ml_model(request: MLTrainingRequest, background_tasks: BackgroundTasks):
+async def train_ml_model(request: MLTrainingRequest, background_tasks: BackgroundTasks, _auth: None = Depends(require_auth)):
     """Train LightAutoML model with real-time progress"""
     try:
         logger.info("🧠 Starting LightAutoML training...")
@@ -370,6 +399,7 @@ async def stream_ml_progress():
     """Server-Sent Events stream for real-time ML progress"""
     async def event_stream():
         try:
+            last_heartbeat = time.time()
             while True:
                 progress = await task_manager.get_ml_training_progress()
 
@@ -380,6 +410,12 @@ async def stream_ml_progress():
                 # Break if training completed
                 if progress.get('status') in ['completed', 'failed']:
                     break
+
+                # Heartbeat every 15s to keep connection alive
+                now = time.time()
+                if now - last_heartbeat > 15:
+                    yield ":keepalive\n\n"
+                    last_heartbeat = now
 
                 await asyncio.sleep(2)  # Update every 2 seconds
 
@@ -393,6 +429,7 @@ async def stream_ml_progress():
         headers={
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Headers": "Cache-Control"
         }
@@ -435,7 +472,7 @@ async def get_ml_status():
 
 # Module 3: Prophet Forecasting Endpoints
 @app.post("/prophet/forecast")
-async def generate_prophet_forecasts(request: ProphetForecastRequest, background_tasks: BackgroundTasks):
+async def generate_prophet_forecasts(request: ProphetForecastRequest, background_tasks: BackgroundTasks, _auth: None = Depends(require_auth)):
     """Generate Prophet forecasts for districts"""
     try:
         logger.info(f"📈 Starting Prophet forecasting for {request.forecast_months} months")
@@ -491,7 +528,7 @@ async def get_prophet_forecasts():
 
 # Module 4: Streamlit Control Endpoints
 @app.post("/streamlit/control")
-async def control_streamlit(request: StreamlitControlRequest):
+async def control_streamlit(request: StreamlitControlRequest, _auth: None = Depends(require_auth)):
     """Start or stop Streamlit application"""
     try:
         if request.action == "start":
@@ -560,7 +597,7 @@ async def get_street_mappings():
 
 
 @app.post("/streets/add")
-async def add_street_mapping(request: StreetMappingRequest):
+async def add_street_mapping(request: StreetMappingRequest, _auth: None = Depends(require_auth)):
     """Add new street to district mapping"""
     try:
         success = await task_manager.add_street_mapping(
@@ -592,14 +629,22 @@ async def stream_events():
     async def event_stream():
         try:
             last_event_id = 0
+            last_heartbeat = time.time()
 
             while True:
                 events = event_logger.get_recent_events(since_id=last_event_id, limit=10)
 
-                for event in events:
-                    data = json.dumps(event)
-                    yield f"data: {data}\n\n"
-                    last_event_id = max(last_event_id, event.get('id', 0))
+                if events:
+                    for event in events:
+                        data = json.dumps(event)
+                        yield f"data: {data}\n\n"
+                        last_event_id = max(last_event_id, event.get('id', 0))
+                    last_heartbeat = time.time()
+                else:
+                    now = time.time()
+                    if now - last_heartbeat > 15:
+                        yield ":keepalive\n\n"
+                        last_heartbeat = now
 
                 await asyncio.sleep(1)  # Check for new events every second
 
@@ -612,7 +657,8 @@ async def stream_events():
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
-            "Connection": "keep-alive"
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"
         }
     )
 
@@ -623,6 +669,7 @@ async def stream_scraper_progress():
     """Server-Sent Events stream for real-time scraper progress"""
     async def progress_stream():
         try:
+            last_heartbeat = time.time()
             while True:
                 scraper_status = await task_manager.get_scraping_status()
 
@@ -647,6 +694,12 @@ async def stream_scraper_progress():
                 if scraper_status.get('status') in ['completed', 'error', 'cancelled']:
                     break
 
+                # Heartbeat every 15s
+                now = time.time()
+                if now - last_heartbeat > 15:
+                    yield ":keepalive\n\n"
+                    last_heartbeat = now
+
                 await asyncio.sleep(1)  # Update every second
 
         except Exception as e:
@@ -663,6 +716,7 @@ async def stream_scraper_progress():
         headers={
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Headers": "Cache-Control"
         }

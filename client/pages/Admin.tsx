@@ -47,6 +47,7 @@ import {
   getProgressStreamUrl,
   getEventsStreamUrl,
 } from "../../shared/config";
+import { withApiKey } from "../../shared/config";
 
 export default function Admin() {
   const [stats, setStats] = useState({
@@ -100,7 +101,7 @@ export default function Admin() {
 
     // Set up Server-Sent Events using centralized configuration
     addLogEntry(`🔗 Setting up SSE connections to ${API_CONFIG.BASE_URL}`);
-    const eventSource = new EventSource(getEventsStreamUrl());
+    const eventSource = new EventSource(withApiKey(getEventsStreamUrl()));
 
     eventSource.onmessage = (event) => {
       try {
@@ -130,7 +131,7 @@ export default function Admin() {
     // Connect to Python backend SSE for real-time scraper progress
     let pythonScraperSSE = null;
     const connectToPythonScraperSSE = () => {
-      const progressUrl = getProgressStreamUrl();
+      const progressUrl = withApiKey(getProgressStreamUrl());
       addLogEntry(`🔗 Connecting to scraper progress: ${progressUrl}`);
       pythonScraperSSE = new EventSource(progressUrl);
 
@@ -209,7 +210,7 @@ export default function Admin() {
     // Set up ML progress SSE for real-time training updates
     let mlProgressSSE = null;
     const connectToMLProgressSSE = () => {
-      const mlProgressUrl = buildApiUrl("/ml/progress/stream");
+      const mlProgressUrl = withApiKey(buildApiUrl("/ml/progress/stream"));
       addLogEntry(`🔗 Connecting to ML progress: ${mlProgressUrl}`);
       mlProgressSSE = new EventSource(mlProgressUrl);
 

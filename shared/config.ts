@@ -27,6 +27,9 @@ export const API_CONFIG = {
   // Timeout settings
   TIMEOUT: 15000, // 15 seconds
 
+  // Optional API key, can be injected at build/runtime
+  API_KEY: (typeof process !== "undefined" && process.env?.API_KEY) || undefined,
+
   // Endpoints
   ENDPOINTS: {
     HEALTH: "/health",
@@ -52,6 +55,13 @@ export const buildApiUrl = (endpoint: string): string => {
   const baseUrl = API_CONFIG.BASE_URL.replace(/\/$/, ""); // Remove trailing slash
   const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
   return `${baseUrl}${cleanEndpoint}`;
+};
+
+// Append api_key query param for SSE endpoints when API_KEY is present
+export const withApiKey = (url: string): string => {
+  if (!API_CONFIG.API_KEY) return url;
+  const separator = url.includes("?") ? "&" : "?";
+  return `${url}${separator}api_key=${encodeURIComponent(API_CONFIG.API_KEY)}`;
 };
 
 export const getHealthUrl = (): string =>

@@ -6,6 +6,9 @@
 
 // API Configuration - PRODUCTION ONLY
 const API_BASE_URL = "https://glow-nest-api.fly.dev";
+// Optional API key support
+const API_KEY = (window && window.__API_KEY__) || (typeof process !== 'undefined' ? process.env.API_KEY : undefined);
+const authHeaders = API_KEY ? { 'X-API-Key': API_KEY } : {};
 
 // Global state
 let eventSource = null;
@@ -33,7 +36,8 @@ function initializeRealTimeUpdates() {
     eventSource.close();
   }
 
-  eventSource = new EventSource(`${API_BASE_URL}/events/stream`);
+  const eventsUrl = `${API_BASE_URL}/events/stream${API_KEY ? `?api_key=${encodeURIComponent(API_KEY)}` : ''}`;
+  eventSource = new EventSource(eventsUrl);
 
   eventSource.onmessage = function (event) {
     try {
@@ -58,7 +62,7 @@ function initializeRealTimeUpdates() {
 // Load system status
 async function loadSystemStatus() {
   try {
-    const response = await fetch(`${API_BASE_URL}/system/status`);
+    const response = await fetch(`${API_BASE_URL}/system/status`, { headers: { ...authHeaders } });
     const status = await response.json();
 
     updateSystemOverview(status);
@@ -72,7 +76,7 @@ async function loadSystemStatus() {
 // Update system overview metrics
 function updateSystemOverview(status) {
   // Get property statistics
-  fetch(`${API_BASE_URL}/properties/stats`)
+  fetch(`${API_BASE_URL}/properties/stats`, { headers: { ...authHeaders } })
     .then((response) => response.json())
     .then((stats) => {
       document.getElementById("totalProperties").textContent =
@@ -207,7 +211,7 @@ async function startScraping(listingType) {
 
     const response = await fetch(`${API_BASE_URL}/scraper/start`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify({
         listing_type: listingType,
         max_pages: 10,
@@ -299,7 +303,7 @@ async function trainMLModel() {
 
     const response = await fetch(`${API_BASE_URL}/ml/train`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify({
         target_mape: 15.0,
         timeout: 3600,
@@ -333,7 +337,8 @@ function startMLProgressMonitoring() {
     mlProgressSource.close();
   }
 
-  mlProgressSource = new EventSource(`${API_BASE_URL}/ml/progress/stream`);
+  const mlProgressSourceUrl = `${API_BASE_URL}/ml/progress/stream${API_KEY ? `?api_key=${encodeURIComponent(API_KEY)}` : ''}`;
+  mlProgressSource = new EventSource(mlProgressSourceUrl);
 
   mlProgressSource.onmessage = function (event) {
     try {
@@ -417,7 +422,7 @@ async function generateForecasts() {
 
     const response = await fetch(`${API_BASE_URL}/prophet/forecast`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify({
         forecast_months: 6,
       }),
@@ -487,7 +492,7 @@ async function controlStreamlit(action) {
 
     const response = await fetch(`${API_BASE_URL}/streamlit/control`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify({
         action: action,
         port: 8501,
@@ -562,7 +567,7 @@ async function addStreetMapping(street, district) {
   try {
     const response = await fetch(`${API_BASE_URL}/streets/add`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify({ street, district }),
     });
 
@@ -581,7 +586,7 @@ async function addStreetMapping(street, district) {
 
 async function viewStreetMappings() {
   try {
-    const response = await fetch(`${API_BASE_URL}/streets/mapping`);
+    const response = await fetch(`${API_BASE_URL}/streets/mapping`, { headers: { ...authHeaders } });
     const result = await response.json();
 
     const mappings = result.street_mappings || {};
